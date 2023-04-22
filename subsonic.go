@@ -235,7 +235,7 @@ func getTracks(albumID int) bool {
 	var resJSON map[string]interface{}
 	json.Unmarshal(body, &resJSON)
 
-	query, err := gojq.Parse(`."subsonic-response".album.song[]`)
+	query, err := gojq.Parse(`."subsonic-response".album.artistId`)
 	if err != nil {
 		log.Fatal(err)
 		return false
@@ -244,11 +244,19 @@ func getTracks(albumID int) bool {
 	artistID := 0
 
 	iter := query.Run(resJSON)
+	if artistIDString, ok := iter.Next(); ok {
+		artistID = toInt(artistIDString.(string))
+	}
+
+	query, err = gojq.Parse(`."subsonic-response".album.song[]`)
+	if err != nil {
+		log.Fatal(err)
+		return false
+	}
+
+	iter = query.Run(resJSON)
 	for track, ok := iter.Next(); ok; track, ok = iter.Next() {
 		trackMap := track.(map[string]any)
-		if artistID == 0 {
-			artistID = toInt(trackMap["artistId"].(string))
-		}
 
 		var track float64
 		if track, ok = trackMap["track"].(float64); !ok {
@@ -261,7 +269,7 @@ func getTracks(albumID int) bool {
 			album:    trackMap["album"].(string),
 			albumID:  albumID,
 			artist:   trackMap["artist"].(string),
-			artistID: toInt(trackMap["artistId"].(string)),
+			artistID: artistID,
 			track:    int(track),
 			duration: int(trackMap["duration"].(float64))}
 
