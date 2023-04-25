@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -11,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/faiface/beep"
+	"github.com/faiface/beep/speaker"
 	"github.com/itchyny/gojq"
 )
 
@@ -279,44 +279,55 @@ func getTracks(albumID int) bool {
 	return true
 }
 
-func stream(trackID int) bool {
-	req, err := http.NewRequest("GET", serverURL+"stream", nil)
-	if err != nil {
-		log.Fatal(err)
-		return false
+func stream(_ int, trackName string, trackIDString string, _ rune) {
+	if trackName == "Back to artist" {
+		pages.SwitchToPage(trackIDString)
+		return
 	}
 
-	params := req.URL.Query()
-	params.Add("u", username)
-	params.Add("t", token)
-	params.Add("s", salt)
-	params.Add("v", version)
-	params.Add("c", client)
-	params.Add("f", "json")
-	params.Add("id", strconv.FormatInt(int64(trackID), 10))
-	req.URL.RawQuery = params.Encode()
+	fileName := trackIDString + ".mp3"
 
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		log.Fatal(err)
-		return false
+	if _, err := os.Stat(fileName); err != nil {
+		trackID, _ := strconv.ParseInt(trackIDString, 10, 32)
+
+		req, err := http.NewRequest("GET", serverURL+"stream", nil)
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+
+		params := req.URL.Query()
+		params.Add("u", username)
+		params.Add("t", token)
+		params.Add("s", salt)
+		params.Add("v", version)
+		params.Add("c", client)
+		params.Add("f", "json")
+		params.Add("id", strconv.FormatInt(int64(trackID), 10))
+		req.URL.RawQuery = params.Encode()
+
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+		defer res.Body.Close()
+
+		file, err := os.Create(fileName)
+		if err != nil {
+			log.Fatal(err)
+			return
+		}
+
+		_, err = io.Copy(file, res.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
-	defer res.Body.Close()
 
-	file, err := os.Create(strconv.FormatInt(int64(trackID), 10) + ".mp3")
-	if err != nil {
-		log.Fatal(err)
-		return false
-	}
-
-	size, err := io.Copy(file, res.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Printf("Created %d.mp3 with size %d\n", trackID, size)
-
-	return true
+	speaker.Lock()
+	queue.Add(fileName)
+	speaker.Unlock()
 }
 
 func toInt(s string) int {
