@@ -3,23 +3,41 @@ package main
 import (
 	"database/sql"
 	"fmt"
+	"log"
+	"os"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func queryArtists() *sql.Rows {
-	db, err := sql.Open("sqlite3", "./database.db")
-	if err != nil {
-		fmt.Println(err)
-	}
+func createDatabase() {
+	db, _ := sql.Open("sqlite3", databaseFile)
 	defer db.Close()
 
-	rows, _ := db.Query("SELECT * FROM artists ORDER BY name")
+	initScript := configDirectory + "init.sql"
+	script, err := os.ReadFile(initScript)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_, err = db.Exec(string(script))
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func queryArtists() *sql.Rows {
+	db, _ := sql.Open("sqlite3", databaseFile)
+	defer db.Close()
+
+	rows, err := db.Query("SELECT * FROM artists ORDER BY name")
+	if err != nil {
+		log.Fatal(err)
+	}
 	return rows
 }
 
 func queryAlbums(artistID int) *sql.Rows {
-	db, err := sql.Open("sqlite3", "./database.db")
+	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -30,7 +48,7 @@ func queryAlbums(artistID int) *sql.Rows {
 }
 
 func queryTracks(albumID int) *sql.Rows {
-	db, err := sql.Open("sqlite3", "./database.db")
+	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -40,70 +58,66 @@ func queryTracks(albumID int) *sql.Rows {
 	return rows
 }
 
-// func loadDatabase() {
-// 	db, err := sql.Open("sqlite3", "./database.db")
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
+func loadDatabase() {
+	db, err := sql.Open("sqlite3", databaseFile)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
-// 	artistQuery, err := db.Prepare("INSERT INTO artists(id, name) VALUES(?,?)")
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
-// 	albumQuery, err := db.Prepare("INSERT INTO albums(id, artistID, name, year) VALUES(?,?,?,?)")
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
+	artistQuery, err := db.Prepare("INSERT INTO artists(id, name) VALUES(?,?)")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	albumQuery, err := db.Prepare("INSERT INTO albums(id, artistID, name, year) VALUES(?,?,?,?)")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
-// 	trackQuery, err := db.Prepare("INSERT INTO tracks(id, title, albumID, artistID, track, duration) VALUES(?,?,?,?,?,?)")
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return
-// 	}
+	trackQuery, err := db.Prepare("INSERT INTO tracks(id, title, albumID, artistID, track, duration) VALUES(?,?,?,?,?,?)")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
-// 	getArtists()
-// 	for k, v := range artists {
-// 		artistID := k
-// 		_, err := artistQuery.Exec(k, v.name)
-// 		if err != nil {
-// 			fmt.Println(err)
-// 			return
-// 		}
-// 		getAlbums(artistID)
-// 		for k, v := range artists[artistID].albums {
-// 			albumID := k
-// 			_, err := albumQuery.Exec(k, v.artistID, v.name, v.year)
-// 			if err != nil {
-// 				fmt.Println(err)
-// 				return
-// 			}
-// 			getTracks(albumID)
-// 			for k, v := range artists[artistID].albums[albumID].tracks {
-// 				_, err := trackQuery.Exec(k, v.title, v.albumID, v.artistID, v.track, v.duration)
-// 				if err != nil {
-// 					fmt.Println(err)
-// 					return
-// 				}
-// 			}
-// 		}
-// 	}
-// }
+	trackCount, err := db.Prepare("SELECT COUNT(*) FROM tracks")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
-// func main() {
-// 	db, err := sql.Open("sqlite3", "./database.db")
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+	var trackNum int
 
-// 	query, err := ioutil.ReadFile("./init.sql")
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	if _, err := db.Exec(string(query)); err != nil {
-// 		panic(err)
-// 	}
-// }
+	getArtists()
+	for k, v := range artists {
+		artistID := k
+		_, err := artistQuery.Exec(k, v.name)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		getAlbums(artistID)
+		for k, v := range artists[artistID].albums {
+			albumID := k
+			_, err := albumQuery.Exec(k, v.artistID, v.name, v.year)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			getTracks(albumID)
+			for k, v := range artists[artistID].albums[albumID].tracks {
+				_, err := trackQuery.Exec(k, v.title, v.albumID, v.artistID, v.track, v.duration)
+				if err != nil {
+					fmt.Println(err)
+					return
+				}
+			}
+			_ = trackCount.QueryRow().Scan(&trackNum)
+			loadingTextBox.Clear()
+			fmt.Fprintf(loadingTextBox, "Loading, %d tracks\n", trackNum)
+			app.Draw()
+		}
+	}
+}

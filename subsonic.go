@@ -2,15 +2,15 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
-	"github.com/faiface/beep"
-	"github.com/faiface/beep/speaker"
 	"github.com/itchyny/gojq"
 )
 
@@ -34,18 +34,6 @@ type Album struct {
 	name       string
 	year       int
 	tracks     map[int]*Track
-}
-
-type Track struct {
-	stream   beep.StreamSeekCloser
-	id       int
-	title    string
-	album    string
-	albumID  int
-	artist   string
-	artistID int
-	track    int
-	duration int
 }
 
 var artists = make(map[int]*Artist)
@@ -87,7 +75,6 @@ func ping() bool {
 	} else {
 		return false
 	}
-
 }
 
 func getArtists() bool {
@@ -131,7 +118,7 @@ func getArtists() bool {
 	iter := query.Run(resJSON)
 	for v, ok := iter.Next(); ok; v, ok = iter.Next() {
 		split := strings.Split(v.(string), "\t")
-		id, _ := strconv.ParseInt(split[0], 10, 32)
+		id := toInt(split[0])
 		name := split[1]
 		albums := make(map[int]*Album)
 		artists[int(id)] = &Artist{id: int(id), name: name, albums: albums}
@@ -182,10 +169,10 @@ func getAlbums(artistID int) bool {
 	iter := query.Run(resJSON)
 	for v, ok := iter.Next(); ok; v, ok = iter.Next() {
 		split := strings.Split(v.(string), "\t")
-		id, _ := strconv.ParseInt(split[0], 10, 32)
+		id := toInt(split[0])
 		artistName := split[1]
 		name := split[2]
-		year, _ := strconv.ParseInt(split[3], 10, 32)
+		year := toInt(split[3])
 		tracks := make(map[int]*Track)
 		artists[artistID].albums[int(id)] =
 			&Album{
@@ -214,7 +201,7 @@ func getTracks(albumID int) bool {
 	params.Add("v", version)
 	params.Add("c", client)
 	params.Add("f", "json")
-	params.Add("id", strconv.FormatInt(int64(albumID), 10))
+	params.Add("id", fmt.Sprint(albumID))
 	req.URL.RawQuery = params.Encode()
 
 	res, err := http.DefaultClient.Do(req)
@@ -285,10 +272,10 @@ func stream(_ int, trackName string, trackIDString string, _ rune) {
 		return
 	}
 
-	fileName := trackIDString + ".mp3"
+	fileName := fmt.Sprint(cacheDirectory, trackIDString, ".mp3")
 
 	if _, err := os.Stat(fileName); err != nil {
-		trackID, _ := strconv.ParseInt(trackIDString, 10, 32)
+		trackID := toInt(trackIDString)
 
 		req, err := http.NewRequest("GET", serverURL+"stream", nil)
 		if err != nil {
@@ -303,7 +290,7 @@ func stream(_ int, trackName string, trackIDString string, _ rune) {
 		params.Add("v", version)
 		params.Add("c", client)
 		params.Add("f", "json")
-		params.Add("id", strconv.FormatInt(int64(trackID), 10))
+		params.Add("id", fmt.Sprint(trackID))
 		req.URL.RawQuery = params.Encode()
 
 		res, err := http.DefaultClient.Do(req)
@@ -325,9 +312,52 @@ func stream(_ int, trackName string, trackIDString string, _ rune) {
 		}
 	}
 
-	speaker.Lock()
-	queue.Add(fileName)
-	speaker.Unlock()
+	changeCurrentTrack(fileName)
+}
+
+func scrobble(trackID int, submission string) bool {
+	req, err := http.NewRequest("GET", serverURL+"scrobble", nil)
+	if err != nil {
+		log.Fatal(err)
+		return false
+	}
+
+	elapsedTime := currentTrack.stream.Position() / sr.N(time.Second)
+	time := int(time.Now().UnixMilli()) - elapsedTime*1000
+
+	params := req.URL.Query()
+	params.Add("u", username)
+	params.Add("t", token)
+	params.Add("s", salt)
+	params.Add("v", version)
+	params.Add("c", client)
+	params.Add("f", "json")
+	params.Add("id", fmt.Sprint(trackID))
+	params.Add("submission", submission)
+	params.Add("time", fmt.Sprint(time))
+	req.URL.RawQuery = params.Encode()
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Fatal(err)
+		return false
+	}
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		log.Fatal(err)
+		return false
+	}
+
+	var resJSON map[string]interface{}
+	json.Unmarshal(body, &resJSON)
+
+	if resJSON["subsonic-response"].(map[string]interface{})["status"] == "ok" {
+		return true
+	} else {
+		return false
+	}
 }
 
 func toInt(s string) int {
