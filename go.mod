@@ -14,6 +14,7 @@ require (
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/mattn/go-sqlite3 v1.14.16 // indirect
+	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rivo/tview v0.0.0-20230406072732-e22ce9588bb4 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect

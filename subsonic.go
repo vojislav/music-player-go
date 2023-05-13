@@ -14,12 +14,12 @@ import (
 	"github.com/itchyny/gojq"
 )
 
-var serverURL = "https://music.lazic.xyz/rest/"
-var username = "voja"
-var salt = "eYEy8Yue"
-var token = "ee5d78b9d676fd5ab119a68860db3c59"
-var version = "1.16.1"
-var client = "music-player-go"
+// var config.ServerURL = "https://music.lazic.xyz/rest/"
+// var config.Username = "voja"
+// var config.Salt = "eYEy8Yue"
+// var config.Token = "ee5d78b9d676fd5ab119a68860db3c59"
+// var config.Version = "1.16.1"
+// var client_name = "music-player-go"
 
 type Artist struct {
 	id     int
@@ -39,32 +39,29 @@ type Album struct {
 var artists = make(map[int]*Artist)
 
 func ping() bool {
-	req, err := http.NewRequest("GET", serverURL+"ping", nil)
+	req, err := http.NewRequest("GET", config.ServerURL+"ping", nil)
 	if err != nil {
 		log.Fatal(err)
-		return false
 	}
 
 	params := req.URL.Query()
-	params.Add("u", username)
-	params.Add("t", token)
-	params.Add("s", salt)
-	params.Add("v", version)
-	params.Add("c", client)
+	params.Add("u", config.Username)
+	params.Add("t", config.Token)
+	params.Add("s", config.Salt)
+	params.Add("v", config.Version)
+	params.Add("c", client_name)
 	params.Add("f", "json")
 	req.URL.RawQuery = params.Encode()
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Fatal(err)
-		return false
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		log.Fatal(err)
-		return false
 	}
 
 	var resJSON map[string]interface{}
@@ -78,38 +75,34 @@ func ping() bool {
 }
 
 func getArtists() bool {
-	req, err := http.NewRequest("GET", serverURL+"getArtists", nil)
+	req, err := http.NewRequest("GET", config.ServerURL+"getArtists", nil)
 	if err != nil {
 		log.Fatal(err)
-		return false
 	}
 
 	params := req.URL.Query()
-	params.Add("u", username)
-	params.Add("t", token)
-	params.Add("s", salt)
-	params.Add("v", version)
-	params.Add("c", client)
+	params.Add("u", config.Username)
+	params.Add("t", config.Token)
+	params.Add("s", config.Salt)
+	params.Add("v", config.Version)
+	params.Add("c", client_name)
 	params.Add("f", "json")
 	req.URL.RawQuery = params.Encode()
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Fatal(err)
-		return false
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		log.Fatal(err)
-		return false
 	}
 
 	query, err := gojq.Parse(`."subsonic-response".artists.index[].artist[] | .id + "\t" + .name`)
 	if err != nil {
 		log.Fatal(err)
-		return false
 	}
 
 	var resJSON map[string]interface{}
@@ -128,18 +121,17 @@ func getArtists() bool {
 }
 
 func getAlbums(artistID int) bool {
-	req, err := http.NewRequest("GET", serverURL+"getArtist", nil)
+	req, err := http.NewRequest("GET", config.ServerURL+"getArtist", nil)
 	if err != nil {
 		log.Fatal(err)
-		return false
 	}
 
 	params := req.URL.Query()
-	params.Add("u", username)
-	params.Add("t", token)
-	params.Add("s", salt)
-	params.Add("v", version)
-	params.Add("c", client)
+	params.Add("u", config.Username)
+	params.Add("t", config.Token)
+	params.Add("s", config.Salt)
+	params.Add("v", config.Version)
+	params.Add("c", client_name)
 	params.Add("f", "json")
 	params.Add("id", strconv.FormatInt(int64(artistID), 10))
 	req.URL.RawQuery = params.Encode()
@@ -147,20 +139,17 @@ func getAlbums(artistID int) bool {
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Fatal(err)
-		return false
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		log.Fatal(err)
-		return false
 	}
 
 	query, err := gojq.Parse(`."subsonic-response".artist.album[] |  .id + "\t" + .artist + "\t" + .name + "\t" + (.year|tostring)`)
 	if err != nil {
 		log.Fatal(err)
-		return false
 	}
 
 	var resJSON map[string]interface{}
@@ -188,18 +177,17 @@ func getAlbums(artistID int) bool {
 }
 
 func getTracks(albumID int) bool {
-	req, err := http.NewRequest("GET", serverURL+"getAlbum", nil)
+	req, err := http.NewRequest("GET", config.ServerURL+"getAlbum", nil)
 	if err != nil {
 		log.Fatal(err)
-		return false
 	}
 
 	params := req.URL.Query()
-	params.Add("u", username)
-	params.Add("t", token)
-	params.Add("s", salt)
-	params.Add("v", version)
-	params.Add("c", client)
+	params.Add("u", config.Username)
+	params.Add("t", config.Token)
+	params.Add("s", config.Salt)
+	params.Add("v", config.Version)
+	params.Add("c", client_name)
 	params.Add("f", "json")
 	params.Add("id", fmt.Sprint(albumID))
 	req.URL.RawQuery = params.Encode()
@@ -207,14 +195,12 @@ func getTracks(albumID int) bool {
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Fatal(err)
-		return false
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		log.Fatal(err)
-		return false
 	}
 
 	// ."subsonic-response".album.song[]
@@ -225,7 +211,6 @@ func getTracks(albumID int) bool {
 	query, err := gojq.Parse(`."subsonic-response".album.artistId`)
 	if err != nil {
 		log.Fatal(err)
-		return false
 	}
 
 	artistID := 0
@@ -238,7 +223,6 @@ func getTracks(albumID int) bool {
 	query, err = gojq.Parse(`."subsonic-response".album.song[]`)
 	if err != nil {
 		log.Fatal(err)
-		return false
 	}
 
 	iter = query.Run(resJSON)
@@ -266,29 +250,23 @@ func getTracks(albumID int) bool {
 	return true
 }
 
-func stream(_ int, trackName string, trackIDString string, _ rune) {
-	if trackName == "Back to artist" {
-		pages.SwitchToPage(trackIDString)
-		return
-	}
-
+func download(trackIDString string) string {
 	fileName := fmt.Sprint(cacheDirectory, trackIDString, ".mp3")
 
 	if _, err := os.Stat(fileName); err != nil {
 		trackID := toInt(trackIDString)
 
-		req, err := http.NewRequest("GET", serverURL+"stream", nil)
+		req, err := http.NewRequest("GET", config.ServerURL+"stream", nil)
 		if err != nil {
 			log.Fatal(err)
-			return
 		}
 
 		params := req.URL.Query()
-		params.Add("u", username)
-		params.Add("t", token)
-		params.Add("s", salt)
-		params.Add("v", version)
-		params.Add("c", client)
+		params.Add("u", config.Username)
+		params.Add("t", config.Token)
+		params.Add("s", config.Salt)
+		params.Add("v", config.Version)
+		params.Add("c", client_name)
 		params.Add("f", "json")
 		params.Add("id", fmt.Sprint(trackID))
 		req.URL.RawQuery = params.Encode()
@@ -296,14 +274,12 @@ func stream(_ int, trackName string, trackIDString string, _ rune) {
 		res, err := http.DefaultClient.Do(req)
 		if err != nil {
 			log.Fatal(err)
-			return
 		}
 		defer res.Body.Close()
 
 		file, err := os.Create(fileName)
 		if err != nil {
 			log.Fatal(err)
-			return
 		}
 
 		_, err = io.Copy(file, res.Body)
@@ -312,25 +288,24 @@ func stream(_ int, trackName string, trackIDString string, _ rune) {
 		}
 	}
 
-	changeCurrentTrack(fileName)
+	return fileName
 }
 
 func scrobble(trackID int, submission string) bool {
-	req, err := http.NewRequest("GET", serverURL+"scrobble", nil)
+	req, err := http.NewRequest("GET", config.ServerURL+"scrobble", nil)
 	if err != nil {
 		log.Fatal(err)
-		return false
 	}
 
 	elapsedTime := currentTrack.stream.Position() / sr.N(time.Second)
 	time := int(time.Now().UnixMilli()) - elapsedTime*1000
 
 	params := req.URL.Query()
-	params.Add("u", username)
-	params.Add("t", token)
-	params.Add("s", salt)
-	params.Add("v", version)
-	params.Add("c", client)
+	params.Add("u", config.Username)
+	params.Add("t", config.Token)
+	params.Add("s", config.Salt)
+	params.Add("v", config.Version)
+	params.Add("c", client_name)
 	params.Add("f", "json")
 	params.Add("id", fmt.Sprint(trackID))
 	params.Add("submission", submission)
@@ -340,14 +315,12 @@ func scrobble(trackID int, submission string) bool {
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Fatal(err)
-		return false
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		log.Fatal(err)
-		return false
 	}
 
 	var resJSON map[string]interface{}
