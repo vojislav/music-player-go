@@ -65,18 +65,18 @@ func loadDatabase() {
 		return
 	}
 
-	artistQuery, err := db.Prepare("INSERT INTO artists(id, name) VALUES(?,?)")
+	artistQuery, err := db.Prepare("INSERT OR IGNORE INTO artists(id, name) VALUES(?,?)")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	albumQuery, err := db.Prepare("INSERT INTO albums(id, artistID, name, year) VALUES(?,?,?,?)")
+	albumQuery, err := db.Prepare("INSERT OR IGNORE INTO albums(id, artistID, name, year) VALUES(?,?,?,?)")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	trackQuery, err := db.Prepare("INSERT INTO tracks(id, title, albumID, artistID, track, duration) VALUES(?,?,?,?,?,?)")
+	trackQuery, err := db.Prepare("INSERT OR IGNORE INTO tracks(id, title, albumID, artistID, track, duration) VALUES(?,?,?,?,?,?)")
 	if err != nil {
 		fmt.Println(err)
 		return

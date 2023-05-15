@@ -31,7 +31,44 @@ type Track struct {
 	duration int
 }
 
-func playTrack(_ int, trackName string, trackIDString string, _ rune) {
+func nextTrack() {
+	if queuePosition+1 == queueList.GetItemCount() {
+		return
+	}
+
+	queuePosition += 1
+
+	nextTrackName, nextTrackID := queueList.GetItemText(queuePosition)
+	playTrack(queuePosition, nextTrackName, nextTrackID, 0)
+}
+
+func previousTrack() {
+	if queuePosition-1 < 0 {
+		return
+	}
+
+	queuePosition -= 1
+
+	nextTrackName, nextTrackID := queueList.GetItemText(queuePosition)
+	playTrack(queuePosition, nextTrackName, nextTrackID, 0)
+}
+
+func pauseTrack() {
+	speaker.Lock()
+	if playerCtrl.Streamer == nil {
+		return
+	}
+
+	playerCtrl.Paused = !playerCtrl.Paused
+	if playerCtrl.Paused {
+		killTicker <- true
+	} else {
+		go trackTime()
+	}
+	speaker.Unlock()
+}
+
+func playTrack(trackIndex int, trackName string, trackIDString string, _ rune) {
 	fileName := download(trackIDString)
 
 	stream := getStream(fileName)
@@ -52,6 +89,8 @@ func playTrack(_ int, trackName string, trackIDString string, _ rune) {
 	speaker.Clear()
 	playerCtrl = &beep.Ctrl{Streamer: currentTrack.stream, Paused: false}
 	speaker.Play(playerCtrl)
+
+	queuePosition = trackIndex
 
 	scrobble(currentTrack.id, "false")
 

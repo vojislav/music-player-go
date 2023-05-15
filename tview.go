@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/faiface/beep/speaker"
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
 var app = tview.NewApplication()
 var pages = tview.NewPages()
-var artistList, albumList, trackList *tview.List
+var artistList, albumList, trackList, queueList *tview.List
 var loadingPopup tview.Primitive
 var currentTrackText, loadingTextBox, loginStatus *tview.TextView
 
@@ -51,16 +50,20 @@ func initView() {
 	pages.AddPage("loading library", loadingPopup, true, false)
 
 	// library page
-	artistList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true)
+	artistList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
 	artistList.SetBorder(true).SetTitle("Artist")
+	artistList.SetChangedFunc(fillAlbumsList)
 
-	albumList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true)
+	albumList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
 	albumList.SetBorder(true).SetTitle("Albums")
+	albumList.SetChangedFunc(fillTracksList)
 
-	trackList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true)
+	trackList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
 	trackList.SetBorder(true).SetTitle("Tracks")
+	trackList.SetSelectedFunc(addToQueueAndPlay)
 
 	currentTrackText = tview.NewTextView()
+	currentTrackText.SetBorder(true)
 
 	libraryFlex := tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
@@ -71,8 +74,20 @@ func initView() {
 
 	pages.AddPage("library", libraryFlex, true, true)
 
+	// queue page
+	queueList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
+	queueList.SetBorder(true).SetTitle("Queue")
+	queueList.SetSelectedFunc(playTrack)
+	queueFlex := tview.NewFlex().SetDirection(tview.FlexRow).
+		AddItem(queueList, 0, 1, true).
+		AddItem(currentTrackText, 3, 1, false)
+
+	pages.AddPage("queue", queueFlex, true, false)
+
 	// key handlers
+	app.SetInputCapture(appInputHandler)
 	libraryFlex.SetInputCapture(libraryKeyHandler)
+	queueFlex.SetInputCapture(queueInputHandler)
 }
 
 func initLibraryPage() {
@@ -95,7 +110,6 @@ func fillArtistList() {
 		artistList.AddItem(name, fmt.Sprint(artistID), 0, nil)
 	}
 
-	artistList.SetChangedFunc(fillAlbumsList)
 }
 
 func fillAlbumsList(_ int, artistName, artistIDString string, _ rune) {
@@ -111,7 +125,6 @@ func fillAlbumsList(_ int, artistName, artistIDString string, _ rune) {
 		albumList.AddItem(fmt.Sprintf("(%d) %s", year, name), fmt.Sprint(albumID), 0, nil)
 	}
 
-	albumList.SetChangedFunc(fillTracksList)
 }
 
 func fillTracksList(_ int, albumName, albumIDString string, _ rune) {
@@ -128,7 +141,19 @@ func fillTracksList(_ int, albumName, albumIDString string, _ rune) {
 		trackList.AddItem(fmt.Sprintf("%d. %s", track, title), fmt.Sprint(trackID), 0, nil)
 	}
 
-	trackList.SetSelectedFunc(playTrack)
+}
+
+func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
+	switch event.Rune() {
+	case '1':
+		pages.SwitchToPage("queue")
+		return nil
+	case '2':
+		pages.SwitchToPage("library")
+		return nil
+	}
+
+	return event
 }
 
 func libraryKeyHandler(event *tcell.EventKey) *tcell.EventKey {
@@ -151,7 +176,7 @@ func libraryKeyHandler(event *tcell.EventKey) *tcell.EventKey {
 		} else if focused == trackList {
 			currentTrackIndex := trackList.GetCurrentItem()
 			currentTrackName, currentTrackID := trackList.GetItemText(currentTrackIndex)
-			playTrack(currentTrackIndex, currentTrackName, currentTrackID, 0)
+			addToQueueAndPlay(currentTrackIndex, currentTrackName, currentTrackID, 0)
 		}
 		return nil
 	}
@@ -160,14 +185,7 @@ func libraryKeyHandler(event *tcell.EventKey) *tcell.EventKey {
 	case 'q':
 		app.Stop()
 	case 'p':
-		speaker.Lock()
-		playerCtrl.Paused = !playerCtrl.Paused
-		if playerCtrl.Paused {
-			killTicker <- true
-		} else {
-			go trackTime()
-		}
-		speaker.Unlock()
+		pauseTrack()
 
 	case 'h':
 		focused := app.GetFocus()
@@ -191,11 +209,61 @@ func libraryKeyHandler(event *tcell.EventKey) *tcell.EventKey {
 		} else if focused == trackList {
 			currentTrackIndex := trackList.GetCurrentItem()
 			currentTrackName, currentTrackID := trackList.GetItemText(currentTrackIndex)
-			playTrack(currentTrackIndex, currentTrackName, currentTrackID, 0)
+			addToQueueAndPlay(currentTrackIndex, currentTrackName, currentTrackID, 0)
+			trackList.SetCurrentItem(currentTrackIndex + 1)
 		}
-
 		return nil
 
+	case '>':
+		nextTrack()
+	case '<':
+		previousTrack()
+
+	case ' ':
+		focused := app.GetFocus()
+		if focused == trackList {
+			currentTrackIndex := trackList.GetCurrentItem()
+			currentTrackName, currentTrackID := trackList.GetItemText(currentTrackIndex)
+			addToQueue(currentTrackIndex, currentTrackName, currentTrackID, 0)
+			trackList.SetCurrentItem(currentTrackIndex + 1)
+		}
+		return nil
+	}
+
+	return event
+}
+
+func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
+	switch event.Key() {
+	case tcell.KeyRight:
+		currentTrackIndex := queueList.GetCurrentItem()
+		currentTrackName, currentTrackID := queueList.GetItemText(currentTrackIndex)
+		playTrack(currentTrackIndex, currentTrackName, currentTrackID, 0)
+		return nil
+	case tcell.KeyLeft:
+		return nil
+	}
+
+	switch event.Rune() {
+	case 'q':
+		app.Stop()
+		return nil
+	case 'p':
+		pauseTrack()
+		return nil
+	case 'j':
+		return tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone)
+	case 'k':
+		return tcell.NewEventKey(tcell.KeyUp, 0, tcell.ModNone)
+	case 'l':
+		currentTrackIndex := queueList.GetCurrentItem()
+		currentTrackName, currentTrackID := queueList.GetItemText(currentTrackIndex)
+		playTrack(currentTrackIndex, currentTrackName, currentTrackID, 0)
+		return nil
+	case '>':
+		nextTrack()
+	case '<':
+		previousTrack()
 	}
 
 	return event
@@ -214,12 +282,34 @@ func updateCurrentTrackText() {
 	totalTime := getTimeString(currentTrack.stream.Len() / sr.N(time.Second))
 
 	// fmt.Fprintf(currentTrack, "%s: %s - %s", status, queue.tracks[0].artist, queue.tracks[0].title)
-	if currentTime == totalTime {
+	if currentTrack.stream.Position() == currentTrack.stream.Len() {
 		currentTrackText.Clear()
+		nextTrack()
 	} else {
-		fmt.Fprintf(currentTrackText, "%s: %s - %s\t%s / %s\n", status, currentTrack.artist, currentTrack.title, currentTime, totalTime)
+		fmt.Fprintf(currentTrackText, "%s: %s - %s\t%s / %s\tQueue position: %d / %d", status, currentTrack.artist, currentTrack.title, currentTime, totalTime, queuePosition+1, queueList.GetItemCount())
 	}
 	app.Draw()
+}
+
+func gotoLoadingPage() {
+	pages.SwitchToPage("loading library")
+	go func() {
+		createDatabase()
+
+		fmt.Fprint(loadingTextBox, "Loading...")
+		app.Draw()
+
+		loadDatabase()
+
+		pages.SwitchToPage("library")
+		initLibraryPage()
+		app.Draw()
+	}()
+}
+
+func gotoLibraryPage() {
+	pages.SwitchToPage("library")
+	initLibraryPage()
 }
 
 func getTimeString(time int) string {

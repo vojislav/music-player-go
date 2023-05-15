@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/rand"
+	"os"
 
 	"github.com/rivo/tview"
 )
@@ -15,7 +16,11 @@ func loginUser() {
 	writeConfig()
 
 	if ping() {
-		gotoLoadingPage()
+		if _, err := os.Stat(databaseFile); err == nil || *reloadDatabaseFlag {
+			gotoLibraryPage()
+		} else {
+			gotoLoadingPage()
+		}
 	} else {
 		deleteConfig()
 		loginStatus.Clear()
