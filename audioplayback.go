@@ -31,43 +31,6 @@ type Track struct {
 	duration int
 }
 
-func nextTrack() {
-	if queuePosition+1 == queueList.GetItemCount() {
-		return
-	}
-
-	queuePosition += 1
-
-	nextTrackName, nextTrackID := queueList.GetItemText(queuePosition)
-	playTrack(queuePosition, nextTrackName, nextTrackID, 0)
-}
-
-func previousTrack() {
-	if queuePosition-1 < 0 {
-		return
-	}
-
-	queuePosition -= 1
-
-	nextTrackName, nextTrackID := queueList.GetItemText(queuePosition)
-	playTrack(queuePosition, nextTrackName, nextTrackID, 0)
-}
-
-func pauseTrack() {
-	speaker.Lock()
-	if playerCtrl.Streamer == nil {
-		return
-	}
-
-	playerCtrl.Paused = !playerCtrl.Paused
-	if playerCtrl.Paused {
-		killTicker <- true
-	} else {
-		go trackTime()
-	}
-	speaker.Unlock()
-}
-
 func playTrack(trackIndex int, trackName string, trackIDString string, _ rune) {
 	fileName := download(trackIDString)
 
@@ -97,6 +60,27 @@ func playTrack(trackIndex int, trackName string, trackIDString string, _ rune) {
 	go trackTime()
 }
 
+func pauseTrack() {
+	if currentTrack.stream == nil {
+		return
+	}
+
+	speaker.Lock()
+	playerCtrl.Paused = !playerCtrl.Paused
+	if playerCtrl.Paused {
+		killTicker <- true
+	} else {
+		go trackTime()
+	}
+	speaker.Unlock()
+}
+
+func stopTrack() {
+	speaker.Clear()
+	currentTrack = Track{stream: nil}
+	killTicker <- true
+}
+
 func trackTime() {
 	updateCurrentTrackText()
 	ticker = time.NewTicker(time.Second)
@@ -113,6 +97,28 @@ func trackTime() {
 			return
 		}
 	}
+}
+
+func nextTrack() {
+	if queuePosition+1 == queueList.GetItemCount() {
+		return
+	}
+
+	queuePosition += 1
+
+	nextTrackName, nextTrackID := queueList.GetItemText(queuePosition)
+	playTrack(queuePosition, nextTrackName, nextTrackID, 0)
+}
+
+func previousTrack() {
+	if queuePosition-1 < 0 {
+		return
+	}
+
+	queuePosition -= 1
+
+	nextTrackName, nextTrackID := queueList.GetItemText(queuePosition)
+	playTrack(queuePosition, nextTrackName, nextTrackID, 0)
 }
 
 func getStream(path string) beep.StreamSeekCloser {

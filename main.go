@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/faiface/beep"
 	"github.com/faiface/beep/speaker"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -36,7 +35,7 @@ func main() {
 	flag.Parse()
 
 	speaker.Init(sr, sr.N(time.Second/10))
-	playerCtrl = &beep.Ctrl{Streamer: nil, Paused: false}
+	currentTrack = Track{stream: nil}
 
 	initView()
 

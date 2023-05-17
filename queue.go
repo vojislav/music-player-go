@@ -1,6 +1,8 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 var queuePosition = -1
 
@@ -21,4 +23,15 @@ func addToQueueAndPlay(currentTrackIndex int, currentTrackName, currentTrackID s
 	queuePosition = queueList.GetItemCount() - 1
 
 	playTrack(queuePosition, currentTrackName, currentTrackID, 0)
+}
+
+func removeFromQueue() {
+	currentTrackIndex := queueList.GetCurrentItem()
+	queueList.RemoveItem(currentTrackIndex)
+	if currentTrackIndex < queuePosition {
+		queuePosition--
+	} else if currentTrackIndex == queuePosition {
+		stopTrack()
+		queuePosition = -1
+	}
 }

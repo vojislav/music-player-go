@@ -218,6 +218,8 @@ func libraryKeyHandler(event *tcell.EventKey) *tcell.EventKey {
 		nextTrack()
 	case '<':
 		previousTrack()
+	case 's':
+		stopTrack()
 
 	case ' ':
 		focused := app.GetFocus()
@@ -242,6 +244,8 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 	case tcell.KeyLeft:
 		return nil
+	case tcell.KeyDelete:
+		removeFromQueue()
 	}
 
 	switch event.Rune() {
@@ -264,6 +268,8 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		nextTrack()
 	case '<':
 		previousTrack()
+	case 's':
+		stopTrack()
 	}
 
 	return event
@@ -271,6 +277,10 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 func updateCurrentTrackText() {
 	currentTrackText.Clear()
+	if currentTrack.stream == nil {
+		return
+	}
+
 	var status string
 	if playerCtrl.Paused {
 		status = "Paused"
