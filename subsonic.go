@@ -37,6 +37,7 @@ type Album struct {
 }
 
 var artists = make(map[int]*Artist)
+var downloadPercent float64
 
 func ping() bool {
 	req, err := http.NewRequest("GET", config.ServerURL+"ping", nil)
@@ -250,10 +251,16 @@ func getTracks(albumID int) bool {
 	return true
 }
 
-func download(trackIDString string) string {
-	fileName := fmt.Sprint(cacheDirectory, trackIDString, ".mp3")
+func downloadCallback(trackIDString string, callback func(int, string, string, rune)) {
+	_ = download(trackIDString)
+	callback(0, "", trackIDString, 0)
+	app.Draw()
+}
 
-	if _, err := os.Stat(fileName); err != nil {
+func download(trackIDString string) string {
+	filePath := fmt.Sprint(cacheDirectory, trackIDString, ".mp3")
+
+	if _, err := os.Stat(filePath); err != nil {
 		trackID := toInt(trackIDString)
 
 		req, err := http.NewRequest("GET", config.ServerURL+"stream", nil)
@@ -271,13 +278,26 @@ func download(trackIDString string) string {
 		params.Add("id", fmt.Sprint(trackID))
 		req.URL.RawQuery = params.Encode()
 
+		headResp, err := http.Head(req.URL.String())
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fileSize, err := strconv.Atoi(headResp.Header.Get("Content-Length"))
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		res, err := http.DefaultClient.Do(req)
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer res.Body.Close()
 
-		file, err := os.Create(fileName)
+		downloadDone := make(chan bool)
+		go getDownloadProgress(downloadDone, filePath, fileSize)
+
+		file, err := os.Create(filePath)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -286,9 +306,11 @@ func download(trackIDString string) string {
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		downloadDone <- true
 	}
 
-	return fileName
+	return filePath
 }
 
 func scrobble(trackID int, submission string) bool {

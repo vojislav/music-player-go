@@ -31,7 +31,7 @@ type Track struct {
 	duration int
 }
 
-func playTrack(trackIndex int, trackName string, trackIDString string, _ rune) {
+func playTrack(trackIndex int, _ string, trackIDString string, _ rune) {
 	fileName := download(trackIDString)
 
 	stream := getStream(fileName)

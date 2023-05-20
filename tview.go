@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"os"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -12,7 +14,7 @@ var app = tview.NewApplication()
 var pages = tview.NewPages()
 var artistList, albumList, trackList, queueList *tview.List
 var loadingPopup tview.Primitive
-var currentTrackText, loadingTextBox, loginStatus *tview.TextView
+var currentTrackText, downloadProgressText, loadingTextBox, loginStatus *tview.TextView
 
 var popup = func(p tview.Primitive, width, height int) tview.Primitive {
 	return tview.NewGrid().
@@ -60,17 +62,21 @@ func initView() {
 
 	trackList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
 	trackList.SetBorder(true).SetTitle("Tracks")
-	trackList.SetSelectedFunc(addToQueueAndPlay)
 
 	currentTrackText = tview.NewTextView()
 	currentTrackText.SetBorder(true)
+
+	downloadProgressText = tview.NewTextView()
+	downloadProgressText.SetBorder(true)
 
 	libraryFlex := tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
 			AddItem(artistList, 0, 1, true).
 			AddItem(albumList, 0, 1, false).
 			AddItem(trackList, 0, 1, false), 0, 1, true).
-		AddItem(currentTrackText, 3, 1, false)
+		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
+			AddItem(currentTrackText, 0, 1, false).
+			AddItem(downloadProgressText, 10, 1, false), 3, 1, false)
 
 	pages.AddPage("library", libraryFlex, true, true)
 
@@ -158,6 +164,11 @@ func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 func libraryKeyHandler(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Key() {
+	case tcell.KeyEnter:
+		currentTrackIndex := trackList.GetCurrentItem()
+		_, currentTrackID := trackList.GetItemText(currentTrackIndex)
+		go downloadCallback(currentTrackID, addToQueueAndPlay)
+		trackList.SetCurrentItem(currentTrackIndex + 1)
 	case tcell.KeyLeft:
 		focused := app.GetFocus()
 		if focused == albumList {
@@ -208,8 +219,8 @@ func libraryKeyHandler(event *tcell.EventKey) *tcell.EventKey {
 			app.SetFocus(trackList)
 		} else if focused == trackList {
 			currentTrackIndex := trackList.GetCurrentItem()
-			currentTrackName, currentTrackID := trackList.GetItemText(currentTrackIndex)
-			addToQueueAndPlay(currentTrackIndex, currentTrackName, currentTrackID, 0)
+			_, currentTrackID := trackList.GetItemText(currentTrackIndex)
+			go downloadCallback(currentTrackID, addToQueueAndPlay)
 			trackList.SetCurrentItem(currentTrackIndex + 1)
 		}
 		return nil
@@ -225,9 +236,13 @@ func libraryKeyHandler(event *tcell.EventKey) *tcell.EventKey {
 		focused := app.GetFocus()
 		if focused == trackList {
 			currentTrackIndex := trackList.GetCurrentItem()
-			currentTrackName, currentTrackID := trackList.GetItemText(currentTrackIndex)
-			addToQueue(currentTrackIndex, currentTrackName, currentTrackID, 0)
+			_, currentTrackID := trackList.GetItemText(currentTrackIndex)
+			go downloadCallback(currentTrackID, addToQueue)
 			trackList.SetCurrentItem(currentTrackIndex + 1)
+		} else if focused == albumList {
+			currentAlbumIndex := albumList.GetCurrentItem()
+			_, currentAlbumID := trackList.GetItemText(currentAlbumIndex)
+			addAlbumToQueue(currentAlbumID)
 		}
 		return nil
 	}
@@ -299,6 +314,39 @@ func updateCurrentTrackText() {
 		fmt.Fprintf(currentTrackText, "%s: %s - %s\t%s / %s\tQueue position: %d / %d", status, currentTrack.artist, currentTrack.title, currentTime, totalTime, queuePosition+1, queueList.GetItemCount())
 	}
 	app.Draw()
+}
+
+func getDownloadProgress(done chan bool, filePath string, fileSize int) {
+	for {
+		select {
+		case <-done:
+			downloadProgressText.Clear()
+			return
+		default:
+			file, err := os.Open(filePath)
+			if err != nil {
+				continue
+			}
+
+			fi, err := file.Stat()
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			size := fi.Size()
+
+			if size == 0 {
+				size = 1
+			}
+
+			downloadPercent = float64(size) / float64(fileSize) * 100
+			downloadProgressText.Clear()
+			fmt.Fprintf(downloadProgressText, "%.0f%%", downloadPercent)
+
+			app.Draw()
+		}
+		time.Sleep(time.Second)
+	}
 }
 
 func gotoLoadingPage() {
