@@ -9,24 +9,26 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var cacheDirectory, configDirectory, databaseFile, configFile string
+var cacheDirectory, configDirectory, databaseFile, configFile, initScriptFile string
 var reloadDatabaseFlag *bool
 
 func init() {
 	homeDirectory, _ := os.UserHomeDir()
-
-	cacheDirectory = homeDirectory + "/.cache/music-player-go/"
-	if _, err := os.Stat(cacheDirectory); err != nil {
-		os.Mkdir(cacheDirectory, 0644)
-	}
-
 	configDirectory = homeDirectory + "/.config/music-player-go/"
-	if _, err := os.Stat(configDirectory); err != nil {
-		os.Mkdir(configDirectory, 0644)
-	}
 
 	databaseFile = configDirectory + "database.db"
 	configFile = configDirectory + "config"
+	initScriptFile = configDirectory + "init.sql"
+
+	cacheDirectory = homeDirectory + "/.cache/music-player-go/"
+	if _, err := os.Stat(cacheDirectory); err != nil {
+		os.Mkdir(cacheDirectory, 0755)
+	}
+
+	if _, err := os.Stat(configDirectory); err != nil {
+		os.Mkdir(configDirectory, 0755)
+		makeInitScript()
+	}
 }
 
 func main() {
