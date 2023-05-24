@@ -12,6 +12,7 @@ import (
 
 var app = tview.NewApplication()
 var pages = tview.NewPages()
+var bottomPanel = tview.NewPages()
 var artistList, albumList, trackList, queueList *tview.List
 var loadingPopup tview.Primitive
 var currentTrackText, downloadProgressText, loadingTextBox, loginStatus *tview.TextView
@@ -66,17 +67,24 @@ func initView() {
 	currentTrackText = tview.NewTextView()
 	currentTrackText.SetBorder(true)
 
+	searchInput := tview.NewInputField().
+		SetLabel("Search: ")
+
 	downloadProgressText = tview.NewTextView()
 	downloadProgressText.SetBorder(true)
+
+	bottomPanel.AddPage("current track info", tview.NewFlex().SetDirection(tview.FlexColumn).
+		AddItem(currentTrackText, 0, 1, false).
+		AddItem(downloadProgressText, 10, 1, false), true, true)
+
+	bottomPanel.AddPage("search", searchInput, true, false)
 
 	libraryFlex := tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
 			AddItem(artistList, 0, 1, true).
 			AddItem(albumList, 0, 1, false).
 			AddItem(trackList, 0, 1, false), 0, 1, true).
-		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
-			AddItem(currentTrackText, 0, 1, false).
-			AddItem(downloadProgressText, 10, 1, false), 3, 1, false)
+		AddItem(bottomPanel, 3, 1, false)
 
 	pages.AddPage("library", libraryFlex, true, true)
 
@@ -115,7 +123,6 @@ func fillArtistList() {
 		rows.Scan(&artistID, &name)
 		artistList.AddItem(name, fmt.Sprint(artistID), 0, nil)
 	}
-
 }
 
 func fillAlbumsList(_ int, artistName, artistIDString string, _ rune) {
@@ -130,7 +137,6 @@ func fillAlbumsList(_ int, artistName, artistIDString string, _ rune) {
 
 		albumList.AddItem(fmt.Sprintf("(%d) %s", year, name), fmt.Sprint(albumID), 0, nil)
 	}
-
 }
 
 func fillTracksList(_ int, albumName, albumIDString string, _ rune) {
@@ -146,7 +152,6 @@ func fillTracksList(_ int, albumName, albumIDString string, _ rune) {
 
 		trackList.AddItem(fmt.Sprintf("%d. %s", track, title), fmt.Sprint(trackID), 0, nil)
 	}
-
 }
 
 func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
@@ -244,6 +249,11 @@ func libraryKeyHandler(event *tcell.EventKey) *tcell.EventKey {
 			_, currentAlbumID := trackList.GetItemText(currentAlbumIndex)
 			addAlbumToQueue(currentAlbumID)
 		}
+		return nil
+
+	case '/':
+		app.SetFocus(bottomPanel)
+		bottomPanel.SwitchToPage("search")
 		return nil
 	}
 
@@ -347,6 +357,9 @@ func getDownloadProgress(done chan bool, filePath string, fileSize int) {
 		}
 		time.Sleep(time.Second)
 	}
+}
+
+func searchDone(key tcell.Key) {
 }
 
 func gotoLoadingPage() {
