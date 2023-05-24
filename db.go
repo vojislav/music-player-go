@@ -123,6 +123,7 @@ func loadDatabase() {
 }
 
 func makeInitScript() {
+	fmt.Println("nesto")
 	initScript := `DROP TABLE IF EXISTS artists;
 DROP TABLE IF EXISTS albums;
 DROP TABLE IF EXISTS tracks;

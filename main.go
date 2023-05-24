@@ -29,6 +29,10 @@ func init() {
 		os.Mkdir(configDirectory, 0755)
 		makeInitScript()
 	}
+
+	if _, err := os.Stat(initScriptFile); err != nil {
+		makeInitScript()
+	}
 }
 
 func main() {
