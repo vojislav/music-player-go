@@ -82,6 +82,12 @@ func loadDatabase() {
 		return
 	}
 
+	playlistQuery, err := db.Prepare("INSERT OR IGNORE INTO playlists(id, name) VALUES(?,?)")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	trackCount, err := db.Prepare("SELECT COUNT(*) FROM tracks")
 	if err != nil {
 		fmt.Println(err)
@@ -120,6 +126,15 @@ func loadDatabase() {
 			app.Draw()
 		}
 	}
+
+	playlists := getPlaylists()
+	for _, playlist := range playlists {
+		_, err := playlistQuery.Exec(playlist.id, playlist.name)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+	}
 }
 
 func makeInitScript() {
@@ -127,6 +142,7 @@ func makeInitScript() {
 	initScript := `DROP TABLE IF EXISTS artists;
 DROP TABLE IF EXISTS albums;
 DROP TABLE IF EXISTS tracks;
+DROP TABLE IF EXISTS playlists;
 
 CREATE TABLE artists (
     id INTEGER PRIMARY KEY,
@@ -150,6 +166,11 @@ CREATE TABLE tracks (
     duration INTEGER,
     FOREIGN KEY (artistID) REFERENCES artists(id),
     FOREIGN KEY (albumID) REFERENCES albums(id)
+);
+
+CREATE TABLE playlists (
+	id INTEGER PRIMARY KEY,
+	name TEXT
 );`
 
 	f, err := os.Create(initScriptFile)

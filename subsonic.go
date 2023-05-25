@@ -36,6 +36,11 @@ type Album struct {
 	tracks     map[int]*Track
 }
 
+type Playlist struct {
+	id   int
+	name string
+}
+
 var artists = make(map[int]*Artist)
 var downloadPercent float64
 
@@ -148,7 +153,7 @@ func getAlbums(artistID int) bool {
 		log.Fatal(err)
 	}
 
-	query, err := gojq.Parse(`."subsonic-response".artist.album[] |  .id + "\t" + .artist + "\t" + .name + "\t" + (.year|tostring)`)
+	query, err := gojq.Parse(`."subsonic-response".artist.album[] | .id + "\t" + .artist + "\t" + .name + "\t" + (.year|tostring)`)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -361,4 +366,52 @@ func toInt(s string) int {
 		return -1
 	}
 	return int(n)
+}
+
+func getPlaylists() []Playlist {
+	req, err := http.NewRequest("GET", config.ServerURL+"getPlaylists", nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	params := req.URL.Query()
+	params.Add("u", config.Username)
+	params.Add("t", config.Token)
+	params.Add("s", config.Salt)
+	params.Add("v", config.Version)
+	params.Add("c", client_name)
+	params.Add("f", "json")
+	req.URL.RawQuery = params.Encode()
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	query, err := gojq.Parse(`."subsonic-response".playlists.playlist[] | .id + "\t" + .name`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var resJSON map[string]interface{}
+	json.Unmarshal(body, &resJSON)
+
+	iter := query.Run(resJSON)
+
+	var playlists []Playlist
+
+	for playlist, ok := iter.Next(); ok; playlist, ok = iter.Next() {
+		split := strings.Split(playlist.(string), "\t")
+		id := toInt(split[0])
+		name := split[1]
+		playlists = append(playlists, Playlist{id, name})
+	}
+
+	return playlists
 }
