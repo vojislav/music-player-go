@@ -16,6 +16,7 @@ var bottomPanel = tview.NewPages()
 var artistList, albumList, trackList, queueList *tview.List
 var loadingPopup tview.Primitive
 var currentTrackText, downloadProgressText, loadingTextBox, loginStatus *tview.TextView
+var searchInput *tview.InputField
 
 var popup = func(p tview.Primitive, width, height int) tview.Primitive {
 	return tview.NewGrid().
@@ -45,7 +46,24 @@ func initView() {
 
 	pages.AddPage("login", loginGrid, true, false)
 
-	// load library page
+	// bottom panel
+	currentTrackText = tview.NewTextView()
+	currentTrackText.SetBorder(true)
+
+	searchInput = tview.NewInputField().
+		SetLabel("Search: ").
+		SetDoneFunc(searchDone)
+
+	downloadProgressText = tview.NewTextView()
+	downloadProgressText.SetBorder(true)
+
+	bottomPanel.AddPage("current track info", tview.NewFlex().SetDirection(tview.FlexColumn).
+		AddItem(currentTrackText, 0, 1, false).
+		AddItem(downloadProgressText, 10, 1, false), true, true)
+
+	bottomPanel.AddPage("search", searchInput, true, false)
+
+	// loading page
 	loadingTextBox = tview.NewTextView()
 	loadingTextBox.SetBorder(true)
 
@@ -64,21 +82,6 @@ func initView() {
 	trackList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
 	trackList.SetBorder(true).SetTitle("Tracks")
 
-	currentTrackText = tview.NewTextView()
-	currentTrackText.SetBorder(true)
-
-	searchInput := tview.NewInputField().
-		SetLabel("Search: ")
-
-	downloadProgressText = tview.NewTextView()
-	downloadProgressText.SetBorder(true)
-
-	bottomPanel.AddPage("current track info", tview.NewFlex().SetDirection(tview.FlexColumn).
-		AddItem(currentTrackText, 0, 1, false).
-		AddItem(downloadProgressText, 10, 1, false), true, true)
-
-	bottomPanel.AddPage("search", searchInput, true, false)
-
 	libraryFlex := tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
 			AddItem(artistList, 0, 1, true).
@@ -94,7 +97,7 @@ func initView() {
 	queueList.SetSelectedFunc(playTrack)
 	queueFlex := tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(queueList, 0, 1, true).
-		AddItem(currentTrackText, 3, 1, false)
+		AddItem(bottomPanel, 3, 1, false)
 
 	pages.AddPage("queue", queueFlex, true, false)
 
@@ -155,6 +158,11 @@ func fillTracksList(_ int, albumName, albumIDString string, _ rune) {
 }
 
 func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
+	focused := app.GetFocus()
+	if focused == searchInput {
+		return event
+	}
+
 	switch event.Rune() {
 	case '1':
 		pages.SwitchToPage("queue")
@@ -168,6 +176,11 @@ func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 }
 
 func libraryKeyHandler(event *tcell.EventKey) *tcell.EventKey {
+	focused := app.GetFocus()
+	if focused == searchInput {
+		return event
+	}
+
 	switch event.Key() {
 	case tcell.KeyEnter:
 		currentTrackIndex := trackList.GetCurrentItem()
@@ -261,6 +274,11 @@ func libraryKeyHandler(event *tcell.EventKey) *tcell.EventKey {
 }
 
 func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
+	focused := app.GetFocus()
+	if focused == searchInput {
+		return event
+	}
+
 	switch event.Key() {
 	case tcell.KeyRight:
 		currentTrackIndex := queueList.GetCurrentItem()
