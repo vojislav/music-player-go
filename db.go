@@ -47,7 +47,7 @@ func queryAlbums(artistID int) *sql.Rows {
 	return rows
 }
 
-func queryTracks(albumID int) *sql.Rows {
+func queryAlbumTracks(albumID int) *sql.Rows {
 	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
 		fmt.Println(err)
@@ -55,6 +55,17 @@ func queryTracks(albumID int) *sql.Rows {
 	defer db.Close()
 
 	rows, _ := db.Query("SELECT * FROM tracks WHERE albumID=? ORDER BY track", albumID)
+	return rows
+}
+
+func queryPlaylistTracks(playlistID int) *sql.Rows {
+	db, err := sql.Open("sqlite3", databaseFile)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+	rows, _ := db.Query("SELECT * FROM tracks WHERE playlistID=?", playlistID)
 	return rows
 }
 
@@ -83,6 +94,12 @@ func loadDatabase() {
 	}
 
 	playlistQuery, err := db.Prepare("INSERT OR IGNORE INTO playlists(id, name) VALUES(?,?)")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	playlistTracksQuery, err := db.Prepare("UPDATE tracks SET playlistID=? WHERE id=?")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -134,6 +151,14 @@ func loadDatabase() {
 			fmt.Println(err)
 			return
 		}
+		playlistTracks := getPlaylistTracks(playlist.id)
+		for _, trackID := range playlistTracks {
+			_, err := playlistTracksQuery.Exec(playlist.id, trackID)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+		}
 	}
 }
 
@@ -162,10 +187,12 @@ CREATE TABLE tracks (
     title TEXT,
     albumID INTEGER,
     artistID INTEGER,
+	playlistID INTEGER DEFAULT -1,
     track INTEGER,
     duration INTEGER,
     FOREIGN KEY (artistID) REFERENCES artists(id),
-    FOREIGN KEY (albumID) REFERENCES albums(id)
+    FOREIGN KEY (albumID) REFERENCES albums(id),
+    FOREIGN KEY (playlistID) REFERENCES playlists(id)
 );
 
 CREATE TABLE playlists (

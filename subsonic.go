@@ -415,3 +415,48 @@ func getPlaylists() []Playlist {
 
 	return playlists
 }
+
+func getPlaylistTracks(playlistID int) []int {
+	req, err := http.NewRequest("GET", config.ServerURL+"getPlaylist", nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	params := req.URL.Query()
+	params.Add("u", config.Username)
+	params.Add("t", config.Token)
+	params.Add("s", config.Salt)
+	params.Add("v", config.Version)
+	params.Add("c", client_name)
+	params.Add("f", "json")
+	params.Add("id", fmt.Sprint(playlistID))
+	req.URL.RawQuery = params.Encode()
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	query, err := gojq.Parse(`."subsonic-response".playlist.entry[].id`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var resJSON map[string]interface{}
+	json.Unmarshal(body, &resJSON)
+
+	var trackIDs []int
+
+	iter := query.Run(resJSON)
+	for trackID, ok := iter.Next(); ok; trackID, ok = iter.Next() {
+		trackIDs = append(trackIDs, toInt(trackID.(string)))
+	}
+
+	return trackIDs
+}

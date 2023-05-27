@@ -17,6 +17,7 @@ var artistList, albumList, trackList, queueList *tview.List
 var loadingPopup tview.Primitive
 var currentTrackText, downloadProgressText, loadingTextBox, loginStatus *tview.TextView
 var searchInput *tview.InputField
+var playlistList, playlistTracks *tview.List
 
 var popup = func(p tview.Primitive, width, height int) tview.Primitive {
 	return tview.NewGrid().
@@ -101,6 +102,18 @@ func initView() {
 
 	pages.AddPage("queue", queueFlex, true, false)
 
+	playlistList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
+	playlistList.SetBorder(true).SetTitle("Playlists")
+	playlistList.SetChangedFunc(showPlaylist)
+
+	playlistTracks = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
+	playlistTracks.SetBorder(true)
+	playlistFlex := tview.NewFlex().
+		AddItem(playlistList, 0, 1, true).
+		AddItem(playlistTracks, 0, 1, false)
+
+	pages.AddPage("playlists", playlistFlex, true, false)
+
 	// key handlers
 	app.SetInputCapture(appInputHandler)
 	libraryFlex.SetInputCapture(libraryKeyHandler)
@@ -147,13 +160,40 @@ func fillTracksList(_ int, albumName, albumIDString string, _ rune) {
 
 	albumID := toInt(albumIDString)
 
-	rows := queryTracks(int(albumID))
+	rows := queryAlbumTracks(albumID)
 	for rows.Next() {
-		var trackID, albumID, artistID, track, duration int
+		var trackID, albumID, artistID, playlistID, track, duration int
 		var title string
-		rows.Scan(&trackID, &title, &albumID, &artistID, &track, &duration)
+		rows.Scan(&trackID, &title, &albumID, &artistID, &playlistID, &track, &duration)
 
 		trackList.AddItem(fmt.Sprintf("%d. %s", track, title), fmt.Sprint(trackID), 0, nil)
+	}
+}
+
+func initPlaylistPage() {
+	fillPlaylists()
+	main, secondary := playlistList.GetItemText(0)
+	showPlaylist(0, main, secondary, 0)
+}
+
+func fillPlaylists() {
+	playlists := getPlaylists()
+	for _, playlist := range playlists {
+		playlistList.AddItem(playlist.name, fmt.Sprint(playlist.id), 0, nil)
+	}
+}
+
+func showPlaylist(_ int, playlistName, playlistIDString string, _ rune) {
+	playlistTracks.Clear()
+
+	playlistID := toInt(playlistIDString)
+	rows := queryPlaylistTracks(playlistID)
+	for rows.Next() {
+		var trackID, albumID, artistID, playlistID, track, duration int
+		var title string
+		rows.Scan(&trackID, &title, &albumID, &artistID, &playlistID, &track, &duration)
+
+		playlistTracks.AddItem(fmt.Sprintf("%d. %d - %s", track, artistID, title), fmt.Sprint(trackID), 0, nil)
 	}
 }
 
@@ -169,6 +209,9 @@ func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 	case '2':
 		pages.SwitchToPage("library")
+		return nil
+	case '3':
+		gotoPlaylistPage()
 		return nil
 	}
 
@@ -399,6 +442,11 @@ func gotoLoadingPage() {
 func gotoLibraryPage() {
 	pages.SwitchToPage("library")
 	initLibraryPage()
+}
+
+func gotoPlaylistPage() {
+	pages.SwitchToPage("playlists")
+	initPlaylistPage()
 }
 
 func getTimeString(time int) string {
