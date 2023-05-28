@@ -12,6 +12,7 @@ import (
 
 var app = tview.NewApplication()
 var pages = tview.NewPages()
+var mainPanel = tview.NewPages()
 var bottomPanel = tview.NewPages()
 var artistList, albumList, trackList, queueList *tview.List
 var loadingPopup tview.Primitive
@@ -47,6 +48,20 @@ func initView() {
 
 	pages.AddPage("login", loginGrid, true, false)
 
+	// loading page
+	loadingTextBox = tview.NewTextView()
+	loadingTextBox.SetBorder(true)
+
+	loadingPopup = popup(loadingTextBox, 40, 10)
+	pages.AddPage("loading library", loadingPopup, true, false)
+
+	// main panel
+	mainFlex := tview.NewFlex().SetDirection(tview.FlexRow).
+		AddItem(mainPanel, 0, 1, true).
+		AddItem(bottomPanel, 3, 1, false)
+
+	pages.AddPage("main", mainFlex, true, false)
+
 	// bottom panel
 	currentTrackText = tview.NewTextView()
 	currentTrackText.SetBorder(true)
@@ -64,13 +79,6 @@ func initView() {
 
 	bottomPanel.AddPage("search", searchInput, true, false)
 
-	// loading page
-	loadingTextBox = tview.NewTextView()
-	loadingTextBox.SetBorder(true)
-
-	loadingPopup = popup(loadingTextBox, 40, 10)
-	pages.AddPage("loading library", loadingPopup, true, false)
-
 	// library page
 	artistList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
 	artistList.SetBorder(true).SetTitle("Artist")
@@ -87,21 +95,20 @@ func initView() {
 		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
 			AddItem(artistList, 0, 1, true).
 			AddItem(albumList, 0, 1, false).
-			AddItem(trackList, 0, 1, false), 0, 1, true).
-		AddItem(bottomPanel, 3, 1, false)
+			AddItem(trackList, 0, 1, false), 0, 1, true)
 
-	pages.AddPage("library", libraryFlex, true, true)
+	mainPanel.AddPage("library", libraryFlex, true, true)
 
 	// queue page
 	queueList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
 	queueList.SetBorder(true).SetTitle("Queue")
 	queueList.SetSelectedFunc(playTrack)
 	queueFlex := tview.NewFlex().SetDirection(tview.FlexRow).
-		AddItem(queueList, 0, 1, true).
-		AddItem(bottomPanel, 3, 1, false)
+		AddItem(queueList, 0, 1, true)
 
-	pages.AddPage("queue", queueFlex, true, false)
+	mainPanel.AddPage("queue", queueFlex, true, false)
 
+	// playlist
 	playlistList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
 	playlistList.SetBorder(true).SetTitle("Playlists")
 	playlistList.SetChangedFunc(showPlaylist)
@@ -110,14 +117,15 @@ func initView() {
 	playlistTracks.SetBorder(true)
 	playlistFlex := tview.NewFlex().
 		AddItem(playlistList, 0, 1, true).
-		AddItem(playlistTracks, 0, 1, false)
+		AddItem(playlistTracks, 0, 3, false)
 
-	pages.AddPage("playlists", playlistFlex, true, false)
+	mainPanel.AddPage("playlists", playlistFlex, true, false)
 
 	// key handlers
 	app.SetInputCapture(appInputHandler)
-	libraryFlex.SetInputCapture(libraryKeyHandler)
+	libraryFlex.SetInputCapture(libraryInputHandler)
 	queueFlex.SetInputCapture(queueInputHandler)
+	playlistFlex.SetInputCapture(playlistInputHandler)
 }
 
 func initLibraryPage() {
@@ -189,11 +197,11 @@ func showPlaylist(_ int, playlistName, playlistIDString string, _ rune) {
 	playlistID := toInt(playlistIDString)
 	rows := queryPlaylistTracks(playlistID)
 	for rows.Next() {
-		var trackID, albumID, artistID, playlistID, track, duration int
-		var title string
-		rows.Scan(&trackID, &title, &albumID, &artistID, &playlistID, &track, &duration)
+		var trackID int
+		var artistName, title string
+		rows.Scan(&trackID, &artistName, &title)
 
-		playlistTracks.AddItem(fmt.Sprintf("%d. %d - %s", track, artistID, title), fmt.Sprint(trackID), 0, nil)
+		playlistTracks.AddItem(fmt.Sprintf("%s - %s", artistName, title), fmt.Sprint(trackID), 0, nil)
 	}
 }
 
@@ -205,20 +213,32 @@ func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 	switch event.Rune() {
 	case '1':
-		pages.SwitchToPage("queue")
+		mainPanel.SwitchToPage("queue")
 		return nil
 	case '2':
-		pages.SwitchToPage("library")
+		mainPanel.SwitchToPage("library")
 		return nil
 	case '3':
-		gotoPlaylistPage()
+		mainPanel.SwitchToPage("playlists")
 		return nil
+
+	case 'q':
+		app.Stop()
+	case 'p':
+		playPause()
+
+	case '>':
+		nextTrack()
+	case '<':
+		previousTrack()
+	case 's':
+		stopTrack()
 	}
 
 	return event
 }
 
-func libraryKeyHandler(event *tcell.EventKey) *tcell.EventKey {
+func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	focused := app.GetFocus()
 	if focused == searchInput {
 		return event
@@ -226,10 +246,13 @@ func libraryKeyHandler(event *tcell.EventKey) *tcell.EventKey {
 
 	switch event.Key() {
 	case tcell.KeyEnter:
-		currentTrackIndex := trackList.GetCurrentItem()
-		_, currentTrackID := trackList.GetItemText(currentTrackIndex)
-		go downloadCallback(currentTrackID, addToQueueAndPlay)
-		trackList.SetCurrentItem(currentTrackIndex + 1)
+		focused := app.GetFocus()
+		if focused == trackList {
+			currentTrackIndex := trackList.GetCurrentItem()
+			_, currentTrackID := trackList.GetItemText(currentTrackIndex)
+			go downloadCallback(currentTrackID, addToQueueAndPlay)
+			trackList.SetCurrentItem(currentTrackIndex + 1)
+		}
 	case tcell.KeyLeft:
 		focused := app.GetFocus()
 		if focused == albumList {
@@ -254,10 +277,6 @@ func libraryKeyHandler(event *tcell.EventKey) *tcell.EventKey {
 	}
 
 	switch event.Rune() {
-	case 'q':
-		app.Stop()
-	case 'p':
-		pauseTrack()
 
 	case 'h':
 		focused := app.GetFocus()
@@ -285,13 +304,6 @@ func libraryKeyHandler(event *tcell.EventKey) *tcell.EventKey {
 			trackList.SetCurrentItem(currentTrackIndex + 1)
 		}
 		return nil
-
-	case '>':
-		nextTrack()
-	case '<':
-		previousTrack()
-	case 's':
-		stopTrack()
 
 	case ' ':
 		focused := app.GetFocus()
@@ -335,12 +347,6 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	}
 
 	switch event.Rune() {
-	case 'q':
-		app.Stop()
-		return nil
-	case 'p':
-		pauseTrack()
-		return nil
 	case 'j':
 		return tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone)
 	case 'k':
@@ -350,12 +356,78 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		currentTrackName, currentTrackID := queueList.GetItemText(currentTrackIndex)
 		playTrack(currentTrackIndex, currentTrackName, currentTrackID, 0)
 		return nil
-	case '>':
-		nextTrack()
-	case '<':
-		previousTrack()
-	case 's':
-		stopTrack()
+	}
+
+	return event
+}
+
+func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
+	focused := app.GetFocus()
+	if focused == searchInput {
+		return event
+	}
+
+	switch event.Key() {
+	case tcell.KeyEnter:
+		focused := app.GetFocus()
+		if focused == playlistTracks {
+			currentTrackIndex := playlistTracks.GetCurrentItem()
+			_, currentTrackID := playlistTracks.GetItemText(currentTrackIndex)
+			go downloadCallback(currentTrackID, addToQueueAndPlay)
+			playlistTracks.SetCurrentItem(currentTrackIndex + 1)
+		}
+		return nil
+
+	case tcell.KeyLeft:
+		focused = app.GetFocus()
+		if focused == playlistTracks {
+			app.SetFocus(playlistList)
+		}
+		return nil
+
+	case tcell.KeyRight:
+		focused = app.GetFocus()
+		if focused == playlistList {
+			app.SetFocus(playlistTracks)
+		}
+		return nil
+
+	}
+
+	switch event.Rune() {
+	case 'h':
+		focused = app.GetFocus()
+		if focused == playlistTracks {
+			app.SetFocus(playlistList)
+		}
+		return nil
+
+	case 'j':
+		return tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone)
+	case 'k':
+		return tcell.NewEventKey(tcell.KeyUp, 0, tcell.ModNone)
+
+	case 'l':
+		focused = app.GetFocus()
+		if focused == playlistList {
+			app.SetFocus(playlistTracks)
+		} else if focused == playlistTracks {
+			currentTrackIndex := playlistTracks.GetCurrentItem()
+			_, currentTrackID := playlistTracks.GetItemText(currentTrackIndex)
+			go downloadCallback(currentTrackID, addToQueueAndPlay)
+			playlistTracks.SetCurrentItem(currentTrackIndex + 1)
+		}
+		return nil
+
+	case ' ':
+		focused := app.GetFocus()
+		if focused == playlistTracks {
+			currentTrackIndex := playlistTracks.GetCurrentItem()
+			_, currentTrackID := playlistTracks.GetItemText(currentTrackIndex)
+			go downloadCallback(currentTrackID, addToQueue)
+			playlistTracks.SetCurrentItem(currentTrackIndex + 1)
+		}
+		return nil
 	}
 
 	return event
@@ -440,13 +512,8 @@ func gotoLoadingPage() {
 }
 
 func gotoLibraryPage() {
-	pages.SwitchToPage("library")
+	pages.SwitchToPage("main")
 	initLibraryPage()
-}
-
-func gotoPlaylistPage() {
-	pages.SwitchToPage("playlists")
-	initPlaylistPage()
 }
 
 func getTimeString(time int) string {

@@ -60,7 +60,7 @@ func playTrack(trackIndex int, _ string, trackIDString string, _ rune) {
 	go trackTime()
 }
 
-func pauseTrack() {
+func playPause() {
 	if currentTrack.stream == nil {
 		return
 	}

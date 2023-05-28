@@ -65,7 +65,7 @@ func queryPlaylistTracks(playlistID int) *sql.Rows {
 	}
 	defer db.Close()
 
-	rows, _ := db.Query("SELECT * FROM tracks WHERE playlistID=?", playlistID)
+	rows, _ := db.Query("SELECT t.id, a.name, t.title FROM tracks t JOIN artists a ON t.artistID=a.id WHERE t.playlistID=?", playlistID)
 	return rows
 }
 
@@ -81,6 +81,7 @@ func loadDatabase() {
 		fmt.Println(err)
 		return
 	}
+
 	albumQuery, err := db.Prepare("INSERT OR IGNORE INTO albums(id, artistID, name, year) VALUES(?,?,?,?)")
 	if err != nil {
 		fmt.Println(err)
@@ -163,7 +164,6 @@ func loadDatabase() {
 }
 
 func makeInitScript() {
-	fmt.Println("nesto")
 	initScript := `DROP TABLE IF EXISTS artists;
 DROP TABLE IF EXISTS albums;
 DROP TABLE IF EXISTS tracks;
@@ -202,7 +202,7 @@ CREATE TABLE playlists (
 
 	f, err := os.Create(initScriptFile)
 	if err != nil {
-		log.Fatal("nesto", err)
+		log.Fatal(err)
 	}
 
 	defer f.Close()
@@ -211,4 +211,17 @@ CREATE TABLE playlists (
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func getArtistName(artistID int) string {
+	db, err := sql.Open("sqlite3", databaseFile)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+	var artistName string
+	db.QueryRow("SELECT name FROM artists WHERE id=?", artistID).Scan(&artistName)
+
+	return artistName
 }
