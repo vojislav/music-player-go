@@ -15,10 +15,14 @@ var pages = tview.NewPages()
 var mainPanel = tview.NewPages()
 var bottomPanel = tview.NewPages()
 var artistList, albumList, trackList, queueList *tview.List
+var searchList *tview.List
 var loadingPopup tview.Primitive
 var currentTrackText, downloadProgressText, loadingTextBox, loginStatus *tview.TextView
 var searchInput *tview.InputField
 var playlistList, playlistTracks *tview.List
+
+var searchIndexes []int
+var searchCurrentIndex int
 
 var popup = func(p tview.Primitive, width, height int) tview.Primitive {
 	return tview.NewGrid().
@@ -126,6 +130,7 @@ func initView() {
 	libraryFlex.SetInputCapture(libraryInputHandler)
 	queueFlex.SetInputCapture(queueInputHandler)
 	playlistFlex.SetInputCapture(playlistInputHandler)
+	searchInput.SetInputCapture(searchInputHandler)
 }
 
 func initLibraryPage() {
@@ -305,6 +310,18 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		}
 		return nil
 
+	case 'g':
+		return tcell.NewEventKey(tcell.KeyHome, 0, tcell.ModNone)
+
+	case 'G':
+		return tcell.NewEventKey(tcell.KeyEnd, 0, tcell.ModNone)
+
+	case 'n':
+		if len(searchIndexes) != 0 {
+			searchCurrentIndex = (searchCurrentIndex + 1) % len(searchIndexes)
+			artistList.SetCurrentItem(searchIndexes[searchCurrentIndex])
+		}
+
 	case ' ':
 		focused := app.GetFocus()
 		if focused == trackList {
@@ -320,6 +337,12 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 
 	case '/':
+		searchIndexes = nil
+		focused = app.GetFocus()
+		switch focused {
+		case artistList:
+			searchList = artistList
+		}
 		app.SetFocus(bottomPanel)
 		bottomPanel.SwitchToPage("search")
 		return nil
@@ -356,6 +379,11 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		currentTrackName, currentTrackID := queueList.GetItemText(currentTrackIndex)
 		playTrack(currentTrackIndex, currentTrackName, currentTrackID, 0)
 		return nil
+	case 'g':
+		return tcell.NewEventKey(tcell.KeyHome, 0, tcell.ModNone)
+
+	case 'G':
+		return tcell.NewEventKey(tcell.KeyEnd, 0, tcell.ModNone)
 	}
 
 	return event
@@ -419,6 +447,12 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		}
 		return nil
 
+	case 'g':
+		return tcell.NewEventKey(tcell.KeyHome, 0, tcell.ModNone)
+
+	case 'G':
+		return tcell.NewEventKey(tcell.KeyEnd, 0, tcell.ModNone)
+
 	case ' ':
 		focused := app.GetFocus()
 		if focused == playlistTracks {
@@ -427,6 +461,17 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 			go downloadCallback(currentTrackID, addToQueue)
 			playlistTracks.SetCurrentItem(currentTrackIndex + 1)
 		}
+		return nil
+	}
+
+	return event
+}
+
+func searchInputHandler(event *tcell.EventKey) *tcell.EventKey {
+	switch event.Key() {
+	case tcell.KeyEscape:
+		bottomPanel.SwitchToPage("current track info")
+		app.SetFocus(mainPanel)
 		return nil
 	}
 
@@ -493,6 +538,12 @@ func getDownloadProgress(done chan bool, filePath string, fileSize int) {
 }
 
 func searchDone(key tcell.Key) {
+	text := searchInput.GetText()
+	if key == tcell.KeyEnter {
+		searchIndexes = searchList.FindItems(text, "-", false, true)
+		bottomPanel.SwitchToPage("current track info")
+		app.SetFocus(mainPanel)
+	}
 }
 
 func gotoLoadingPage() {
