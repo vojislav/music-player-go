@@ -71,8 +71,7 @@ func initView() {
 	currentTrackText.SetBorder(true)
 
 	searchInput = tview.NewInputField().
-		SetLabel("Search: ").
-		SetDoneFunc(searchDone)
+		SetLabel("Search: ")
 
 	downloadProgressText = tview.NewTextView()
 	downloadProgressText.SetBorder(true)
@@ -338,14 +337,16 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 	case '/':
 		searchIndexes = nil
-		focused = app.GetFocus()
-		switch focused {
+		switch app.GetFocus() {
 		case artistList:
 			searchList = artistList
+		case albumList:
+			searchList = albumList
+		case trackList:
+			searchList = trackList
 		}
 		app.SetFocus(bottomPanel)
 		bottomPanel.SwitchToPage("search")
-		return nil
 	}
 
 	return event
@@ -384,6 +385,12 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 	case 'G':
 		return tcell.NewEventKey(tcell.KeyEnd, 0, tcell.ModNone)
+
+	case '/':
+		searchIndexes = nil
+		searchList = queueList
+		app.SetFocus(bottomPanel)
+		bottomPanel.SwitchToPage("search")
 	}
 
 	return event
@@ -453,6 +460,17 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	case 'G':
 		return tcell.NewEventKey(tcell.KeyEnd, 0, tcell.ModNone)
 
+	case '/':
+		searchIndexes = nil
+		switch app.GetFocus() {
+		case playlistList:
+			searchList = playlistList
+		case playlistTracks:
+			searchList = playlistTracks
+		}
+		app.SetFocus(bottomPanel)
+		bottomPanel.SwitchToPage("search")
+
 	case ' ':
 		focused := app.GetFocus()
 		if focused == playlistTracks {
@@ -471,7 +489,18 @@ func searchInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Key() {
 	case tcell.KeyEscape:
 		bottomPanel.SwitchToPage("current track info")
-		app.SetFocus(mainPanel)
+		app.SetFocus(searchList)
+		return nil
+
+	case tcell.KeyEnter:
+		text := searchInput.GetText()
+		if text == "" {
+			searchIndexes = nil
+		} else {
+			searchIndexes = searchList.FindItems(text, "-", false, true)
+		}
+		bottomPanel.SwitchToPage("current track info")
+		app.SetFocus(searchList)
 		return nil
 	}
 
@@ -534,15 +563,6 @@ func getDownloadProgress(done chan bool, filePath string, fileSize int) {
 			app.Draw()
 		}
 		time.Sleep(time.Second)
-	}
-}
-
-func searchDone(key tcell.Key) {
-	text := searchInput.GetText()
-	if key == tcell.KeyEnter {
-		searchIndexes = searchList.FindItems(text, "-", false, true)
-		bottomPanel.SwitchToPage("current track info")
-		app.SetFocus(mainPanel)
 	}
 }
 
