@@ -37,8 +37,16 @@ type Album struct {
 }
 
 type Playlist struct {
-	id   int
-	name string
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	Comment   string    `json:"comment"`
+	Owner     string    `json:"owner"`
+	Public    bool      `json:"public"`
+	SongCount int       `json:"songCount"`
+	Duration  int       `json:"duration"`
+	Created   time.Time `json:"created"`
+	Changed   time.Time `json:"changed"`
+	CoverArt  string    `json:"coverArt"`
 }
 
 var artists = make(map[int]*Artist)
@@ -394,7 +402,7 @@ func getPlaylists() []Playlist {
 		log.Fatal(err)
 	}
 
-	query, err := gojq.Parse(`."subsonic-response".playlists.playlist[] | .id + "\t" + .name`)
+	query, err := gojq.Parse(`."subsonic-response".playlists.playlist[]`)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -407,10 +415,10 @@ func getPlaylists() []Playlist {
 	var playlists []Playlist
 
 	for playlist, ok := iter.Next(); ok; playlist, ok = iter.Next() {
-		split := strings.Split(playlist.(string), "\t")
-		id := toInt(split[0])
-		name := split[1]
-		playlists = append(playlists, Playlist{id, name})
+		// split := strings.Split(playlist.(string), "\t")
+		// id := split[0]
+		// name := split[1]
+		// playlists = append(playlists, Playlist{ID: id, Name: name})
 	}
 
 	return playlists
