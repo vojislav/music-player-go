@@ -316,10 +316,9 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		return tcell.NewEventKey(tcell.KeyEnd, 0, tcell.ModNone)
 
 	case 'n':
-		if len(searchIndexes) != 0 {
-			searchCurrentIndex = (searchCurrentIndex + 1) % len(searchIndexes)
-			artistList.SetCurrentItem(searchIndexes[searchCurrentIndex])
-		}
+		nextSearchResult()
+	case 'p':
+		previousSearchResult()
 
 	case ' ':
 		focused := app.GetFocus()
@@ -337,6 +336,8 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 	case '/':
 		searchIndexes = nil
+		searchCurrentIndex = 0
+
 		switch app.GetFocus() {
 		case artistList:
 			searchList = artistList
@@ -386,8 +387,15 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	case 'G':
 		return tcell.NewEventKey(tcell.KeyEnd, 0, tcell.ModNone)
 
+	case 'n':
+		nextSearchResult()
+	case 'p':
+		previousSearchResult()
+
 	case '/':
 		searchIndexes = nil
+		searchCurrentIndex = 0
+
 		searchList = queueList
 		app.SetFocus(bottomPanel)
 		bottomPanel.SwitchToPage("search")
@@ -460,14 +468,23 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	case 'G':
 		return tcell.NewEventKey(tcell.KeyEnd, 0, tcell.ModNone)
 
+	case 'n':
+		nextSearchResult()
+
+	case 'p':
+		previousSearchResult()
+
 	case '/':
 		searchIndexes = nil
+		searchCurrentIndex = 0
+
 		switch app.GetFocus() {
 		case playlistList:
 			searchList = playlistList
 		case playlistTracks:
 			searchList = playlistTracks
 		}
+
 		app.SetFocus(bottomPanel)
 		bottomPanel.SwitchToPage("search")
 
@@ -485,6 +502,20 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	return event
 }
 
+func nextSearchResult() {
+	if len(searchIndexes) != 0 {
+		searchCurrentIndex = (searchCurrentIndex + 1) % len(searchIndexes)
+		searchList.SetCurrentItem(searchIndexes[searchCurrentIndex])
+	}
+}
+
+func previousSearchResult() {
+	if len(searchIndexes) != 0 {
+		searchCurrentIndex = (searchCurrentIndex - 1) % len(searchIndexes)
+		searchList.SetCurrentItem(searchIndexes[searchCurrentIndex])
+	}
+}
+
 func searchInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Key() {
 	case tcell.KeyEscape:
@@ -493,18 +524,38 @@ func searchInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 
 	case tcell.KeyEnter:
-		text := searchInput.GetText()
-		if text == "" {
+		searchString := searchInput.GetText()
+		if len(searchString) == 0 {
 			searchIndexes = nil
+			go searchStatus("Search cleared", "")
 		} else {
-			searchIndexes = searchList.FindItems(text, "-", false, true)
+			searchIndexes = searchList.FindItems(searchString, "-", false, true)
+			if len(searchIndexes) == 0 {
+				go searchStatus("No results found!", "")
+			} else {
+				searchList.SetCurrentItem(searchIndexes[0])
+				go searchStatus("Searching: ", searchString)
+			}
 		}
+
 		bottomPanel.SwitchToPage("current track info")
 		app.SetFocus(searchList)
+		searchInput.SetText("")
+
 		return nil
 	}
 
 	return event
+}
+
+func searchStatus(message, searchString string) {
+	previousText := currentTrackText.GetText(true)
+	currentTrackText.Clear()
+	fmt.Fprint(currentTrackText, message, searchString)
+	time.Sleep(2 * time.Second)
+	currentTrackText.Clear()
+	fmt.Fprint(currentTrackText, previousText)
+	app.Draw()
 }
 
 func updateCurrentTrackText() {
