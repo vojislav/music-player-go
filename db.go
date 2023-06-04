@@ -100,11 +100,11 @@ func loadDatabase() {
 		return
 	}
 
-	playlistTracksQuery, err := db.Prepare("UPDATE tracks SET playlistID=? WHERE id=?")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	// _, err = db.Prepare("UPDATE tracks SET playlistID=? WHERE id=?")
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
 
 	trackCount, err := db.Prepare("SELECT COUNT(*) FROM tracks")
 	if err != nil {
@@ -147,19 +147,19 @@ func loadDatabase() {
 
 	playlists := getPlaylists()
 	for _, playlist := range playlists {
-		_, err := playlistQuery.Exec(playlist.id, playlist.name)
+		_, err := playlistQuery.Exec(playlist.ID, playlist.Name)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		playlistTracks := getPlaylistTracks(playlist.id)
-		for _, trackID := range playlistTracks {
-			_, err := playlistTracksQuery.Exec(playlist.id, trackID)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-		}
+		// playlistTracks := getPlaylistTracks(playlist.id)
+		// for _, trackID := range playlistTracks {
+		// 	_, err := playlistTracksQuery.Exec(playlist.id, trackID)
+		// 	if err != nil {
+		// 		fmt.Println(err)
+		// 		return
+		// 	}
+		// }
 	}
 }
 
@@ -187,12 +187,10 @@ CREATE TABLE tracks (
     title TEXT,
     albumID INTEGER,
     artistID INTEGER,
-	playlistID INTEGER DEFAULT -1,
     track INTEGER,
     duration INTEGER,
     FOREIGN KEY (artistID) REFERENCES artists(id),
-    FOREIGN KEY (albumID) REFERENCES albums(id),
-    FOREIGN KEY (playlistID) REFERENCES playlists(id)
+    FOREIGN KEY (albumID) REFERENCES albums(id)
 );
 
 CREATE TABLE playlists (

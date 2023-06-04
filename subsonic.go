@@ -415,10 +415,9 @@ func getPlaylists() []Playlist {
 	var playlists []Playlist
 
 	for playlist, ok := iter.Next(); ok; playlist, ok = iter.Next() {
-		// split := strings.Split(playlist.(string), "\t")
-		// id := split[0]
-		// name := split[1]
-		// playlists = append(playlists, Playlist{ID: id, Name: name})
+		id := playlist.(map[string]any)["id"].(string)
+		name := playlist.(map[string]any)["name"].(string)
+		playlists = append(playlists, Playlist{ID: id, Name: name})
 	}
 
 	return playlists

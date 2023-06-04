@@ -20,6 +20,7 @@ var loadingPopup tview.Primitive
 var currentTrackText, downloadProgressText, loadingTextBox, loginStatus *tview.TextView
 var searchInput *tview.InputField
 var playlistList, playlistTracks *tview.List
+var loginGrid *tview.Grid
 
 var searchIndexes []int
 var searchCurrentIndex int
@@ -42,7 +43,7 @@ func initView() {
 	loginStatus = tview.NewTextView()
 	loginStatus.SetBorder(true)
 
-	loginGrid := tview.NewGrid().
+	loginGrid = tview.NewGrid().
 		SetColumns(0, 40, 0).
 		SetRows(0, 10, 3, 0).
 		AddItem(loginForm, 1, 1, 1, 1, 0, 0, true).
@@ -114,7 +115,7 @@ func initView() {
 	// playlist
 	playlistList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
 	playlistList.SetBorder(true).SetTitle("Playlists")
-	playlistList.SetChangedFunc(showPlaylist)
+	// playlistList.SetChangedFunc(showPlaylist)
 
 	playlistTracks = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
 	playlistTracks.SetBorder(true)
@@ -174,9 +175,9 @@ func fillTracksList(_ int, albumName, albumIDString string, _ rune) {
 
 	rows := queryAlbumTracks(albumID)
 	for rows.Next() {
-		var trackID, albumID, artistID, playlistID, track, duration int
+		var trackID, albumID, artistID, track, duration int
 		var title string
-		rows.Scan(&trackID, &title, &albumID, &artistID, &playlistID, &track, &duration)
+		rows.Scan(&trackID, &title, &albumID, &artistID, &track, &duration)
 
 		trackList.AddItem(fmt.Sprintf("%d. %s", track, title), fmt.Sprint(trackID), 0, nil)
 	}
@@ -189,10 +190,10 @@ func initPlaylistPage() {
 }
 
 func fillPlaylists() {
-	playlists := getPlaylists()
-	for _, playlist := range playlists {
-		playlistList.AddItem(playlist.name, fmt.Sprint(playlist.id), 0, nil)
-	}
+	// playlists := getPlaylists()
+	// for _, playlist := range playlists {
+	// 	playlistList.AddItem(playlist.name, fmt.Sprint(playlist.id), 0, nil)
+	// }
 }
 
 func showPlaylist(_ int, playlistName, playlistIDString string, _ rune) {
@@ -211,7 +212,7 @@ func showPlaylist(_ int, playlistName, playlistIDString string, _ rune) {
 
 func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	focused := app.GetFocus()
-	if focused == searchInput {
+	if focused == loginGrid || focused == searchInput {
 		return event
 	}
 
@@ -226,17 +227,6 @@ func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		mainPanel.SwitchToPage("playlists")
 		return nil
 
-	case 'q':
-		app.Stop()
-	case 'p':
-		playPause()
-
-	case '>':
-		nextTrack()
-	case '<':
-		previousTrack()
-	case 's':
-		stopTrack()
 	}
 
 	return event
@@ -244,7 +234,7 @@ func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	focused := app.GetFocus()
-	if focused == searchInput {
+	if focused == loginForm || focused == searchInput {
 		return event
 	}
 
@@ -281,6 +271,17 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	}
 
 	switch event.Rune() {
+	case 'q':
+		app.Stop()
+	case 'p':
+		playPause()
+
+	case '>':
+		nextTrack()
+	case '<':
+		previousTrack()
+	case 's':
+		stopTrack()
 
 	case 'h':
 		focused := app.GetFocus()
@@ -317,7 +318,7 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 	case 'n':
 		nextSearchResult()
-	case 'p':
+	case 'N':
 		previousSearchResult()
 
 	case ' ':
@@ -355,7 +356,7 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	focused := app.GetFocus()
-	if focused == searchInput {
+	if focused == loginForm || focused == searchInput {
 		return event
 	}
 
@@ -372,6 +373,18 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	}
 
 	switch event.Rune() {
+	case 'q':
+		app.Stop()
+	case 'p':
+		playPause()
+
+	case '>':
+		nextTrack()
+	case '<':
+		previousTrack()
+	case 's':
+		stopTrack()
+
 	case 'j':
 		return tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone)
 	case 'k':
@@ -389,7 +402,7 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 	case 'n':
 		nextSearchResult()
-	case 'p':
+	case 'N':
 		previousSearchResult()
 
 	case '/':
@@ -406,7 +419,7 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	focused := app.GetFocus()
-	if focused == searchInput {
+	if focused == loginForm || focused == searchInput {
 		return event
 	}
 
@@ -438,6 +451,18 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	}
 
 	switch event.Rune() {
+	case 'q':
+		app.Stop()
+	case 'p':
+		playPause()
+
+	case '>':
+		nextTrack()
+	case '<':
+		previousTrack()
+	case 's':
+		stopTrack()
+
 	case 'h':
 		focused = app.GetFocus()
 		if focused == playlistTracks {
@@ -471,7 +496,7 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	case 'n':
 		nextSearchResult()
 
-	case 'p':
+	case 'N':
 		previousSearchResult()
 
 	case '/':
@@ -627,7 +652,7 @@ func gotoLoadingPage() {
 
 		loadDatabase()
 
-		pages.SwitchToPage("library")
+		pages.SwitchToPage("main")
 		initLibraryPage()
 		app.Draw()
 	}()

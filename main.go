@@ -58,7 +58,7 @@ func main() {
 		gotoLoadingPage()
 	} else {
 		gotoLibraryPage()
-		initPlaylistPage()
+		// initPlaylistPage()
 	}
 
 	if err := app.SetRoot(pages, true).SetFocus(pages).Run(); err != nil {

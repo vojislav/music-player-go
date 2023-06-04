@@ -16,7 +16,7 @@ func loginUser() {
 	writeConfig()
 
 	if ping() {
-		if _, err := os.Stat(databaseFile); err == nil || *reloadDatabaseFlag {
+		if _, err := os.Stat(databaseFile); err == nil && !*reloadDatabaseFlag {
 			gotoLibraryPage()
 		} else {
 			gotoLoadingPage()
