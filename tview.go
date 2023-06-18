@@ -1,12 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/itchyny/gojq"
 	"github.com/rivo/tview"
 )
 
@@ -190,24 +192,47 @@ func initPlaylistPage() {
 }
 
 func fillPlaylists() {
-	// playlists := getPlaylists()
-	// for _, playlist := range playlists {
-	// 	playlistList.AddItem(playlist.name, fmt.Sprint(playlist.id), 0, nil)
-	// }
+	playlists := getPlaylists()
+	for _, playlist := range playlists {
+		playlistList.AddItem(playlist.Name, fmt.Sprint(playlist.ID), 0, nil)
+	}
 }
 
 func showPlaylist(_ int, playlistName, playlistIDString string, _ rune) {
 	playlistTracks.Clear()
 
-	playlistID := toInt(playlistIDString)
-	rows := queryPlaylistTracks(playlistID)
-	for rows.Next() {
-		var trackID int
-		var artistName, title string
-		rows.Scan(&trackID, &artistName, &title)
-
-		playlistTracks.AddItem(fmt.Sprintf("%s - %s", artistName, title), fmt.Sprint(trackID), 0, nil)
+	playlistTracksJSON, err := os.ReadFile(playlistDirectory + playlistName + ".json")
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	query, err := gojq.Parse(`.[]`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var resJSON map[string]interface{}
+	json.Unmarshal(playlistTracksJSON, &resJSON)
+	fmt.Println(string(playlistTracksJSON))
+
+	iter := query.Run(resJSON)
+	for trackMap, ok := iter.Next(); ok; trackMap, ok = iter.Next() {
+		newTrack := Track{}
+		trackJSON, _ := json.Marshal(trackMap)
+		json.Unmarshal(trackJSON, &newTrack)
+		// playlistTracks.AddItem(fmt.Sprintf("%s - %s", track.Artist, track.Title), fmt.Sprint(track.ID), 0, nil)
+
+		// playlistTracks.AddItem(fmt.Sprint(newTrack.Title), "", 0, nil)
+	}
+
+	// rows := queryPlaylistTracks(playlistID)
+	// for rows.Next() {
+	// 	var trackID int
+	// 	var artistName, title string
+	// 	rows.Scan(&trackID, &artistName, &title)
+
+	// 	playlistTracks.AddItem(fmt.Sprintf("%s - %s", artistName, title), fmt.Sprint(trackID), 0, nil)
+	// }
 }
 
 func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
@@ -604,7 +629,7 @@ func updateCurrentTrackText() {
 		currentTrackText.Clear()
 		nextTrack()
 	} else {
-		fmt.Fprintf(currentTrackText, "%s: %s - %s\t%s / %s\tQueue position: %d / %d", status, currentTrack.artist, currentTrack.title, currentTime, totalTime, queuePosition+1, queueList.GetItemCount())
+		fmt.Fprintf(currentTrackText, "%s: %s - %s\t%s / %s\tQueue position: %d / %d", status, currentTrack.Artist, currentTrack.Title, currentTime, totalTime, queuePosition+1, queueList.GetItemCount())
 	}
 	app.Draw()
 }

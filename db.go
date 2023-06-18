@@ -94,7 +94,7 @@ func loadDatabase() {
 		return
 	}
 
-	playlistQuery, err := db.Prepare("INSERT OR IGNORE INTO playlists(id, name) VALUES(?,?)")
+	playlistQuery, err := db.Prepare("INSERT OR IGNORE INTO playlists(id, name, comment, owner, public, songCount, duration, created, changed, coverArt) VALUES(?,?,?,?,?,?,?,?,?,?)")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -132,7 +132,7 @@ func loadDatabase() {
 			}
 			getTracks(albumID)
 			for k, v := range artists[artistID].albums[albumID].tracks {
-				_, err := trackQuery.Exec(k, v.title, v.albumID, v.artistID, v.track, v.duration)
+				_, err := trackQuery.Exec(k, v.Title, v.AlbumID, v.ArtistID, v.Track, v.Duration)
 				if err != nil {
 					fmt.Println(err)
 					return
@@ -147,20 +147,25 @@ func loadDatabase() {
 
 	playlists := getPlaylists()
 	for _, playlist := range playlists {
-		_, err := playlistQuery.Exec(playlist.ID, playlist.Name)
+		_, err := playlistQuery.Exec(playlist.ID, playlist.Name, playlist.Comment, playlist.Owner,
+			playlist.Public, playlist.SongCount, playlist.Duration, playlist.Created, playlist.Changed, playlist.CoverArt)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		// playlistTracks := getPlaylistTracks(playlist.id)
-		// for _, trackID := range playlistTracks {
-		// 	_, err := playlistTracksQuery.Exec(playlist.id, trackID)
-		// 	if err != nil {
-		// 		fmt.Println(err)
-		// 		return
-		// 	}
-		// }
+		playlistTracks := getPlaylistTracks(toInt(playlist.ID))
+
+		os.WriteFile(playlistDirectory+playlist.Name+".json", playlistTracks, 0755)
 	}
+	// playlistTracks := getPlaylistTracks(playlist.id)
+	// for _, trackID := range playlistTracks {
+	// 	_, err := playlistTracksQuery.Exec(playlist.id, trackID)
+	// 	if err != nil {
+	// 		fmt.Println(err)
+	// 		return
+	// 	}
+	// }
+	// }
 }
 
 func makeInitScript() {
@@ -195,7 +200,16 @@ CREATE TABLE tracks (
 
 CREATE TABLE playlists (
 	id INTEGER PRIMARY KEY,
-	name TEXT
+	name TEXT,
+	comment TEXT,
+	owner TEXT,
+	public INTERGER,
+	songCount INTERGER,
+	duration INTERGER,
+	created TEXT,
+	changed TEXT,
+	coverArt TEXT
+
 );`
 
 	f, err := os.Create(initScriptFile)

@@ -249,16 +249,16 @@ func getTracks(albumID int) bool {
 		}
 
 		newTrack := Track{
-			id:       toInt(trackMap["id"].(string)),
-			title:    trackMap["title"].(string),
-			album:    trackMap["album"].(string),
-			albumID:  albumID,
-			artist:   trackMap["artist"].(string),
-			artistID: artistID,
-			track:    int(track),
-			duration: int(trackMap["duration"].(float64))}
+			ID:       toInt(trackMap["id"].(string)),
+			Title:    trackMap["title"].(string),
+			Album:    trackMap["album"].(string),
+			AlbumID:  albumID,
+			Artist:   trackMap["artist"].(string),
+			ArtistID: artistID,
+			Track:    int(track),
+			Duration: int(trackMap["duration"].(float64))}
 
-		artists[artistID].albums[albumID].tracks[newTrack.id] = &newTrack
+		artists[artistID].albums[albumID].tracks[newTrack.ID] = &newTrack
 	}
 
 	return true
@@ -409,21 +409,26 @@ func getPlaylists() []Playlist {
 
 	var resJSON map[string]interface{}
 	json.Unmarshal(body, &resJSON)
+	fmt.Println(resJSON)
 
 	iter := query.Run(resJSON)
 
 	var playlists []Playlist
 
-	for playlist, ok := iter.Next(); ok; playlist, ok = iter.Next() {
-		id := playlist.(map[string]any)["id"].(string)
-		name := playlist.(map[string]any)["name"].(string)
-		playlists = append(playlists, Playlist{ID: id, Name: name})
+	for playlistMap, ok := iter.Next(); ok; playlistMap, ok = iter.Next() {
+		// id := playlist.(map[string]any)["id"].(string)
+		// name := playlist.(map[string]any)["name"].(string)
+		// playlists = append(playlists, Playlist{ID: id, Name: name})
+		newPlaylist := Playlist{}
+		playlistJSON, _ := json.Marshal(playlistMap)
+		json.Unmarshal(playlistJSON, &newPlaylist)
+		playlists = append(playlists, newPlaylist)
 	}
 
 	return playlists
 }
 
-func getPlaylistTracks(playlistID int) []int {
+func getPlaylistTracks(playlistID int) []byte {
 	req, err := http.NewRequest("GET", config.ServerURL+"getPlaylist", nil)
 	if err != nil {
 		log.Fatal(err)
@@ -450,7 +455,7 @@ func getPlaylistTracks(playlistID int) []int {
 		log.Fatal(err)
 	}
 
-	query, err := gojq.Parse(`."subsonic-response".playlist.entry[].id`)
+	query, err := gojq.Parse(`."subsonic-response".playlist.entry`)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -458,12 +463,12 @@ func getPlaylistTracks(playlistID int) []int {
 	var resJSON map[string]interface{}
 	json.Unmarshal(body, &resJSON)
 
-	var trackIDs []int
+	var tracksJSON []byte
 
 	iter := query.Run(resJSON)
-	for trackID, ok := iter.Next(); ok; trackID, ok = iter.Next() {
-		trackIDs = append(trackIDs, toInt(trackID.(string)))
+	if trackMap, ok := iter.Next(); ok {
+		tracksJSON, _ = json.Marshal(trackMap)
 	}
 
-	return trackIDs
+	return tracksJSON
 }

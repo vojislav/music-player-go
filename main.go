@@ -15,7 +15,7 @@ var reloadDatabaseFlag *bool
 func init() {
 	homeDirectory, _ := os.UserHomeDir()
 	configDirectory = homeDirectory + "/.config/music-player-go/"
-	playlistDirectory = configDirectory + "playlists"
+	playlistDirectory = configDirectory + "playlists/"
 
 	databaseFile = configDirectory + "database.db"
 	configFile = configDirectory + "config"
@@ -58,7 +58,7 @@ func main() {
 		gotoLoadingPage()
 	} else {
 		gotoLibraryPage()
-		// initPlaylistPage()
+		initPlaylistPage()
 	}
 
 	if err := app.SetRoot(pages, true).SetFocus(pages).Run(); err != nil {
