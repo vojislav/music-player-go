@@ -227,11 +227,11 @@ func getTracks(albumID int) bool {
 		log.Fatal(err)
 	}
 
-	artistID := 0
+	var artistID string
 
 	iter := query.Run(resJSON)
-	if artistIDString, ok := iter.Next(); ok {
-		artistID = toInt(artistIDString.(string))
+	if artistIDAny, ok := iter.Next(); ok {
+		artistID = artistIDAny.(string)
 	}
 
 	query, err = gojq.Parse(`."subsonic-response".album.song[]`)
@@ -249,16 +249,16 @@ func getTracks(albumID int) bool {
 		}
 
 		newTrack := Track{
-			ID:       toInt(trackMap["id"].(string)),
+			ID:       trackMap["id"].(string),
 			Title:    trackMap["title"].(string),
 			Album:    trackMap["album"].(string),
-			AlbumID:  albumID,
+			AlbumID:  fmt.Sprint(albumID),
 			Artist:   trackMap["artist"].(string),
 			ArtistID: artistID,
 			Track:    int(track),
 			Duration: int(trackMap["duration"].(float64))}
 
-		artists[artistID].albums[albumID].tracks[newTrack.ID] = &newTrack
+		artists[toInt(artistID)].albums[albumID].tracks[toInt(newTrack.ID)] = &newTrack
 	}
 
 	return true
@@ -409,7 +409,6 @@ func getPlaylists() []Playlist {
 
 	var resJSON map[string]interface{}
 	json.Unmarshal(body, &resJSON)
-	fmt.Println(resJSON)
 
 	iter := query.Run(resJSON)
 
@@ -450,25 +449,25 @@ func getPlaylistTracks(playlistID int) []byte {
 	}
 	defer res.Body.Close()
 
-	body, err := io.ReadAll(res.Body)
+	tracksJSON, err := io.ReadAll(res.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	query, err := gojq.Parse(`."subsonic-response".playlist.entry`)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// query, err := gojq.Parse(`."subsonic-response".playlist.entry`)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
-	var resJSON map[string]interface{}
-	json.Unmarshal(body, &resJSON)
+	// var resJSON map[string]interface{}
+	// json.Unmarshal(body, &resJSON)
 
-	var tracksJSON []byte
+	// var tracksJSON []byte
 
-	iter := query.Run(resJSON)
-	if trackMap, ok := iter.Next(); ok {
-		tracksJSON, _ = json.Marshal(trackMap)
-	}
+	// iter := query.Run(resJSON)
+	// if trackMap, ok := iter.Next(); ok {
+	// 	tracksJSON, _ = json.Marshal(trackMap)
+	// }
 
 	return tracksJSON
 }

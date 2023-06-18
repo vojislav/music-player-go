@@ -21,7 +21,7 @@ var killTicker = make(chan bool)
 
 type Track struct {
 	stream   beep.StreamSeekCloser
-	ID       int    `json:"id"`
+	ID       string `json:"id"`
 	Title    string `json:"title"`
 	Album    string `json:"album"`
 	Artist   string `json:"artist"`
@@ -32,17 +32,15 @@ type Track struct {
 	Suffix   string `json:"suffix"`
 	Duration int    `json:"duration"`
 	BitRate  int    `json:"bitRate"`
-	AlbumID  int    `json:"albumId"`
-	ArtistID int    `json:"artistId"`
+	AlbumID  string `json:"albumId"`
+	ArtistID string `json:"artistId"`
 }
 
-func playTrack(trackIndex int, _ string, trackIDString string, _ rune) {
-	fileName := download(trackIDString)
+func playTrack(trackIndex int, _ string, trackID string, _ rune) {
+	fileName := download(trackID)
 
 	stream := getStream(fileName)
 	tags := getTags(fileName)
-
-	trackID := toInt(trackIDString)
 
 	track, _ := tags.Track()
 	currentTrack = Track{
@@ -60,7 +58,7 @@ func playTrack(trackIndex int, _ string, trackIDString string, _ rune) {
 
 	queuePosition = trackIndex
 
-	scrobble(currentTrack.ID, "false")
+	scrobble(toInt(currentTrack.ID), "false")
 
 	go trackTime()
 }
@@ -93,7 +91,7 @@ func trackTime() {
 		select {
 		case <-ticker.C:
 			if currentTrack.stream.Position() >= currentTrack.stream.Len()/2 {
-				scrobble(currentTrack.ID, "true")
+				scrobble(toInt(currentTrack.ID), "true")
 			}
 			updateCurrentTrackText()
 		case <-killTicker:

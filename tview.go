@@ -117,7 +117,7 @@ func initView() {
 	// playlist
 	playlistList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
 	playlistList.SetBorder(true).SetTitle("Playlists")
-	// playlistList.SetChangedFunc(showPlaylist)
+	playlistList.SetChangedFunc(showPlaylist)
 
 	playlistTracks = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
 	playlistTracks.SetBorder(true)
@@ -192,8 +192,7 @@ func initPlaylistPage() {
 }
 
 func fillPlaylists() {
-	playlists := getPlaylists()
-	for _, playlist := range playlists {
+	for _, playlist := range getPlaylists() {
 		playlistList.AddItem(playlist.Name, fmt.Sprint(playlist.ID), 0, nil)
 	}
 }
@@ -206,33 +205,22 @@ func showPlaylist(_ int, playlistName, playlistIDString string, _ rune) {
 		log.Fatal(err)
 	}
 
-	query, err := gojq.Parse(`.[]`)
+	query, err := gojq.Parse(`."subsonic-response".playlist.entry[]`)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	var resJSON map[string]interface{}
 	json.Unmarshal(playlistTracksJSON, &resJSON)
-	fmt.Println(string(playlistTracksJSON))
 
 	iter := query.Run(resJSON)
+
 	for trackMap, ok := iter.Next(); ok; trackMap, ok = iter.Next() {
-		newTrack := Track{}
+		track := Track{}
 		trackJSON, _ := json.Marshal(trackMap)
-		json.Unmarshal(trackJSON, &newTrack)
-		// playlistTracks.AddItem(fmt.Sprintf("%s - %s", track.Artist, track.Title), fmt.Sprint(track.ID), 0, nil)
-
-		// playlistTracks.AddItem(fmt.Sprint(newTrack.Title), "", 0, nil)
+		json.Unmarshal(trackJSON, &track)
+		playlistTracks.AddItem(fmt.Sprintf("%s - %s", track.Artist, track.Title), fmt.Sprint(track.ID), 0, nil)
 	}
-
-	// rows := queryPlaylistTracks(playlistID)
-	// for rows.Next() {
-	// 	var trackID int
-	// 	var artistName, title string
-	// 	rows.Scan(&trackID, &artistName, &title)
-
-	// 	playlistTracks.AddItem(fmt.Sprintf("%s - %s", artistName, title), fmt.Sprint(trackID), 0, nil)
-	// }
 }
 
 func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
@@ -288,9 +276,10 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		} else if focused == albumList {
 			app.SetFocus(trackList)
 		} else if focused == trackList {
-			currentTrackIndex := trackList.GetCurrentItem()
-			currentTrackName, currentTrackID := trackList.GetItemText(currentTrackIndex)
-			addToQueueAndPlay(currentTrackIndex, currentTrackName, currentTrackID, 0)
+			currentTrackIndex := playlistTracks.GetCurrentItem()
+			_, currentTrackID := playlistTracks.GetItemText(currentTrackIndex)
+			go downloadCallback(currentTrackID, addToQueueAndPlay)
+			playlistTracks.SetCurrentItem(currentTrackIndex + 1)
 		}
 		return nil
 	}
@@ -386,7 +375,7 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	}
 
 	switch event.Key() {
-	case tcell.KeyRight:
+	case tcell.KeyRight, tcell.KeyEnter:
 		currentTrackIndex := queueList.GetCurrentItem()
 		currentTrackName, currentTrackID := queueList.GetItemText(currentTrackIndex)
 		playTrack(currentTrackIndex, currentTrackName, currentTrackID, 0)
