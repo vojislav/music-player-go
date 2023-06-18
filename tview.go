@@ -260,6 +260,8 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 			go downloadCallback(currentTrackID, addToQueueAndPlay)
 			trackList.SetCurrentItem(currentTrackIndex + 1)
 		}
+		return nil
+
 	case tcell.KeyLeft:
 		focused := app.GetFocus()
 		if focused == albumList {
@@ -287,15 +289,20 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Rune() {
 	case 'q':
 		app.Stop()
+		return nil
 	case 'p':
 		playPause()
+		return nil
 
 	case '>':
 		nextTrack()
+		return nil
 	case '<':
 		previousTrack()
+		return nil
 	case 's':
 		stopTrack()
+		return nil
 
 	case 'h':
 		focused := app.GetFocus()
@@ -304,8 +311,8 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		} else if focused == trackList {
 			app.SetFocus(albumList)
 		}
-
 		return nil
+
 	case 'j':
 		return tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone)
 	case 'k':
@@ -332,8 +339,10 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 	case 'n':
 		nextSearchResult()
+		return nil
 	case 'N':
 		previousSearchResult()
+		return nil
 
 	case ' ':
 		focused := app.GetFocus()
@@ -363,6 +372,7 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		}
 		app.SetFocus(bottomPanel)
 		bottomPanel.SwitchToPage("search")
+		return nil
 	}
 
 	return event
@@ -384,20 +394,26 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 	case tcell.KeyDelete:
 		removeFromQueue()
+		return nil
 	}
 
 	switch event.Rune() {
 	case 'q':
 		app.Stop()
+		return nil
 	case 'p':
 		playPause()
+		return nil
 
 	case '>':
 		nextTrack()
+		return nil
 	case '<':
 		previousTrack()
+		return nil
 	case 's':
 		stopTrack()
+		return nil
 
 	case 'j':
 		return tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone)
@@ -416,8 +432,10 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 	case 'n':
 		nextSearchResult()
+		return nil
 	case 'N':
 		previousSearchResult()
+		return nil
 
 	case '/':
 		searchIndexes = nil
@@ -426,6 +444,7 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		searchList = queueList
 		app.SetFocus(bottomPanel)
 		bottomPanel.SwitchToPage("search")
+		return nil
 	}
 
 	return event
@@ -459,23 +478,32 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		focused = app.GetFocus()
 		if focused == playlistList {
 			app.SetFocus(playlistTracks)
+		} else if focused == playlistTracks {
+			currentTrackIndex := playlistTracks.GetCurrentItem()
+			_, currentTrackID := playlistTracks.GetItemText(currentTrackIndex)
+			go downloadCallback(currentTrackID, addToQueueAndPlay)
+			playlistTracks.SetCurrentItem(currentTrackIndex + 1)
 		}
 		return nil
-
 	}
 
 	switch event.Rune() {
 	case 'q':
 		app.Stop()
+		return nil
 	case 'p':
 		playPause()
+		return nil
 
 	case '>':
 		nextTrack()
+		return nil
 	case '<':
 		previousTrack()
+		return nil
 	case 's':
 		stopTrack()
+		return nil
 
 	case 'h':
 		focused = app.GetFocus()
@@ -509,9 +537,11 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 	case 'n':
 		nextSearchResult()
+		return nil
 
 	case 'N':
 		previousSearchResult()
+		return nil
 
 	case '/':
 		searchIndexes = nil
@@ -526,6 +556,7 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 		app.SetFocus(bottomPanel)
 		bottomPanel.SwitchToPage("search")
+		return nil
 
 	case ' ':
 		focused := app.GetFocus()
@@ -686,4 +717,18 @@ func getTimeString(time int) string {
 	}
 
 	return fmt.Sprint(minutes, ":", seconds)
+}
+
+func upper_bound(array []int, target int) int {
+	low, high, mid := 0, len(array)-1, 0
+
+	for low <= high {
+		mid = (low + high) / 2
+		if array[mid] > target {
+			high = mid - 1
+		} else {
+			low = mid + 1
+		}
+	}
+	return low
 }
