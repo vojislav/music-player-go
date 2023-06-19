@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"time"
 
@@ -154,4 +155,37 @@ func getTags(path string) tag.Metadata {
 	}
 
 	return tags
+}
+
+func getDownloadProgress(done chan bool, filePath string, fileSize int) {
+	for {
+		select {
+		case <-done:
+			downloadProgressText.Clear()
+			return
+		default:
+			file, err := os.Open(filePath)
+			if err != nil {
+				continue
+			}
+
+			fi, err := file.Stat()
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			size := fi.Size()
+
+			if size == 0 {
+				size = 1
+			}
+
+			downloadPercent = float64(size) / float64(fileSize) * 100
+			downloadProgressText.Clear()
+			fmt.Fprintf(downloadProgressText, "%.0f%%", downloadPercent)
+
+			app.Draw()
+		}
+		time.Sleep(time.Second)
+	}
 }
