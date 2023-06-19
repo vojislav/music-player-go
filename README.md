@@ -6,6 +6,7 @@ modeled after [ncmpcpp](https://github.com/ncmpcpp/ncmpcpp)
 current features:
 - library view
 - queue
+- playlists
 
 keyboard shortcuts:
 
@@ -20,3 +21,7 @@ keyboard shortcuts:
 `>` - next track
 
 `<` - previous track
+
+`/` - search
+
+`n/N` - next/previous search result
