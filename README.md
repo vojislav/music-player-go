@@ -18,9 +18,7 @@ keyboard shortcuts:
 
 `p` - toggle play/pause
 
-`>` - next track
-
-`<` - previous track
+`>/<` - next/previous track
 
 `/` - search
 
