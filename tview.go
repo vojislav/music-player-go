@@ -574,14 +574,18 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 func nextSearchResult() {
 	if len(searchIndexes) != 0 {
-		searchCurrentIndex = (searchCurrentIndex + 1) % len(searchIndexes)
+		currentHighlightedItemIndex := searchList.GetCurrentItem()
+		searchCurrentIndex = upper_bound(searchIndexes, currentHighlightedItemIndex) % len(searchIndexes)
 		searchList.SetCurrentItem(searchIndexes[searchCurrentIndex])
 	}
 }
 
 func previousSearchResult() {
 	if len(searchIndexes) != 0 {
-		searchCurrentIndex = (searchCurrentIndex - 1) % len(searchIndexes)
+		currentHighlightedItemIndex := searchList.GetCurrentItem()
+		arrayLen := len(searchIndexes)
+		searchCurrentIndex = upper_bound_reverse(searchIndexes, currentHighlightedItemIndex)
+		searchCurrentIndex = (searchCurrentIndex + arrayLen) % arrayLen
 		searchList.SetCurrentItem(searchIndexes[searchCurrentIndex])
 	}
 }
@@ -731,4 +735,20 @@ func upper_bound(array []int, target int) int {
 		}
 	}
 	return low
+}
+
+func upper_bound_reverse(array []int, target int) int {
+	low, high, mid := 0, len(array)-1, 0
+	result := -1
+
+	for low <= high {
+		mid = (low + high) / 2
+		if array[mid] < target {
+			low = mid + 1
+			result = mid
+		} else {
+			high = mid - 1
+		}
+	}
+	return result
 }
