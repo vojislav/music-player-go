@@ -8,7 +8,10 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/itchyny/gojq"
+	"github.com/rivo/tview"
 )
+
+var playlistList, playlistTracks *tview.List
 
 func initPlaylistPage() {
 	fillPlaylists()

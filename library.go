@@ -4,7 +4,10 @@ import (
 	"fmt"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
 )
+
+var artistList, albumList, trackList, queueList *tview.List
 
 func gotoLibraryPage() {
 	pages.SwitchToPage("main")

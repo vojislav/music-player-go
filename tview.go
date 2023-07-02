@@ -12,16 +12,9 @@ var app = tview.NewApplication()
 var pages = tview.NewPages()
 var mainPanel = tview.NewPages()
 var bottomPanel = tview.NewPages()
-var artistList, albumList, trackList, queueList *tview.List
-var searchList *tview.List
 var loadingPopup tview.Primitive
 var currentTrackText, downloadProgressText, loadingTextBox, loginStatus *tview.TextView
-var searchInput *tview.InputField
-var playlistList, playlistTracks *tview.List
 var loginGrid *tview.Grid
-
-var searchIndexes []int
-var searchCurrentIndex int
 
 var popup = func(p tview.Primitive, width, height int) tview.Primitive {
 	return tview.NewGrid().

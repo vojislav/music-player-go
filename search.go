@@ -5,7 +5,13 @@ import (
 	"time"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
 )
+
+var searchList *tview.List
+var searchInput *tview.InputField
+var searchIndexes []int
+var searchCurrentIndex int
 
 func nextSearchResult() {
 	if len(searchIndexes) != 0 {
