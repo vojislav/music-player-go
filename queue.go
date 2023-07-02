@@ -106,6 +106,13 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		app.SetFocus(bottomPanel)
 		bottomPanel.SwitchToPage("search")
 		return nil
+
+	case '=':
+		changeVolume(volumeStep)
+	case '-':
+		changeVolume(-volumeStep)
+	case 'm':
+		changeVolume(0.0)
 	}
 
 	return event

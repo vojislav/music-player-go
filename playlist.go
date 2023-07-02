@@ -168,6 +168,13 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 			playlistTracks.SetCurrentItem(currentTrackIndex + 1)
 		}
 		return nil
+
+	case '=':
+		changeVolume(volumeStep)
+	case '-':
+		changeVolume(-volumeStep)
+	case 'm':
+		changeVolume(0.0)
 	}
 
 	return event

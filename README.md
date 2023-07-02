@@ -23,3 +23,7 @@ keyboard shortcuts:
 `/` - search
 
 `n/N` - next/previous search result
+
+``-/=`` - decrease/increase volume
+
+`m` - mute

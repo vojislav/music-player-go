@@ -8,12 +8,13 @@ import (
 
 	"github.com/dhowden/tag"
 	"github.com/faiface/beep"
+	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
 )
 
 var sr = beep.SampleRate(44100)
-var playerCtrl *beep.Ctrl
+var playerCtrl *CtrlVolume
 
 var currentTrack Track
 
@@ -37,6 +38,11 @@ type Track struct {
 	ArtistID string `json:"artistId"`
 }
 
+var volume = effects.Volume{
+	Base:   2.0,
+	Silent: false,
+}
+
 func playTrack(trackIndex int, _ string, trackID string, _ rune) {
 	fileName := download(trackID)
 
@@ -54,7 +60,7 @@ func playTrack(trackIndex int, _ string, trackID string, _ rune) {
 	}
 
 	speaker.Clear()
-	playerCtrl = &beep.Ctrl{Streamer: currentTrack.stream, Paused: false}
+	playerCtrl.Streamer = currentTrack.stream
 	speaker.Play(playerCtrl)
 
 	queuePosition = trackIndex
@@ -125,6 +131,17 @@ func previousTrack() {
 	playTrack(queuePosition, nextTrackName, nextTrackID, 0)
 }
 
+func changeVolume(step float64) {
+	if step == 0.0 {
+		playerCtrl.Silent = !playerCtrl.Silent
+	} else {
+		playerCtrl.Volume += step
+		volumePercent += int(step * 10)
+		downloadProgressText.Clear()
+		fmt.Fprintf(downloadProgressText, "%d%%", volumePercent)
+	}
+}
+
 func getStream(path string) beep.StreamSeekCloser {
 	f, err := os.Open(path)
 	if err != nil {
@@ -162,6 +179,7 @@ func getDownloadProgress(done chan bool, filePath string, fileSize int) {
 		select {
 		case <-done:
 			downloadProgressText.Clear()
+			fmt.Fprintf(downloadProgressText, "%d%%", volumePercent)
 			return
 		default:
 			file, err := os.Open(filePath)

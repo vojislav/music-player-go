@@ -72,6 +72,8 @@ func initView() {
 		AddItem(currentTrackText, 0, 1, false).
 		AddItem(downloadProgressText, 10, 1, false), true, true)
 
+	fmt.Fprintf(downloadProgressText, "%d%%", volumePercent)
+
 	bottomPanel.AddPage("search", searchInput, true, false)
 
 	// library page
