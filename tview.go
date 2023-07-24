@@ -13,7 +13,7 @@ var pages = tview.NewPages()
 var mainPanel = tview.NewPages()
 var bottomPanel = tview.NewPages()
 var loadingPopup tview.Primitive
-var currentTrackText, downloadProgressText, loadingTextBox, loginStatus *tview.TextView
+var currentTrackText, downloadProgressText, loadingTextBox, loginStatus, trackInfoTextBox *tview.TextView
 var loginGrid *tview.Grid
 
 var popup = func(p tview.Primitive, width, height int) tview.Primitive {
@@ -50,6 +50,11 @@ func initView() {
 
 	loadingPopup = popup(loadingTextBox, 40, 10)
 	pages.AddPage("loading library", loadingPopup, true, false)
+
+	// track info page
+	trackInfoTextBox = tview.NewTextView()
+	trackInfoTextBox.SetBorder(true).SetTitle("Track info")
+	pages.AddPage("track info", trackInfoTextBox, true, false)
 
 	// main panel
 	mainFlex := tview.NewFlex().SetDirection(tview.FlexRow).
@@ -118,12 +123,41 @@ func initView() {
 
 	mainPanel.AddPage("playlists", playlistFlex, true, false)
 
+	pages.SendToFront("track info")
+
 	// key handlers
 	app.SetInputCapture(appInputHandler)
 	libraryFlex.SetInputCapture(libraryInputHandler)
 	queueFlex.SetInputCapture(queueInputHandler)
 	playlistFlex.SetInputCapture(playlistInputHandler)
 	searchInput.SetInputCapture(searchInputHandler)
+}
+
+func toggleTrackInfo() {
+	var list *tview.List
+	switch app.GetFocus() {
+	case trackList:
+		list = trackList
+	case playlistTracks:
+		list = playlistList
+	case queueList:
+		list = queueList
+	default:
+		pages.HidePage("track info")
+		return
+	}
+
+	if app.GetFocus() != trackInfoTextBox {
+		pages.ShowPage("track info")
+		trackInfoTextBox.Clear()
+		_, trackID := list.GetItemText(list.GetCurrentItem())
+		var id, title, album, artist, genre, suffix, albumID, artistID string
+		var track, year, size, duration, bitrate int
+		queryTrackInfo(toInt(trackID)).Scan(&id, &title, &album, &artist, &track, &year, &genre, &size, &suffix, &duration, &bitrate, &albumID, &artistID)
+		fmt.Fprintf(trackInfoTextBox, "Title: %s\nAlbum: %s\nArtist: %s\nYear: %d\nTrack: %d\nGenre: %s\nSize: %s\nDuration: %s\nSuffix: %s\nBit rate: %d kbps\n", title, album, artist, year, track, genre, getSizeString(size), getTimeString(duration), suffix, bitrate)
+	} else {
+		pages.HidePage("track info")
+	}
 }
 
 func updateCurrentTrackText() {
@@ -163,6 +197,10 @@ func getTimeString(time int) string {
 	return fmt.Sprint(minutes, ":", seconds)
 }
 
+func getSizeString(size int) string {
+	return fmt.Sprintf("%.1fM", float64(size)/(1024*1024))
+}
+
 func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	focused := app.GetFocus()
 	if focused == loginGrid || focused == searchInput {
@@ -180,6 +218,8 @@ func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		mainPanel.SwitchToPage("playlists")
 		return nil
 
+	case 'i':
+		toggleTrackInfo()
 	}
 
 	return event

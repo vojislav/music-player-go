@@ -7,6 +7,7 @@ current features:
 - library view
 - queue
 - playlists
+- track info
 
 keyboard shortcuts:
 
@@ -27,3 +28,5 @@ keyboard shortcuts:
 ``-/=`` - decrease/increase volume
 
 `m` - mute
+
+`i` - show track info

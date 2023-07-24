@@ -58,6 +58,17 @@ func queryAlbumTracks(albumID int) *sql.Rows {
 	return rows
 }
 
+func queryTrackInfo(trackID int) *sql.Row {
+	db, err := sql.Open("sqlite3", databaseFile)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+	row := db.QueryRow("SELECT * FROM tracks WHERE id=?", trackID)
+	return row
+}
+
 func queryPlaylistTracks(playlistID int) *sql.Rows {
 	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
@@ -132,7 +143,7 @@ func loadDatabase() {
 			}
 			getTracks(albumID)
 			for k, v := range artists[artistID].albums[albumID].tracks {
-				_, err := trackQuery.Exec(k, v.Title, v.AlbumID, v.ArtistID, v.Track, v.Duration)
+				_, err := trackQuery.Exec(k, v.Title, v.Album, v.Artist, v.Track, v.Year, v.Genre, v.Size, v.Suffix, v.Duration, v.BitRate, v.AlbumID, v.ArtistID)
 				if err != nil {
 					fmt.Println(err)
 					return

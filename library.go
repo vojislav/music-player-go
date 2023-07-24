@@ -56,9 +56,9 @@ func fillTracksList(_ int, albumName, albumIDString string, _ rune) {
 
 	rows := queryAlbumTracks(albumID)
 	for rows.Next() {
-		var trackID, albumID, artistID, track, duration int
-		var title string
-		rows.Scan(&trackID, &title, &albumID, &artistID, &track, &duration)
+		var title, album, artist, genre, suffix, albumID, artistID string
+		var trackID, track, year, size, duration, bitrate int
+		rows.Scan(&trackID, &title, &album, &artist, &track, &year, &genre, &size, &suffix, &duration, &bitrate, &albumID, &artistID)
 
 		trackList.AddItem(fmt.Sprintf("%d. %s", track, title), fmt.Sprint(trackID), 0, nil)
 	}
