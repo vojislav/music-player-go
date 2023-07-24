@@ -240,24 +240,29 @@ func getTracks(albumID int) bool {
 	}
 
 	iter = query.Run(resJSON)
-	for track, ok := iter.Next(); ok; track, ok = iter.Next() {
-		trackMap := track.(map[string]any)
+	for trackMap, ok := iter.Next(); ok; trackMap, ok = iter.Next() {
 
-		var track float64
-		if track, ok = trackMap["track"].(float64); !ok {
-			track = 0
-		}
+		// trackMap := track.(map[string]any)
 
-		newTrack := Track{
-			ID:       trackMap["id"].(string),
-			Title:    trackMap["title"].(string),
-			Album:    trackMap["album"].(string),
-			AlbumID:  fmt.Sprint(albumID),
-			Artist:   trackMap["artist"].(string),
-			ArtistID: artistID,
-			Track:    int(track),
-			Duration: int(trackMap["duration"].(float64))}
+		// var track float64
+		// if track, ok = trackMap["track"].(float64); !ok {
+		// 	track = 0
+		// }
 
+		// newTrack := Track{
+		// 	ID:       trackMap["id"].(string),
+		// 	Title:    trackMap["title"].(string),
+		// 	Album:    trackMap["album"].(string),
+		// 	AlbumID:  fmt.Sprint(albumID),
+		// 	Artist:   trackMap["artist"].(string),
+		// 	ArtistID: artistID,
+		// 	Track:    int(track),
+		// 	Duration: int(trackMap["duration"].(float64))}
+
+		// artists[toInt(artistID)].albums[albumID].tracks[toInt(newTrack.ID)] = &newTrack
+		newTrack := Track{}
+		trackJSON, _ := json.Marshal(trackMap)
+		json.Unmarshal(trackJSON, &newTrack)
 		artists[toInt(artistID)].albums[albumID].tracks[toInt(newTrack.ID)] = &newTrack
 	}
 

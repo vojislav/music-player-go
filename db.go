@@ -88,17 +88,17 @@ func loadDatabase() {
 		return
 	}
 
-	trackQuery, err := db.Prepare("INSERT OR IGNORE INTO tracks(id, title, albumID, artistID, track, duration) VALUES(?,?,?,?,?,?)")
+	trackQuery, err := db.Prepare("INSERT OR IGNORE INTO tracks(id, title, album, artist, track, year, genre, size, suffix, duration, bitrate, albumID, artistID) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	playlistQuery, err := db.Prepare("INSERT OR IGNORE INTO playlists(id, name, comment, owner, public, songCount, duration, created, changed, coverArt) VALUES(?,?,?,?,?,?,?,?,?,?)")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	// playlistQuery, err := db.Prepare("INSERT OR IGNORE INTO playlists(id, name, comment, owner, public, songCount, duration, created, changed, coverArt) VALUES(?,?,?,?,?,?,?,?,?,?)")
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
 
 	// _, err = db.Prepare("UPDATE tracks SET playlistID=? WHERE id=?")
 	// if err != nil {
@@ -145,18 +145,18 @@ func loadDatabase() {
 		}
 	}
 
-	playlists := getPlaylists()
-	for _, playlist := range playlists {
-		_, err := playlistQuery.Exec(playlist.ID, playlist.Name, playlist.Comment, playlist.Owner,
-			playlist.Public, playlist.SongCount, playlist.Duration, playlist.Created, playlist.Changed, playlist.CoverArt)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		playlistTracks := getPlaylistTracks(toInt(playlist.ID))
+	// playlists := getPlaylists()
+	// for _, playlist := range playlists {
+	// 	_, err := playlistQuery.Exec(playlist.ID, playlist.Name, playlist.Comment, playlist.Owner,
+	// 		playlist.Public, playlist.SongCount, playlist.Duration, playlist.Created, playlist.Changed, playlist.CoverArt)
+	// 	if err != nil {
+	// 		fmt.Println(err)
+	// 		return
+	// 	}
+	// 	playlistTracks := getPlaylistTracks(toInt(playlist.ID))
 
-		os.WriteFile(playlistDirectory+playlist.Name+".json", playlistTracks, 0755)
-	}
+	// 	os.WriteFile(playlistDirectory+playlist.Name+".json", playlistTracks, 0755)
+	// }
 	// playlistTracks := getPlaylistTracks(playlist.id)
 	// for _, trackID := range playlistTracks {
 	// 	_, err := playlistTracksQuery.Exec(playlist.id, trackID)
@@ -175,27 +175,34 @@ DROP TABLE IF EXISTS tracks;
 DROP TABLE IF EXISTS playlists;
 
 CREATE TABLE artists (
-    id INTEGER PRIMARY KEY,
-    name TEXT
+	id INTEGER PRIMARY KEY,
+	name TEXT
 );
 
 CREATE TABLE albums (
-    id INTEGER PRIMARY KEY,
-    artistID INTEGER,
-    name TEXT,
-    year INT,
-    FOREIGN KEY (artistID) REFERENCES artists(id)
+	id INTEGER PRIMARY KEY,
+	artistID INTEGER,
+	name TEXT,
+	year INT,
+	FOREIGN KEY (artistID) REFERENCES artists(id)
 );
 
 CREATE TABLE tracks (
-    id INTEGER PRIMARY KEY,
-    title TEXT,
-    albumID INTEGER,
-    artistID INTEGER,
-    track INTEGER,
-    duration INTEGER,
-    FOREIGN KEY (artistID) REFERENCES artists(id),
-    FOREIGN KEY (albumID) REFERENCES albums(id)
+	id INTEGER PRIMARY KEY,
+	title TEXT,
+	album TEXT,
+	artist TEXT,
+	track INTEGER,
+	year INTEGER,
+	genre TEXT,
+	size INTEGER,
+	suffix TEXT,
+	duration INTEGER,
+	bitrate INTEGER,
+	albumID INTEGER,
+	artistID INTEGER,
+	FOREIGN KEY (artistID) REFERENCES artists(id),
+	FOREIGN KEY (albumID) REFERENCES albums(id)
 );
 
 CREATE TABLE playlists (
@@ -209,7 +216,6 @@ CREATE TABLE playlists (
 	created TEXT,
 	changed TEXT,
 	coverArt TEXT
-
 );`
 
 	f, err := os.Create(initScriptFile)
