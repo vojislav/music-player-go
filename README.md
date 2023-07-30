@@ -8,6 +8,7 @@ current features:
 - queue
 - playlists
 - track info
+- scrobbling
 
 keyboard shortcuts:
 
