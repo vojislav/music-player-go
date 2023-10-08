@@ -203,7 +203,8 @@ func getSizeString(size int) string {
 
 func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	focused := app.GetFocus()
-	if focused == loginGrid || focused == searchInput {
+	frontPage, _ := pages.GetFrontPage()
+	if frontPage == "login" || focused == searchInput {
 		return event
 	}
 
