@@ -111,20 +111,26 @@ func loadDatabase() {
 		return
 	}
 
-	// _, err = db.Prepare("UPDATE tracks SET playlistID=? WHERE id=?")
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
-
 	trackCount, err := db.Prepare("SELECT COUNT(*) FROM tracks")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	var trackNum int
+	playlists := getPlaylists()
+	for _, playlist := range playlists {
+		_, err := playlistQuery.Exec(playlist.ID, playlist.Name, playlist.Comment, playlist.Owner,
+			playlist.Public, playlist.SongCount, playlist.Duration, playlist.Created, playlist.Changed, playlist.CoverArt)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		playlistTracks := getPlaylistTracks(toInt(playlist.ID))
 
+		os.WriteFile(playlistDirectory+playlist.Name+".json", playlistTracks, 0755)
+	}
+
+	var trackNum int
 	getArtists()
 	for k, v := range artists {
 		artistID := k
@@ -156,27 +162,6 @@ func loadDatabase() {
 		}
 	}
 
-	playlists := getPlaylists()
-	for _, playlist := range playlists {
-		_, err := playlistQuery.Exec(playlist.ID, playlist.Name, playlist.Comment, playlist.Owner,
-			playlist.Public, playlist.SongCount, playlist.Duration, playlist.Created, playlist.Changed, playlist.CoverArt)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		playlistTracks := getPlaylistTracks(toInt(playlist.ID))
-
-		os.WriteFile(playlistDirectory+playlist.Name+".json", playlistTracks, 0755)
-		// }
-		// playlistTracks := getPlaylistTracks(playlist.id)
-		// for _, trackID := range playlistTracks {
-		// 	_, err := playlistTracksQuery.Exec(playlist.id, trackID)
-		// 	if err != nil {
-		// 		fmt.Println(err)
-		// 		return
-		// 	}
-		// }
-	}
 }
 
 func makeInitScript() {
