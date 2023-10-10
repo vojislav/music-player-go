@@ -174,7 +174,7 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	case '-':
 		changeVolume(-volumeStep)
 	case 'm':
-		changeVolume(0.0)
+		toggleMute()
 	}
 
 	return event

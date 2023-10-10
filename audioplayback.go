@@ -132,14 +132,14 @@ func previousTrack() {
 }
 
 func changeVolume(step float64) {
-	if step == 0.0 {
-		playerCtrl.Silent = !playerCtrl.Silent
-	} else {
-		playerCtrl.Volume += step
-		volumePercent += int(step * 10)
-		downloadProgressText.Clear()
-		fmt.Fprintf(downloadProgressText, "%d%%", volumePercent)
-	}
+	playerCtrl.Volume += step
+	volumePercent += int(step * 10)
+	downloadProgressText.Clear()
+	fmt.Fprintf(downloadProgressText, "%d%%", volumePercent)
+}
+
+func toggleMute() {
+	playerCtrl.Silent = !playerCtrl.Silent
 }
 
 func getStream(path string) beep.StreamSeekCloser {
