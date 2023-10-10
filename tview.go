@@ -139,7 +139,7 @@ func toggleTrackInfo() {
 	case trackList:
 		list = trackList
 	case playlistTracks:
-		list = playlistList
+		list = playlistTracks
 	case queueList:
 		list = queueList
 	default:
