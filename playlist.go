@@ -53,13 +53,9 @@ func showPlaylist(_ int, playlistName, playlistIDString string, _ rune) {
 
 func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	focused := app.GetFocus()
-	if focused == loginForm || focused == searchInput {
-		return event
-	}
 
 	switch event.Key() {
 	case tcell.KeyEnter:
-		focused := app.GetFocus()
 		if focused == playlistTracks {
 			currentTrackIndex := playlistTracks.GetCurrentItem()
 			_, currentTrackID := playlistTracks.GetItemText(currentTrackIndex)
@@ -69,14 +65,12 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 
 	case tcell.KeyLeft:
-		focused = app.GetFocus()
 		if focused == playlistTracks {
 			app.SetFocus(playlistList)
 		}
 		return nil
 
 	case tcell.KeyRight:
-		focused = app.GetFocus()
 		if focused == playlistList {
 			app.SetFocus(playlistTracks)
 		} else if focused == playlistTracks {
@@ -89,37 +83,16 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	}
 
 	switch event.Rune() {
-	case 'q':
-		app.Stop()
-		return nil
-	case 'p':
-		playPause()
-		return nil
-
-	case '>':
-		nextTrack()
-		return nil
-	case '<':
-		previousTrack()
-		return nil
-	case 's':
-		stopTrack()
-		return nil
-
 	case 'h':
-		focused = app.GetFocus()
 		if focused == playlistTracks {
 			app.SetFocus(playlistList)
 		}
 		return nil
-
 	case 'j':
 		return tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone)
 	case 'k':
 		return tcell.NewEventKey(tcell.KeyUp, 0, tcell.ModNone)
-
 	case 'l':
-		focused = app.GetFocus()
 		if focused == playlistList {
 			app.SetFocus(playlistTracks)
 		} else if focused == playlistTracks {
@@ -130,37 +103,7 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		}
 		return nil
 
-	case 'g':
-		return tcell.NewEventKey(tcell.KeyHome, 0, tcell.ModNone)
-
-	case 'G':
-		return tcell.NewEventKey(tcell.KeyEnd, 0, tcell.ModNone)
-
-	case 'n':
-		nextSearchResult()
-		return nil
-
-	case 'N':
-		previousSearchResult()
-		return nil
-
-	case '/':
-		searchIndexes = nil
-		searchCurrentIndex = 0
-
-		switch app.GetFocus() {
-		case playlistList:
-			searchList = playlistList
-		case playlistTracks:
-			searchList = playlistTracks
-		}
-
-		app.SetFocus(bottomPanel)
-		bottomPanel.SwitchToPage("search")
-		return nil
-
 	case ' ':
-		focused := app.GetFocus()
 		if focused == playlistTracks {
 			currentTrackIndex := playlistTracks.GetCurrentItem()
 			_, currentTrackID := playlistTracks.GetItemText(currentTrackIndex)
@@ -168,13 +111,6 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 			playlistTracks.SetCurrentItem(currentTrackIndex + 1)
 		}
 		return nil
-
-	case '=':
-		changeVolume(volumeStep)
-	case '-':
-		changeVolume(-volumeStep)
-	case 'm':
-		toggleMute()
 	}
 
 	return event

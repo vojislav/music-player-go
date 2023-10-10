@@ -15,12 +15,75 @@ var bottomPanel = tview.NewPages()
 var loadingPopup tview.Primitive
 var currentTrackText, downloadProgressText, loadingTextBox, loginStatus, trackInfoTextBox *tview.TextView
 var loginGrid *tview.Grid
+var libraryFlex, queueFlex, playlistFlex *tview.Flex
 
 var popup = func(p tview.Primitive, width, height int) tview.Primitive {
 	return tview.NewGrid().
 		SetColumns(0, width, 0).
 		SetRows(0, height, 0).
 		AddItem(p, 1, 1, 1, 1, 0, 0, true)
+}
+
+// generic handler used for track manipulation in [library, playlist, queue]
+func trackInputHandler(event *tcell.EventKey) *tcell.EventKey {
+	switch event.Rune() {
+	case 'g':
+		return tcell.NewEventKey(tcell.KeyHome, 0, tcell.ModNone)
+	case 'G':
+		return tcell.NewEventKey(tcell.KeyEnd, 0, tcell.ModNone)
+
+	case 'p':
+		playPause()
+		return nil
+	case 's':
+		stopTrack()
+		return nil
+	case '>':
+		nextTrack()
+		return nil
+	case '<':
+		previousTrack()
+		return nil
+
+	case '/':
+		searchIndexes = nil
+		searchCurrentIndex = 0
+
+		switch app.GetFocus() {
+		case artistList:
+			searchList = artistList
+		case albumList:
+			searchList = albumList
+		case trackList:
+			searchList = trackList
+		case queueList:
+			searchList = queueList
+		case playlistList:
+			searchList = playlistList
+		case playlistTracks:
+			searchList = playlistTracks
+		}
+		app.SetFocus(bottomPanel)
+		bottomPanel.SwitchToPage("search")
+		return nil
+	case 'n':
+		nextSearchResult()
+		return nil
+	case 'N':
+		previousSearchResult()
+		return nil
+
+	case '=':
+		changeVolume(volumeStep)
+		return nil
+	case '-':
+		changeVolume(-volumeStep)
+		return nil
+	case 'm':
+		toggleMute()
+		return nil
+	}
+	return event
 }
 
 func initView() {
@@ -93,7 +156,7 @@ func initView() {
 	trackList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
 	trackList.SetBorder(true).SetTitle("Tracks")
 
-	libraryFlex := tview.NewFlex().SetDirection(tview.FlexRow).
+	libraryFlex = tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
 			AddItem(artistList, 0, 1, true).
 			AddItem(albumList, 0, 1, false).
@@ -105,7 +168,7 @@ func initView() {
 	queueList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
 	queueList.SetBorder(true).SetTitle("Queue")
 	queueList.SetSelectedFunc(playTrack)
-	queueFlex := tview.NewFlex().SetDirection(tview.FlexRow).
+	queueFlex = tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(queueList, 0, 1, true)
 
 	mainPanel.AddPage("queue", queueFlex, true, false)
@@ -117,7 +180,7 @@ func initView() {
 
 	playlistTracks = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
 	playlistTracks.SetBorder(true)
-	playlistFlex := tview.NewFlex().
+	playlistFlex = tview.NewFlex().
 		AddItem(playlistList, 0, 1, true).
 		AddItem(playlistTracks, 0, 3, false)
 
@@ -208,7 +271,18 @@ func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		return event
 	}
 
+	mainFrontPage, _ := mainPanel.GetFrontPage()
+	// if nil is returned from trackInputHandler, event has been handled. trackInputHandler() only applies to certain pages
+	if mainFrontPage == "library" || mainFrontPage == "queue" || mainFrontPage == "playlists" {
+		if event = trackInputHandler(event); event == nil {
+			return nil
+		}
+	}
+
 	switch event.Rune() {
+	case 'q':
+		app.Stop()
+		return nil
 	case '1':
 		mainPanel.SwitchToPage("queue")
 		return nil

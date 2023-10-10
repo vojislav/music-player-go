@@ -66,13 +66,9 @@ func fillTracksList(_ int, albumName, albumIDString string, _ rune) {
 
 func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	focused := app.GetFocus()
-	if focused == loginForm || focused == searchInput {
-		return event
-	}
 
 	switch event.Key() {
 	case tcell.KeyEnter:
-		focused := app.GetFocus()
 		if focused == trackList {
 			currentTrackIndex := trackList.GetCurrentItem()
 			_, currentTrackID := trackList.GetItemText(currentTrackIndex)
@@ -82,7 +78,6 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 
 	case tcell.KeyLeft:
-		focused := app.GetFocus()
 		if focused == albumList {
 			app.SetFocus(artistList)
 		} else if focused == trackList {
@@ -91,7 +86,6 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 
 	case tcell.KeyRight:
-		focused := app.GetFocus()
 		if focused == artistList {
 			app.SetFocus(albumList)
 		} else if focused == albumList {
@@ -106,25 +100,7 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	}
 
 	switch event.Rune() {
-	case 'q':
-		app.Stop()
-		return nil
-	case 'p':
-		playPause()
-		return nil
-
-	case '>':
-		nextTrack()
-		return nil
-	case '<':
-		previousTrack()
-		return nil
-	case 's':
-		stopTrack()
-		return nil
-
 	case 'h':
-		focused := app.GetFocus()
 		if focused == albumList {
 			app.SetFocus(artistList)
 		} else if focused == trackList {
@@ -137,7 +113,6 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	case 'k':
 		return tcell.NewEventKey(tcell.KeyUp, 0, tcell.ModNone)
 	case 'l':
-		focused := app.GetFocus()
 		if focused == artistList {
 			app.SetFocus(albumList)
 		} else if focused == albumList {
@@ -150,21 +125,7 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		}
 		return nil
 
-	case 'g':
-		return tcell.NewEventKey(tcell.KeyHome, 0, tcell.ModNone)
-
-	case 'G':
-		return tcell.NewEventKey(tcell.KeyEnd, 0, tcell.ModNone)
-
-	case 'n':
-		nextSearchResult()
-		return nil
-	case 'N':
-		previousSearchResult()
-		return nil
-
 	case ' ':
-		focused := app.GetFocus()
 		if focused == trackList {
 			currentTrackIndex := trackList.GetCurrentItem()
 			_, currentTrackID := trackList.GetItemText(currentTrackIndex)
@@ -176,29 +137,6 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 			addAlbumToQueue(currentAlbumID)
 		}
 		return nil
-
-	case '/':
-		searchIndexes = nil
-		searchCurrentIndex = 0
-
-		switch app.GetFocus() {
-		case artistList:
-			searchList = artistList
-		case albumList:
-			searchList = albumList
-		case trackList:
-			searchList = trackList
-		}
-		app.SetFocus(bottomPanel)
-		bottomPanel.SwitchToPage("search")
-		return nil
-
-	case '=':
-		changeVolume(volumeStep)
-	case '-':
-		changeVolume(-volumeStep)
-	case 'm':
-		toggleMute()
 	}
 
 	return event
