@@ -40,11 +40,6 @@ func addAlbumToQueue(albumID string) {
 }
 
 func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
-	focused := app.GetFocus()
-	if focused == loginForm || focused == searchInput {
-		return event
-	}
-
 	switch event.Key() {
 	case tcell.KeyRight, tcell.KeyEnter:
 		currentTrackIndex := queueList.GetCurrentItem()
@@ -59,23 +54,6 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	}
 
 	switch event.Rune() {
-	case 'q':
-		app.Stop()
-		return nil
-	case 'p':
-		playPause()
-		return nil
-
-	case '>':
-		nextTrack()
-		return nil
-	case '<':
-		previousTrack()
-		return nil
-	case 's':
-		stopTrack()
-		return nil
-
 	case 'j':
 		return tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone)
 	case 'k':
@@ -85,36 +63,10 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		currentTrackName, currentTrackID := queueList.GetItemText(currentTrackIndex)
 		playTrack(currentTrackIndex, currentTrackName, currentTrackID, 0)
 		return nil
-	case 'g':
-		return tcell.NewEventKey(tcell.KeyHome, 0, tcell.ModNone)
-
-	case 'G':
-		return tcell.NewEventKey(tcell.KeyEnd, 0, tcell.ModNone)
-
-	case 'n':
-		nextSearchResult()
-		return nil
-	case 'N':
-		previousSearchResult()
-		return nil
-
-	case '/':
-		searchIndexes = nil
-		searchCurrentIndex = 0
-
-		searchList = queueList
-		app.SetFocus(bottomPanel)
-		bottomPanel.SwitchToPage("search")
-		return nil
 
 	case 'x':
 		removeFromQueue()
-	case '=':
-		changeVolume(volumeStep)
-	case '-':
-		changeVolume(-volumeStep)
-	case 'm':
-		toggleMute()
+		return nil
 	}
 
 	return event
