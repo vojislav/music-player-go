@@ -107,6 +107,8 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		bottomPanel.SwitchToPage("search")
 		return nil
 
+	case 'x':
+		removeFromQueue()
 	case '=':
 		changeVolume(volumeStep)
 	case '-':
