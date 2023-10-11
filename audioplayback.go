@@ -88,7 +88,11 @@ func togglePlay() {
 func stopTrack() {
 	speaker.Clear()
 	currentTrack = Track{stream: nil}
-	killTicker <- true
+	if !playerCtrl.Paused {
+		killTicker <- true
+	} else {
+		updateCurrentTrackText()
+	}
 }
 
 func trackTime() {
