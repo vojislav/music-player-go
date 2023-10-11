@@ -31,6 +31,10 @@ func trackInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		return tcell.NewEventKey(tcell.KeyHome, 0, tcell.ModNone)
 	case 'G':
 		return tcell.NewEventKey(tcell.KeyEnd, 0, tcell.ModNone)
+	case 'J':
+		return tcell.NewEventKey(tcell.KeyPgDn, 0, tcell.ModNone)
+	case 'K':
+		return tcell.NewEventKey(tcell.KeyPgUp, 0, tcell.ModNone)
 
 	case 'p':
 		togglePlay()
