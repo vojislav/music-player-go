@@ -27,6 +27,10 @@ var popup = func(p tview.Primitive, width, height int) tview.Primitive {
 // generic handler used for track manipulation in [library, playlist, queue]
 func trackInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Rune() {
+	case 'j':
+		return tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone)
+	case 'k':
+		return tcell.NewEventKey(tcell.KeyUp, 0, tcell.ModNone)
 	case 'g':
 		return tcell.NewEventKey(tcell.KeyHome, 0, tcell.ModNone)
 	case 'G':

@@ -108,10 +108,6 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		}
 		return nil
 
-	case 'j':
-		return tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone)
-	case 'k':
-		return tcell.NewEventKey(tcell.KeyUp, 0, tcell.ModNone)
 	case 'l':
 		if focused == artistList {
 			app.SetFocus(albumList)
