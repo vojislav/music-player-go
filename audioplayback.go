@@ -70,7 +70,7 @@ func playTrack(trackIndex int, _ string, trackID string, _ rune) {
 	go trackTime()
 }
 
-func playPause() {
+func togglePlay() {
 	if currentTrack.stream == nil {
 		return
 	}

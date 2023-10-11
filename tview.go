@@ -33,7 +33,7 @@ func trackInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		return tcell.NewEventKey(tcell.KeyEnd, 0, tcell.ModNone)
 
 	case 'p':
-		playPause()
+		togglePlay()
 		return nil
 	case 's':
 		stopTrack()
