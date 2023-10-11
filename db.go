@@ -43,7 +43,7 @@ func queryAlbums(artistID int) *sql.Rows {
 	}
 	defer db.Close()
 
-	rows, _ := db.Query("SELECT * FROM albums WHERE artistID=? ORDER BY year", artistID)
+	rows, _ := db.Query("SELECT * FROM albums WHERE artistID=?  ORDER BY year, name", artistID)
 	return rows
 }
 
