@@ -31,3 +31,5 @@ keyboard shortcuts:
 `m` - mute
 
 `i` - show track info
+
+. -	show lyrics

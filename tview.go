@@ -13,7 +13,7 @@ var pages = tview.NewPages()
 var mainPanel = tview.NewPages()
 var bottomPanel = tview.NewPages()
 var loadingPopup tview.Primitive
-var currentTrackText, downloadProgressText, loadingTextBox, loginStatus, trackInfoTextBox *tview.TextView
+var currentTrackText, downloadProgressText, loadingTextBox, loginStatus, trackInfoTextBox, lyricsTextBox *tview.TextView
 var loginGrid *tview.Grid
 
 var popup = func(p tview.Primitive, width, height int) tview.Primitive {
@@ -55,6 +55,11 @@ func initView() {
 	trackInfoTextBox = tview.NewTextView()
 	trackInfoTextBox.SetBorder(true).SetTitle("Track info")
 	pages.AddPage("track info", trackInfoTextBox, true, false)
+
+	// lyrics page
+	lyricsTextBox = tview.NewTextView()
+	lyricsTextBox.SetBorder(true)
+	pages.AddPage("lyrics", lyricsTextBox, true, false)
 
 	// main panel
 	mainFlex := tview.NewFlex().SetDirection(tview.FlexRow).
@@ -135,6 +140,8 @@ func initView() {
 
 func toggleTrackInfo() {
 	var list *tview.List
+	focused := app.GetFocus()
+
 	switch app.GetFocus() {
 	case trackList:
 		list = trackList
@@ -142,12 +149,11 @@ func toggleTrackInfo() {
 		list = playlistList
 	case queueList:
 		list = queueList
-	default:
+	case trackInfoTextBox:
 		pages.HidePage("track info")
-		return
 	}
 
-	if app.GetFocus() != trackInfoTextBox {
+	if focused != trackInfoTextBox {
 		pages.ShowPage("track info")
 		trackInfoTextBox.Clear()
 		_, trackID := list.GetItemText(list.GetCurrentItem())
@@ -155,8 +161,27 @@ func toggleTrackInfo() {
 		var track, year, size, duration, bitrate int
 		queryTrackInfo(toInt(trackID)).Scan(&id, &title, &album, &artist, &track, &year, &genre, &size, &suffix, &duration, &bitrate, &albumID, &artistID)
 		fmt.Fprintf(trackInfoTextBox, "Title: %s\nAlbum: %s\nArtist: %s\nYear: %d\nTrack: %d\nGenre: %s\nSize: %s\nDuration: %s\nSuffix: %s\nBit rate: %d kbps\n", title, album, artist, year, track, genre, getSizeString(size), getTimeString(duration), suffix, bitrate)
+	}
+}
+
+func toggleLyrics() {
+	var list *tview.List
+	switch app.GetFocus() {
+	case trackList:
+		list = trackList
+	case playlistTracks:
+		list = playlistTracks
+	case queueList:
+		list = queueList
+	case lyricsTextBox:
+		pages.HidePage("lyrics")
+		return
+	}
+
+	if app.GetFocus() != lyricsTextBox {
+		go showLyrics(list)
 	} else {
-		pages.HidePage("track info")
+		pages.HidePage("lyrics")
 	}
 }
 
@@ -221,6 +246,9 @@ func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 	case 'i':
 		toggleTrackInfo()
+
+	case '.':
+		toggleLyrics()
 	}
 
 	return event

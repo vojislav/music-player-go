@@ -13,17 +13,23 @@ require (
 )
 
 require (
+	github.com/PuerkitoBio/goquery v1.4.1 // indirect
+	github.com/andybalholm/cascadia v1.0.0 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
+	github.com/gosimple/slug v1.2.0 // indirect
 	github.com/hajimehoshi/go-mp3 v0.3.4 // indirect
 	github.com/hajimehoshi/oto v1.0.1 // indirect
 	github.com/itchyny/timefmt-go v0.1.5 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/rainycape/unidecode v0.0.0-20150907023854-cb7f23ec59be // indirect
+	github.com/rhnvrm/lyric-api-go v0.1.4 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
 	golang.org/x/exp/shiny v0.0.0-20230519143937-03e91628a987 // indirect
 	golang.org/x/image v0.7.0 // indirect
 	golang.org/x/mobile v0.0.0-20230301163155-e0f57694e12c // indirect
+	golang.org/x/net v0.6.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
 	golang.org/x/term v0.5.0 // indirect
 	golang.org/x/text v0.9.0 // indirect
