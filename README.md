@@ -32,4 +32,4 @@ keyboard shortcuts:
 
 `i` - show track info
 
-. -	show lyrics
+`.` - show lyrics
