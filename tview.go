@@ -27,13 +27,21 @@ var popup = func(p tview.Primitive, width, height int) tview.Primitive {
 // generic handler used for track manipulation in [library, playlist, queue]
 func trackInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Rune() {
+	case 'j':
+		return tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone)
+	case 'k':
+		return tcell.NewEventKey(tcell.KeyUp, 0, tcell.ModNone)
 	case 'g':
 		return tcell.NewEventKey(tcell.KeyHome, 0, tcell.ModNone)
 	case 'G':
 		return tcell.NewEventKey(tcell.KeyEnd, 0, tcell.ModNone)
+	case 'J':
+		return tcell.NewEventKey(tcell.KeyPgDn, 0, tcell.ModNone)
+	case 'K':
+		return tcell.NewEventKey(tcell.KeyPgUp, 0, tcell.ModNone)
 
 	case 'p':
-		playPause()
+		togglePlay()
 		return nil
 	case 's':
 		stopTrack()
@@ -49,20 +57,7 @@ func trackInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		searchIndexes = nil
 		searchCurrentIndex = 0
 
-		switch app.GetFocus() {
-		case artistList:
-			searchList = artistList
-		case albumList:
-			searchList = albumList
-		case trackList:
-			searchList = trackList
-		case queueList:
-			searchList = queueList
-		case playlistList:
-			searchList = playlistList
-		case playlistTracks:
-			searchList = playlistTracks
-		}
+		searchList = app.GetFocus().(*tview.List)
 		app.SetFocus(bottomPanel)
 		bottomPanel.SwitchToPage("search")
 		return nil
@@ -296,14 +291,18 @@ func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		return event
 	}
 
+	mainFrontPage, _ := mainPanel.GetFrontPage()
 	// if nil is returned from trackInputHandler, event has been handled. trackInputHandler() only applies to certain pages
-	if focused == libraryFlex || focused == queueFlex || focused == playlistFlex {
+	if mainFrontPage == "library" || mainFrontPage == "queue" || mainFrontPage == "playlists" {
 		if event = trackInputHandler(event); event == nil {
 			return nil
 		}
 	}
 
 	switch event.Rune() {
+	case 'q':
+		app.Stop()
+		return nil
 	case '1':
 		mainPanel.SwitchToPage("queue")
 		return nil

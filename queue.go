@@ -2,11 +2,16 @@ package main
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/gdamore/tcell/v2"
 )
 
+// position in queue of currently played track [0-indexed]. Should only be set setQueuePosition()
 var queuePosition = -1
+
+// the way in which the current playing track is marked.
+var currentTrackMarker = "[::u]"
 
 func addToQueue(_ int, _, trackID string, _ rune) {
 	tags := getTags(cacheDirectory + trackID + ".mp3")
@@ -15,28 +20,47 @@ func addToQueue(_ int, _, trackID string, _ rune) {
 }
 
 func addToQueueAndPlay(_ int, _, trackID string, _ rune) {
-	tags := getTags(cacheDirectory + trackID + ".mp3")
-	itemText := fmt.Sprintf("%s - %s", tags.Artist(), tags.Title())
+	addToQueue(0, "", trackID, 0)
 
-	queueList.AddItem(itemText, trackID, 0, nil)
-	queuePosition = queueList.GetItemCount() - 1
-
+	setQueuePosition(queueList.GetItemCount() - 1)
 	playTrack(queuePosition, "", trackID, 0)
 }
 
 func removeFromQueue() {
-	currentTrackIndex := queueList.GetCurrentItem()
-	queueList.RemoveItem(currentTrackIndex)
-	if currentTrackIndex < queuePosition {
-		queuePosition--
-	} else if currentTrackIndex == queuePosition {
+	highlightedTrackIndex := queueList.GetCurrentItem()
+	if highlightedTrackIndex < queuePosition {
+		queuePosition -= 1
+	} else if highlightedTrackIndex == queuePosition {
 		stopTrack()
-		queuePosition = -1
 	}
+	queueList.RemoveItem(highlightedTrackIndex)
 }
 
 func addAlbumToQueue(albumID string) {
 
+}
+
+// should only be called when current song is changed
+func setQueuePosition(newQueuePosition int) {
+	previousQueuePosition := queuePosition
+
+	// if there was a previous song, remove the underline
+	if previousQueuePosition != -1 {
+		previousTrackText, trackID := queueList.GetItemText(previousQueuePosition)
+		previousTrackText = strings.Replace(previousTrackText, currentTrackMarker, "", 1)
+		queueList.SetItemText(previousQueuePosition, previousTrackText, trackID)
+	}
+
+	// if there is a next song, add underline
+	if newQueuePosition != -1 {
+		currentText, trackID := queueList.GetItemText(newQueuePosition)
+		queueList.SetItemText(newQueuePosition,
+			fmt.Sprintf("%s%s", currentTrackMarker, currentText),
+			trackID)
+	}
+
+	// set new queuePosition
+	queuePosition = newQueuePosition
 }
 
 func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
