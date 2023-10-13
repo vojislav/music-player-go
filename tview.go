@@ -259,13 +259,7 @@ func updateCurrentTrackText() {
 	currentTime := getTimeString(currentTrack.stream.Position() / sr.N(time.Second))
 	totalTime := getTimeString(currentTrack.stream.Len() / sr.N(time.Second))
 
-	// fmt.Fprintf(currentTrack, "%s: %s - %s", status, queue.tracks[0].artist, queue.tracks[0].title)
-	if currentTrack.stream.Position() == currentTrack.stream.Len() {
-		currentTrackText.Clear()
-		nextTrack()
-	} else {
-		fmt.Fprintf(currentTrackText, "%s: %s - %s\t%s / %s\tQueue position: %d / %d", status, currentTrack.Artist, currentTrack.Title, currentTime, totalTime, queuePosition+1, queueList.GetItemCount())
-	}
+	fmt.Fprintf(currentTrackText, "%s: %s - %s\t%s / %s\tQueue position: %d / %d", status, currentTrack.Artist, currentTrack.Title, currentTime, totalTime, queuePosition+1, queueList.GetItemCount())
 	app.Draw()
 }
 

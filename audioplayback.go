@@ -19,7 +19,7 @@ var playerCtrl *CtrlVolume
 var currentTrack Track
 
 var ticker *time.Ticker
-var killTicker = make(chan bool)
+var killTicker = make(chan bool, 1)
 
 type Track struct {
 	stream   beep.StreamSeekCloser
@@ -105,10 +105,14 @@ func trackTime() {
 			if currentTrack.stream.Position() >= currentTrack.stream.Len()/2 {
 				scrobble(toInt(currentTrack.ID), "true")
 			}
+			if currentTrack.stream.Position() == currentTrack.stream.Len() {
+				nextTrack()
+			}
 			updateCurrentTrackText()
 		case <-killTicker:
 			ticker.Stop()
 			updateCurrentTrackText()
+			app.Draw()
 			return
 		}
 	}
@@ -116,6 +120,7 @@ func trackTime() {
 
 func nextTrack() {
 	if queuePosition+1 == queueList.GetItemCount() {
+		stopTrack()
 		return
 	}
 
