@@ -315,9 +315,10 @@ func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 	case 'i':
 		toggleTrackInfo()
-
+		return nil
 	case '.':
 		toggleLyrics()
+		return nil
 	}
 
 	return event
