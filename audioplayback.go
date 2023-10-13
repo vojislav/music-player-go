@@ -63,7 +63,7 @@ func playTrack(trackIndex int, _ string, trackID string, _ rune) {
 	playerCtrl.Streamer = currentTrack.stream
 	speaker.Play(playerCtrl)
 
-	queuePosition = trackIndex
+	setQueuePosition(trackIndex)
 
 	scrobble(toInt(currentTrack.ID), "false")
 
@@ -85,7 +85,7 @@ func togglePlay() {
 	speaker.Unlock()
 }
 
-func stopTrack() {
+func stopTrack() { // TODO: stop zablokira kada je prazan queue
 	speaker.Clear()
 	currentTrack = Track{stream: nil}
 	if !playerCtrl.Paused {
@@ -93,6 +93,7 @@ func stopTrack() {
 	} else {
 		updateCurrentTrackText()
 	}
+	setQueuePosition(-1)
 }
 
 func trackTime() {
@@ -118,7 +119,7 @@ func nextTrack() {
 		return
 	}
 
-	queuePosition += 1
+	setQueuePosition(queuePosition + 1)
 
 	nextTrackName, nextTrackID := queueList.GetItemText(queuePosition)
 	playTrack(queuePosition, nextTrackName, nextTrackID, 0)
@@ -129,7 +130,7 @@ func previousTrack() {
 		return
 	}
 
-	queuePosition -= 1
+	setQueuePosition(queuePosition - 1)
 
 	nextTrackName, nextTrackID := queueList.GetItemText(queuePosition)
 	playTrack(queuePosition, nextTrackName, nextTrackID, 0)
