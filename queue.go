@@ -63,12 +63,20 @@ func setQueuePosition(newQueuePosition int) {
 	queuePosition = newQueuePosition
 }
 
+// play the currently highlighted track in queue. No-op if queue is empty
+func queuePlayHighlighted() {
+	if queueList.GetItemCount() == 0 {
+		return
+	}
+	currentTrackIndex := queueList.GetCurrentItem()
+	currentTrackName, currentTrackID := queueList.GetItemText(currentTrackIndex)
+	playTrack(currentTrackIndex, currentTrackName, currentTrackID, 0)
+}
+
 func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Key() {
 	case tcell.KeyRight, tcell.KeyEnter:
-		currentTrackIndex := queueList.GetCurrentItem()
-		currentTrackName, currentTrackID := queueList.GetItemText(currentTrackIndex)
-		playTrack(currentTrackIndex, currentTrackName, currentTrackID, 0)
+		queuePlayHighlighted()
 		return nil
 	case tcell.KeyLeft:
 		return nil
@@ -83,9 +91,7 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	case 'k':
 		return tcell.NewEventKey(tcell.KeyUp, 0, tcell.ModNone)
 	case 'l':
-		currentTrackIndex := queueList.GetCurrentItem()
-		currentTrackName, currentTrackID := queueList.GetItemText(currentTrackIndex)
-		playTrack(currentTrackIndex, currentTrackName, currentTrackID, 0)
+		queuePlayHighlighted()
 		return nil
 
 	case 'x':
