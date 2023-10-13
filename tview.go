@@ -57,20 +57,7 @@ func trackInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		searchIndexes = nil
 		searchCurrentIndex = 0
 
-		switch app.GetFocus() {
-		case artistList:
-			searchList = artistList
-		case albumList:
-			searchList = albumList
-		case trackList:
-			searchList = trackList
-		case queueList:
-			searchList = queueList
-		case playlistList:
-			searchList = playlistList
-		case playlistTracks:
-			searchList = playlistTracks
-		}
+		searchList = app.GetFocus().(*tview.List)
 		app.SetFocus(bottomPanel)
 		bottomPanel.SwitchToPage("search")
 		return nil

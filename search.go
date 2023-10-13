@@ -36,6 +36,7 @@ func searchInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	case tcell.KeyEscape:
 		bottomPanel.SwitchToPage("current track info")
 		app.SetFocus(searchList)
+		searchInput.SetText("") // search input shouldn't persist for next search
 		return nil
 
 	case tcell.KeyEnter:

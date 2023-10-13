@@ -119,10 +119,8 @@ func nextTrack() {
 		return
 	}
 
-	setQueuePosition(queuePosition + 1)
-
-	nextTrackName, nextTrackID := queueList.GetItemText(queuePosition)
-	playTrack(queuePosition, nextTrackName, nextTrackID, 0)
+	nextTrackName, nextTrackID := queueList.GetItemText(queuePosition + 1)
+	playTrack(queuePosition+1, nextTrackName, nextTrackID, 0)
 }
 
 func previousTrack() {
@@ -130,10 +128,8 @@ func previousTrack() {
 		return
 	}
 
-	setQueuePosition(queuePosition - 1)
-
-	nextTrackName, nextTrackID := queueList.GetItemText(queuePosition)
-	playTrack(queuePosition, nextTrackName, nextTrackID, 0)
+	nextTrackName, nextTrackID := queueList.GetItemText(queuePosition - 1)
+	playTrack(queuePosition-1, nextTrackName, nextTrackID, 0)
 }
 
 func changeVolume(step float64) {
