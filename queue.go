@@ -78,6 +78,10 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	}
 
 	switch event.Rune() {
+	case 'j':
+		return tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone)
+	case 'k':
+		return tcell.NewEventKey(tcell.KeyUp, 0, tcell.ModNone)
 	case 'l':
 		currentTrackIndex := queueList.GetCurrentItem()
 		currentTrackName, currentTrackID := queueList.GetItemText(currentTrackIndex)

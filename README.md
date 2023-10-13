@@ -28,5 +28,5 @@ current features:
 * ``-/=`` - decrease/increase volume
 * `m` - mute
 * `i` - show track info
+* `.` - show lyrics
 * `x` - remove current track from queue
-

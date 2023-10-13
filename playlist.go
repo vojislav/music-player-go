@@ -88,6 +88,10 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 			app.SetFocus(playlistList)
 		}
 		return nil
+	case 'j':
+		return tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone)
+	case 'k':
+		return tcell.NewEventKey(tcell.KeyUp, 0, tcell.ModNone)
 	case 'l':
 		if focused == playlistList {
 			app.SetFocus(playlistTracks)
