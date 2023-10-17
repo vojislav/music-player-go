@@ -295,6 +295,13 @@ func updateCurrentTrackText() {
 	currentTime := getTimeString(currentTrack.stream.Position() / sr.N(time.Second))
 	totalTime := getTimeString(currentTrack.stream.Len() / sr.N(time.Second))
 
+	// TODO lazy refresh
+	nowPlayingTrackTextBox.Clear()
+	fmt.Fprintf(nowPlayingTrackTextBox, "%s - %s", currentTrack.Artist, currentTrack.Title)
+
+	nowPlayingTimeTextBox.Clear()
+	fmt.Fprintf(nowPlayingTimeTextBox, "%s / %s", currentTime, totalTime)
+
 	fmt.Fprintf(currentTrackText, "%s: %s - %s\t%s / %s\tQueue position: %d / %d", status, currentTrack.Artist, currentTrack.Title, currentTime, totalTime, queuePosition+1, queueList.GetItemCount())
 	app.Draw()
 }

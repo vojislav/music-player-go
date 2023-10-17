@@ -11,6 +11,12 @@ import (
 )
 
 func displayNowPlaying() {
+	// TODO cache image
+	if currentTrack.stream == nil {
+		fmt.Fprint(nowPlayingTrackTextBox, "No currently playing track.")
+		return
+	}
+
 	f, _ := os.Open("cover.png")
 	reader := bufio.NewReader(f)
 	content, _ := ioutil.ReadAll(reader)
@@ -21,10 +27,4 @@ func displayNowPlaying() {
 	photo, _ := jpeg.Decode(bytes.NewReader(b))
 	// resizedPhoto := resize.Resize(100, 0, photo, resize.Lanczos3)
 	nowPlayingCover.SetImage(photo)
-
-	nowPlayingTrackTextBox.Clear()
-	fmt.Fprint(nowPlayingTrackTextBox, "Buc Kesidi - Kafe aparat")
-
-	nowPlayingTimeTextBox.Clear()
-	fmt.Fprint(nowPlayingTimeTextBox, "02:54")
 }
