@@ -13,9 +13,11 @@ var pages = tview.NewPages()
 var mainPanel = tview.NewPages()
 var bottomPanel = tview.NewPages()
 var loadingPopup tview.Primitive
-var currentTrackText, downloadProgressText, loadingTextBox, loginStatus, trackInfoTextBox, lyricsTextBox *tview.TextView
+var currentTrackText, downloadProgressText, loadingTextBox, loginStatus, trackInfoTextBox,
+	lyricsTextBox, nowPlayingTrackTextBox, nowPlayingTimeTextBox *tview.TextView
+var nowPlayingCover *tview.Image
 var loginGrid *tview.Grid
-var libraryFlex, queueFlex, playlistFlex *tview.Flex
+var libraryFlex, queueFlex, playlistFlex, nowPlayingFlex *tview.Flex
 
 var popup = func(p tview.Primitive, width, height int) tview.Primitive {
 	return tview.NewGrid().
@@ -118,6 +120,16 @@ func initView() {
 	lyricsTextBox = tview.NewTextView()
 	lyricsTextBox.SetBorder(true)
 	pages.AddPage("lyrics", lyricsTextBox, true, false)
+
+	nowPlayingCover = tview.NewImage()
+	nowPlayingCover.SetSize(-90, 0)
+	nowPlayingTrackTextBox = tview.NewTextView().SetTextAlign(tview.AlignCenter)
+	nowPlayingTimeTextBox = tview.NewTextView().SetTextAlign(tview.AlignCenter)
+	nowPlayingFlex = tview.NewFlex().SetDirection(tview.FlexRow).
+		AddItem(nowPlayingCover, 0, 1, false).
+		AddItem(nowPlayingTrackTextBox, 2, 1, false).
+		AddItem(nowPlayingTimeTextBox, 2, 1, false)
+	pages.AddPage("nowplaying", nowPlayingFlex, true, false)
 
 	// main panel
 	mainFlex := tview.NewFlex().SetDirection(tview.FlexRow).
@@ -287,7 +299,7 @@ func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 	mainFrontPage, _ := mainPanel.GetFrontPage()
 	// if nil is returned from trackInputHandler, event has been handled. trackInputHandler() only applies to certain pages
-	if mainFrontPage == "library" || mainFrontPage == "queue" || mainFrontPage == "playlists" {
+	if mainFrontPage == "library" || mainFrontPage == "queue" || mainFrontPage == "playlists" || frontPage == "nowplaying" {
 		if event = trackInputHandler(event); event == nil {
 			return nil
 		}
@@ -298,13 +310,20 @@ func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		app.Stop()
 		return nil
 	case '1':
+		pages.SwitchToPage("main")
 		mainPanel.SwitchToPage("queue")
 		return nil
 	case '2':
+		pages.SwitchToPage("main")
 		mainPanel.SwitchToPage("library")
 		return nil
 	case '3':
+		pages.SwitchToPage("main")
 		mainPanel.SwitchToPage("playlists")
+		return nil
+	case '4':
+		pages.SwitchToPage("nowplaying")
+		displayNowPlaying()
 		return nil
 
 	case 'i':
