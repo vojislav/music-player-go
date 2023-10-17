@@ -102,6 +102,11 @@ func trackTime() {
 	for {
 		select {
 		case <-ticker.C:
+			// prevents freak situation where rapidly switching songs
+			// causes track stream to be accessed before its loaded
+			if currentTrack.stream == nil {
+				continue
+			}
 			if currentTrack.stream.Position() >= currentTrack.stream.Len()/2 {
 				scrobble(toInt(currentTrack.ID), "true")
 			}
