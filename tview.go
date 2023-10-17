@@ -156,17 +156,41 @@ func initView() {
 
 	bottomPanel.AddPage("search", searchInput, true, false)
 
+	selectedTextStyle := tcell.StyleDefault.Foreground(tview.Styles.PrimitiveBackgroundColor).
+		Background(tview.Styles.PrimaryTextColor).Attributes(tcell.AttrBold)
+
 	// library page
 	artistList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
 	artistList.SetBorder(true).SetTitle("Artist")
 	artistList.SetChangedFunc(fillAlbumsList)
+	artistList.
+		SetMainTextColor(tcell.ColorYellow).
+		SetSelectedTextColor(tcell.ColorBlack).
+		SetSelectedStyle(selectedTextStyle).
+		SetSelectedBackgroundColor(tcell.ColorTeal).
+		SetBorderColor(tcell.ColorYellow).
+		SetTitleColor(tcell.ColorYellow)
 
 	albumList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
 	albumList.SetBorder(true).SetTitle("Albums")
 	albumList.SetChangedFunc(fillTracksList)
+	albumList.
+		SetMainTextColor(tcell.ColorYellow).
+		SetSelectedStyle(selectedTextStyle).
+		SetSelectedTextColor(tcell.ColorBlack).
+		SetSelectedBackgroundColor(tcell.ColorTeal).
+		SetBorderColor(tcell.ColorYellow).
+		SetTitleColor(tcell.ColorYellow)
 
 	trackList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
 	trackList.SetBorder(true).SetTitle("Tracks")
+	trackList.
+		SetMainTextColor(tcell.ColorYellow).
+		SetSelectedStyle(selectedTextStyle).
+		SetSelectedTextColor(tcell.ColorBlack).
+		SetSelectedBackgroundColor(tcell.ColorTeal).
+		SetBorderColor(tcell.ColorYellow).
+		SetTitleColor(tcell.ColorYellow)
 
 	libraryFlex = tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
