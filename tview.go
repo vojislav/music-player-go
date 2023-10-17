@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/gdamore/tcell/v2"
@@ -14,7 +15,7 @@ var mainPanel = tview.NewPages()
 var bottomPanel = tview.NewPages()
 var loadingPopup tview.Primitive
 var currentTrackText, downloadProgressText, loadingTextBox, loginStatus, trackInfoTextBox,
-	lyricsTextBox, nowPlayingTrackTextBox, nowPlayingTimeTextBox *tview.TextView
+	lyricsTextBox, nowPlayingTrackTextBox, nowPlayingTimeTextBox, progressBar *tview.TextView
 var nowPlayingCover *tview.Image
 var loginGrid *tview.Grid
 var libraryFlex, queueFlex, playlistFlex, nowPlayingFlex *tview.Flex
@@ -123,12 +124,16 @@ func initView() {
 
 	nowPlayingCover = tview.NewImage()
 	nowPlayingCover.SetSize(-90, 0)
-	nowPlayingTrackTextBox = tview.NewTextView().SetTextAlign(tview.AlignCenter)
-	nowPlayingTimeTextBox = tview.NewTextView().SetTextAlign(tview.AlignCenter)
+	nowPlayingTrackTextBox = tview.NewTextView().
+		SetTextAlign(tview.AlignCenter)
+	nowPlayingTimeTextBox = tview.NewTextView().
+		SetTextAlign(tview.AlignCenter)
+	progressBar = tview.NewTextView()
 	nowPlayingFlex = tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(nowPlayingCover, 0, 1, false).
 		AddItem(nowPlayingTrackTextBox, 2, 1, false).
-		AddItem(nowPlayingTimeTextBox, 2, 1, false)
+		AddItem(nowPlayingTimeTextBox, 2, 1, false).
+		AddItem(progressBar, 2, 1, false)
 	pages.AddPage("nowplaying", nowPlayingFlex, true, false)
 
 	// main panel
@@ -279,6 +284,29 @@ func toggleLyrics() {
 	}
 }
 
+// clears and draw progress bar
+func refreshProgressBar(currentTime int, totalTime int) {
+	progressBar.Clear()
+
+	_, _, width, _ := mainPanel.GetInnerRect()
+	// width is reduced by 4 to account for " |" at the beginning and "| " at the end of progress bar
+	width -= 4
+
+	// amount of '=' characters in progress bar
+	progressCount := int(float64(currentTime) / float64(totalTime) * float64(width))
+	// amount of padding spaces in progress bar
+	negativeProgressCount := width - progressCount
+
+	progress := " |"
+	negativeProgress := strings.Repeat(" ", negativeProgressCount) + "|"
+	if progressCount != 0 {
+		// leading '=' is replaced by '>'
+		progress = " |" + strings.Repeat("=", progressCount-1) + ">"
+	}
+
+	fmt.Fprintf(progressBar, "%s%s", progress, negativeProgress)
+}
+
 func updateCurrentTrackText() {
 	currentTrackText.Clear()
 	if currentTrack.stream == nil {
@@ -292,15 +320,20 @@ func updateCurrentTrackText() {
 		status = "Playing"
 	}
 
-	currentTime := getTimeString(currentTrack.stream.Position() / sr.N(time.Second))
-	totalTime := getTimeString(currentTrack.stream.Len() / sr.N(time.Second))
+	currentTimeInt := currentTrack.stream.Position() / sr.N(time.Second)
+	totalTimeInt := currentTrack.stream.Len() / sr.N(time.Second)
 
-	// TODO lazy refresh
+	currentTime := getTimeString(currentTimeInt)
+	totalTime := getTimeString(totalTimeInt)
+
+	// TODO: lazy refresh (for progress bar aswell)
 	nowPlayingTrackTextBox.Clear()
 	fmt.Fprintf(nowPlayingTrackTextBox, "%s - %s", currentTrack.Artist, currentTrack.Title)
 
 	nowPlayingTimeTextBox.Clear()
 	fmt.Fprintf(nowPlayingTimeTextBox, "%s / %s", currentTime, totalTime)
+
+	refreshProgressBar(currentTimeInt, totalTimeInt)
 
 	fmt.Fprintf(currentTrackText, "%s: %s - %s\t%s / %s\tQueue position: %d / %d", status, currentTrack.Artist, currentTrack.Title, currentTime, totalTime, queuePosition+1, queueList.GetItemCount())
 	app.Draw()
