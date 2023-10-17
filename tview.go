@@ -122,13 +122,15 @@ func initView() {
 	lyricsTextBox.SetBorder(true)
 	pages.AddPage("lyrics", lyricsTextBox, true, false)
 
+	progressBar = tview.NewTextView().
+		SetDynamicColors(true)
+
 	nowPlayingCover = tview.NewImage()
 	nowPlayingCover.SetSize(-90, 0)
 	nowPlayingTrackTextBox = tview.NewTextView().
 		SetTextAlign(tview.AlignCenter)
 	nowPlayingTimeTextBox = tview.NewTextView().
 		SetTextAlign(tview.AlignCenter)
-	progressBar = tview.NewTextView()
 	nowPlayingFlex = tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(nowPlayingCover, 0, 1, false).
 		AddItem(nowPlayingTrackTextBox, 2, 1, false).
@@ -139,6 +141,7 @@ func initView() {
 	// main panel
 	mainFlex := tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(mainPanel, 0, 1, true).
+		AddItem(progressBar, 1, 1, false).
 		AddItem(bottomPanel, 3, 1, false)
 
 	pages.AddPage("main", mainFlex, true, false)
