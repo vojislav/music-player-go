@@ -111,6 +111,10 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 			playlistTracks.SetCurrentItem(currentTrackIndex + 1)
 		}
 		return nil
+
+	case 'o':
+		findInLibrary(playlistTracks)
+		return nil
 	}
 
 	return event

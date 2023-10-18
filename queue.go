@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
 )
 
 // position in queue of currently played track [0-indexed]. Should only be set setQueuePosition()
@@ -14,7 +15,7 @@ var queuePosition = -1
 var currentTrackMarker = "[::u]"
 
 func addToQueue(_ int, _, trackID string, _ rune) {
-	tags := getTags(cacheDirectory + trackID + ".mp3")
+	tags := getTags(getTrackPath(trackID))
 	itemText := fmt.Sprintf("%s - %s", tags.Artist(), tags.Title())
 	queueList.AddItem(itemText, trackID, 0, nil)
 }
@@ -73,6 +74,41 @@ func queuePlayHighlighted() {
 	playTrack(currentTrackIndex, currentTrackName, currentTrackID, 0)
 }
 
+// finds location of currently highlighted track in library.
+// should only be used in queue or playlist.
+// TODO: error handling; TODO: what if files aren't downloaded? getTags breaks
+func findInLibrary(list *tview.List) {
+	focused := app.GetFocus()
+	if focused != list || list.GetItemCount() == 0 {
+		return
+	}
+
+	idx := list.GetCurrentItem()
+	_, secondary := list.GetItemText(idx)
+	tags := getTags(getTrackPath(secondary))
+
+	artists := artistList.FindItems(tags.Artist(), "", true, true)
+	if len(artists) == 0 {
+		return
+	}
+	artistList.SetCurrentItem(artists[0])
+
+	albums := albumList.FindItems(tags.Album(), "", true, true)
+	if len(albums) == 0 {
+		return
+	}
+	albumList.SetCurrentItem(albums[0])
+
+	tracks := trackList.FindItems("", secondary, true, true)
+	if len(tracks) == 0 {
+		return
+	}
+	trackList.SetCurrentItem(tracks[0])
+
+	mainPanel.SwitchToPage("library")
+	app.SetFocus(trackList)
+}
+
 func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Key() {
 	case tcell.KeyRight, tcell.KeyEnter:
@@ -96,6 +132,9 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 	case 'x':
 		removeFromQueue()
+		return nil
+	case 'o':
+		findInLibrary(queueList)
 		return nil
 	}
 

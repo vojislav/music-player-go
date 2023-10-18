@@ -275,8 +275,13 @@ func downloadCallback(trackIDString string, callback func(int, string, string, r
 	app.Draw()
 }
 
+// returns filepath of corresponding trackID
+func getTrackPath(trackID string) string {
+	return fmt.Sprint(cacheDirectory, trackID, ".mp3")
+}
+
 func download(trackIDString string) string {
-	filePath := fmt.Sprint(cacheDirectory, trackIDString, ".mp3")
+	filePath := getTrackPath(trackIDString)
 
 	if _, err := os.Stat(filePath); err != nil {
 		trackID := toInt(trackIDString)
