@@ -20,6 +20,7 @@ var currentTrack Track
 
 var ticker *time.Ticker
 var killTicker = make(chan bool, 1)
+var coverArt []byte
 
 type Track struct {
 	stream   beep.StreamSeekCloser
@@ -65,6 +66,8 @@ func playTrack(trackIndex int, _ string, trackID string, _ rune) {
 	speaker.Play(playerCtrl)
 
 	setQueuePosition(trackIndex)
+
+	coverArt = getCoverArt(currentTrack.ID) // TODO: lazy load
 
 	scrobble(toInt(currentTrack.ID), "false")
 

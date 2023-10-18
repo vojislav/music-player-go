@@ -1,13 +1,10 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/base64"
 	"fmt"
 	"image/jpeg"
-	"io"
-	"os"
 )
 
 func displayNowPlaying() {
@@ -18,11 +15,7 @@ func displayNowPlaying() {
 		return
 	}
 
-	f, _ := os.Open("cover.png")
-	reader := bufio.NewReader(f)
-	content, _ := io.ReadAll(reader)
-
-	encoded := base64.StdEncoding.EncodeToString(content)
+	encoded := base64.StdEncoding.EncodeToString(coverArt)
 
 	b, _ := base64.StdEncoding.DecodeString(encoded)
 	photo, _ := jpeg.Decode(bytes.NewReader(b))
