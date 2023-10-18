@@ -91,10 +91,10 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		} else if focused == albumList {
 			app.SetFocus(trackList)
 		} else if focused == trackList {
-			currentTrackIndex := playlistTracks.GetCurrentItem()
-			_, currentTrackID := playlistTracks.GetItemText(currentTrackIndex)
+			currentTrackIndex := trackList.GetCurrentItem()
+			_, currentTrackID := trackList.GetItemText(currentTrackIndex)
 			go downloadCallback(currentTrackID, addToQueueAndPlay)
-			playlistTracks.SetCurrentItem(currentTrackIndex + 1)
+			trackList.SetCurrentItem(currentTrackIndex + 1)
 		}
 		return nil
 	}
