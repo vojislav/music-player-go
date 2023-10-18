@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -329,6 +330,34 @@ func download(trackIDString string) string {
 	}
 
 	return filePath
+}
+
+func getCoverArt(trackID string) []byte {
+	req, err := http.NewRequest("GET", config.ServerURL+"getCoverArt", nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	params := req.URL.Query()
+	params.Add("u", config.Username)
+	params.Add("t", config.Token)
+	params.Add("s", config.Salt)
+	params.Add("v", config.Version)
+	params.Add("c", client_name)
+	params.Add("f", "json")
+	params.Add("id", trackID)
+	req.URL.RawQuery = params.Encode()
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer res.Body.Close()
+
+	reader := bufio.NewReader(res.Body)
+	content, _ := io.ReadAll(reader)
+
+	return content
 }
 
 func scrobble(trackID int, submission string) bool {
