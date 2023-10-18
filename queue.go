@@ -84,22 +84,23 @@ func findInLibrary(list *tview.List) {
 	}
 
 	idx := list.GetCurrentItem()
-	_, secondary := list.GetItemText(idx)
-	tags := getTags(getTrackPath(secondary))
+	_, trackID := list.GetItemText(idx)
+	var artist, album string
+	queryArtistAndAlbum(toInt(trackID)).Scan(&artist, &album)
 
-	artists := artistList.FindItems(tags.Artist(), "", true, true)
+	artists := artistList.FindItems(artist, "", true, true)
 	if len(artists) == 0 {
 		return
 	}
 	artistList.SetCurrentItem(artists[0])
 
-	albums := albumList.FindItems(tags.Album(), "", true, true)
+	albums := albumList.FindItems(album, "", true, true)
 	if len(albums) == 0 {
 		return
 	}
 	albumList.SetCurrentItem(albums[0])
 
-	tracks := trackList.FindItems("", secondary, true, true)
+	tracks := trackList.FindItems("", trackID, true, true)
 	if len(tracks) == 0 {
 		return
 	}
