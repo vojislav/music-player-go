@@ -30,6 +30,17 @@ func addToQueueAndPlay(_ int, _, trackID string, _ rune) {
 	playTrack(queuePosition, "", trackID, 0)
 }
 
+// removes indicator that track is in queue. This fixes the situation where
+// trackList/playlistTracks are not refreshed after removing track from queue
+func removeInQueueMarks(list *tview.List, trackID string) {
+	items := list.FindItems("", trackID, true, true)
+	// this should only find one item. for loop is probably unnecessary
+	for _, idx := range items {
+		prim, sec := list.GetItemText(idx)
+		list.SetItemText(idx, strings.Replace(prim, trackInQueueMarker, "", 1), sec)
+	}
+}
+
 func removeFromQueue() {
 	highlightedTrackIndex := queueList.GetCurrentItem()
 	if highlightedTrackIndex < queuePosition {
@@ -37,6 +48,11 @@ func removeFromQueue() {
 	} else if highlightedTrackIndex == queuePosition {
 		stopTrack()
 	}
+
+	_, trackID := queueList.GetItemText(highlightedTrackIndex)
+	removeInQueueMarks(trackList, trackID)
+	removeInQueueMarks(playlistTracks, trackID)
+
 	queueList.RemoveItem(highlightedTrackIndex)
 }
 
@@ -89,8 +105,6 @@ func markInQueue(trackID string) string {
 
 // marks tracks added to queue from track lists such as playlists or library
 // TODO: this can be stacked infinitely. What are the implications?
-// TODO: if track is removed from queue, it will stay bolded until trackList/playlistTracks
-// is refreshed (by changing currently selected album or playlist)
 func markList(list *tview.List, idx int) {
 	prim, sec := list.GetItemText(idx)
 	list.SetItemText(idx, trackInQueueMarker+prim, sec)
