@@ -46,6 +46,12 @@ func init() {
 	}
 }
 
+// the only way you should kill the app. ensures required work is done before it's stopped
+func stopApp() {
+	removeUnfinishedDownloads()
+	app.Stop()
+}
+
 func main() {
 	reloadDatabaseFlag = flag.Bool("r", false, "Reload library on startup")
 
@@ -61,7 +67,7 @@ func main() {
 	if !validConfig() {
 		pages.SwitchToPage("login")
 	} else if !ping() {
-		app.Stop()
+		stopApp()
 	} else if _, err := os.Stat(databaseFile); err != nil || *reloadDatabaseFlag {
 		gotoLoadingPage()
 	} else {
