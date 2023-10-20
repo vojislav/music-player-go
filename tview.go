@@ -360,11 +360,12 @@ func updateCurrentTrackText() {
 	totalTime := getTimeString(totalTimeInt)
 
 	// TODO: lazy refresh (for progress bar aswell)
-	nowPlayingTrackTextBox.Clear()
-	fmt.Fprintf(nowPlayingTrackTextBox, "%s - %s", currentTrack.Artist, currentTrack.Title)
 
-	nowPlayingTimeTextBox.Clear()
-	fmt.Fprintf(nowPlayingTimeTextBox, "%s / %s", currentTime, totalTime)
+	frontPage, _ := pages.GetFrontPage()
+	if frontPage == "nowplaying" {
+		nowPlayingTimeTextBox.Clear()
+		fmt.Fprintf(nowPlayingTimeTextBox, "%s / %s", currentTime, totalTime)
+	}
 
 	refreshProgressBar(currentTimeInt, totalTimeInt)
 
