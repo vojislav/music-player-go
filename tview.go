@@ -374,7 +374,7 @@ func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 	switch event.Rune() {
 	case 'q':
-		app.Stop()
+		stopApp()
 		return nil
 	case '1':
 		pages.SwitchToPage("main")

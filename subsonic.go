@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -280,10 +281,43 @@ func getTrackPath(trackID string) string {
 	return fmt.Sprint(cacheDirectory, trackID, ".mp3")
 }
 
-func download(trackIDString string) string {
-	filePath := getTrackPath(trackIDString)
+// remove all files in cacheDirectory ending with ".XXX" (unfinished downloads)
+func removeUnfinishedDownloads() {
+	dirname := cacheDirectory
 
-	if _, err := os.Stat(filePath); err != nil {
+	d, err := os.Open(dirname)
+	if err != nil {
+		return
+	}
+	defer d.Close()
+
+	files, err := d.Readdir(-1)
+	if err != nil {
+		return
+	}
+
+	for _, file := range files {
+		if file.Mode().IsRegular() {
+			if filepath.Ext(file.Name()) == ".XXX" {
+				os.Remove(dirname + file.Name())
+			}
+		}
+	}
+}
+
+func download(trackIDString string) string {
+	trueFilePath := getTrackPath(trackIDString)
+	// indicates that file is downloading
+	fakeFilePath := strings.Replace(trueFilePath, ".mp3", ".XXX", 1)
+
+	// case where same download was already started in another goroutine.
+	// control is returned when the file downloads in another goroutine.
+	for _, err := os.Stat(fakeFilePath); err == nil; {
+		time.Sleep(5 * time.Second)
+	}
+
+	// if the track isn't already downloaded - download it
+	if _, err := os.Stat(trueFilePath); err != nil {
 		trackID := toInt(trackIDString)
 
 		req, err := http.NewRequest("GET", config.ServerURL+"stream", nil)
@@ -318,9 +352,9 @@ func download(trackIDString string) string {
 		defer res.Body.Close()
 
 		downloadDone := make(chan bool)
-		go getDownloadProgress(downloadDone, filePath, fileSize)
+		go getDownloadProgress(downloadDone, fakeFilePath, fileSize)
 
-		file, err := os.Create(filePath)
+		file, err := os.Create(fakeFilePath)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -331,9 +365,11 @@ func download(trackIDString string) string {
 		}
 
 		downloadDone <- true
+
+		os.Rename(fakeFilePath, trueFilePath)
 	}
 
-	return filePath
+	return trueFilePath
 }
 
 func scrobble(trackID int, submission string) bool {
