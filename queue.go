@@ -34,10 +34,9 @@ func addToQueueAndPlay(_ int, _, trackID string, _ rune) {
 // trackList/playlistTracks are not refreshed after removing track from queue
 func removeInQueueMarks(list *tview.List, trackID string) {
 	items := list.FindItems("", trackID, true, true)
-	// this should only find one item. for loop is probably unnecessary
-	for _, idx := range items {
-		prim, sec := list.GetItemText(idx)
-		list.SetItemText(idx, strings.Replace(prim, trackInQueueMarker, "", 1), sec)
+	if len(items) > 0 { // sanity check, should always be true
+		prim, sec := list.GetItemText(items[0])
+		list.SetItemText(items[0], strings.Replace(prim, trackInQueueMarker, "", 1), sec)
 	}
 }
 
