@@ -7,13 +7,27 @@ import (
 	"image/jpeg"
 )
 
+var coverArt []byte
+
 func displayNowPlaying() {
-	// TODO cache image
 	if currentTrack.stream == nil {
 		fmt.Fprint(nowPlayingTrackTextBox, "No currently playing track.")
 		return
 	}
 
+	nowPlayingTrackTextBox.Clear()
+	fmt.Fprintf(nowPlayingTrackTextBox, "%s - %s", currentTrack.Artist, currentTrack.Title)
+
+	displayCoverArt()
+}
+
+func displayCoverArt() {
+	// TODO cache image
+	if currentTrack.stream == nil {
+		return
+	}
+
+	coverArt = getCoverArt(currentTrack.ID) // TODO: lazy load
 	encoded := base64.StdEncoding.EncodeToString(coverArt)
 
 	b, _ := base64.StdEncoding.DecodeString(encoded)
