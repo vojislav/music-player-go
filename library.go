@@ -61,7 +61,7 @@ func fillTracksList(_ int, albumName, albumIDString string, _ rune) {
 		var trackID, track, year, size, duration, bitrate int
 		rows.Scan(&trackID, &title, &album, &artist, &track, &year, &genre, &size, &suffix, &duration, &bitrate, &albumID, &artistID)
 
-		alreadyInQueue := markInQueue(strconv.FormatInt(int64(trackID), 10))
+		alreadyInQueue := markTrack(strconv.FormatInt(int64(trackID), 10))
 
 		trackList.AddItem(fmt.Sprintf("%s%d. %s", alreadyInQueue, track, title), fmt.Sprint(trackID), 0, nil)
 	}

@@ -17,6 +17,9 @@ var currentTrackMarker = "[::u]"
 // the way in which the tracks that are in queue are marked
 var trackInQueueMarker = "[::b]"
 
+// the way in which the tracks that are not downloaded are marked
+var trackNotDownloadedMarker = "[::d]"
+
 func addToQueue(_ int, _, trackID string, _ rune) {
 	tags := getTags(getTrackPath(trackID))
 	itemText := fmt.Sprintf("%s - %s", tags.Artist(), tags.Title())
@@ -92,14 +95,20 @@ func queuePlayHighlighted() {
 	playTrack(currentTrackIndex, currentTrackName, currentTrackID, 0)
 }
 
-// returns string which is used to "mark" tracks that are currently in queue
-func markInQueue(trackID string) string {
+// returns string which is used to "mark" tracks which are either:
+// in queue (bold);
+// not downloaded (dim)
+func markTrack(trackID string) string {
+	if !trackExists(trackID) { // track doesn't exist locally in .cache
+		return trackNotDownloadedMarker
+	}
+
 	indices := queueList.FindItems("", trackID, true, true)
-	if len(indices) == 0 {
-		return ""
-	} else {
+	if len(indices) == 1 { // track exists in queue
 		return trackInQueueMarker
 	}
+
+	return ""
 }
 
 // marks tracks added to queue from track lists such as playlists or library
