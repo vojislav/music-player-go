@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
 )
 
 // position in queue of currently played track [0-indexed]. Should only be set setQueuePosition()
@@ -12,6 +13,9 @@ var queuePosition = -1
 
 // the way in which the current playing track is marked.
 var currentTrackMarker = "[::u]"
+
+// the way in which the tracks that are in queue are marked
+var trackInQueueMarker = "[::b]"
 
 func addToQueue(_ int, _, trackID string, _ rune) {
 	tags := getTags(getTrackPath(trackID))
@@ -71,6 +75,25 @@ func queuePlayHighlighted() {
 	currentTrackIndex := queueList.GetCurrentItem()
 	currentTrackName, currentTrackID := queueList.GetItemText(currentTrackIndex)
 	playTrack(currentTrackIndex, currentTrackName, currentTrackID, 0)
+}
+
+// returns string which is used to "mark" tracks that are currently in queue
+func markInQueue(trackID string) string {
+	indices := queueList.FindItems("", trackID, true, true)
+	if len(indices) == 0 {
+		return ""
+	} else {
+		return trackInQueueMarker
+	}
+}
+
+// marks tracks added to queue from track lists such as playlists or library
+// TODO: this can be stacked infinitely. What are the implications?
+// TODO: if track is removed from queue, it will stay bolded until trackList/playlistTracks
+// is refreshed (by changing currently selected album or playlist)
+func markList(list *tview.List, idx int) {
+	prim, sec := list.GetItemText(idx)
+	list.SetItemText(idx, trackInQueueMarker+prim, sec)
 }
 
 func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {

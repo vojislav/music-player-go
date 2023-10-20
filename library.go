@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -60,7 +61,9 @@ func fillTracksList(_ int, albumName, albumIDString string, _ rune) {
 		var trackID, track, year, size, duration, bitrate int
 		rows.Scan(&trackID, &title, &album, &artist, &track, &year, &genre, &size, &suffix, &duration, &bitrate, &albumID, &artistID)
 
-		trackList.AddItem(fmt.Sprintf("%d. %s", track, title), fmt.Sprint(trackID), 0, nil)
+		alreadyInQueue := markInQueue(strconv.FormatInt(int64(trackID), 10))
+
+		trackList.AddItem(fmt.Sprintf("%s%d. %s", alreadyInQueue, track, title), fmt.Sprint(trackID), 0, nil)
 	}
 }
 
@@ -110,6 +113,7 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 			_, currentTrackID := trackList.GetItemText(currentTrackIndex)
 			go downloadCallback(currentTrackID, addToQueueAndPlay)
 			trackList.SetCurrentItem(currentTrackIndex + 1)
+			markList(trackList, currentTrackIndex)
 		}
 		return nil
 
@@ -131,6 +135,7 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 			_, currentTrackID := trackList.GetItemText(currentTrackIndex)
 			go downloadCallback(currentTrackID, addToQueueAndPlay)
 			trackList.SetCurrentItem(currentTrackIndex + 1)
+			markList(trackList, currentTrackIndex)
 		}
 		return nil
 	}
@@ -154,6 +159,7 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 			_, currentTrackID := trackList.GetItemText(currentTrackIndex)
 			go downloadCallback(currentTrackID, addToQueueAndPlay)
 			trackList.SetCurrentItem(currentTrackIndex + 1)
+			markList(trackList, currentTrackIndex)
 		}
 		return nil
 
@@ -163,6 +169,7 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 			_, currentTrackID := trackList.GetItemText(currentTrackIndex)
 			go downloadCallback(currentTrackID, addToQueue)
 			trackList.SetCurrentItem(currentTrackIndex + 1)
+			markList(trackList, currentTrackIndex)
 		} else if focused == albumList {
 			currentAlbumIndex := albumList.GetCurrentItem()
 			_, currentAlbumID := trackList.GetItemText(currentAlbumIndex)
