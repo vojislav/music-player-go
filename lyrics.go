@@ -31,7 +31,7 @@ func getLyrics(trackID string) string {
 			return "Error reading lyrics file"
 		}
 
-		lyricsTextBox.SetTitle(fmt.Sprintf("%s - %s", artist, title))
+		lyricsTextBox.SetTitle(fmt.Sprintf(" %s - %s ", artist, title))
 
 		return string(lyrics)
 	}
@@ -55,7 +55,7 @@ func getLyrics(trackID string) string {
 	currentTrackText.Clear()
 	app.Draw()
 
-	lyricsTextBox.SetTitle(fmt.Sprintf("%s - %s", artist, title))
+	lyricsTextBox.SetTitle(fmt.Sprintf(" %s - %s ", artist, title))
 
 	return lyrics
 }
