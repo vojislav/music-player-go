@@ -358,7 +358,7 @@ func updateCurrentTrackText() {
 	fmt.Fprintf(currentTrackText, `[red::b]%s:[-::-] "%s" [::d]by[::D] [yellow]%s[-] [::d]in[::D] [teal]%s (%d)[-]`, status, currentTrack.Title, currentTrack.Artist, currentTrack.Album, currentTrack.Year)
 
 	currentTrackTime.Clear()
-	fmt.Fprintf(currentTrackTime, "[orange::b][%s/%s]", currentTime, totalTime)
+	fmt.Fprintf(currentTrackTime, "[blue::b][%s/%s]", currentTime, totalTime)
 
 	app.Draw()
 }
