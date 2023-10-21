@@ -163,6 +163,7 @@ func initView() {
 	currentTrackText = tview.NewTextView()
 	currentTrackText.SetBorder(true)
 	currentTrackText.SetBorderColor(tcell.ColorDarkGrey)
+	currentTrackText.SetDynamicColors(true)
 
 	searchInput = tview.NewInputField().
 		SetLabel("Search: ")
@@ -335,7 +336,7 @@ func updateCurrentTrackText() {
 
 	refreshProgressBar(currentTimeInt, totalTimeInt)
 
-	fmt.Fprintf(currentTrackText, "%s: %s - %s\t%s / %s\tQueue position: %d / %d", status, currentTrack.Artist, currentTrack.Title, currentTime, totalTime, queuePosition+1, queueList.GetItemCount())
+	fmt.Fprintf(currentTrackText, "[red::b]%s:[-::-] \"%s\" [::d]by[::D] [yellow]%s[-] [::d]in[::D] [teal]%s (%d)[-]", status, currentTrack.Title, currentTrack.Artist, currentTrack.Album, currentTrack.Year)
 	app.Draw()
 }
 

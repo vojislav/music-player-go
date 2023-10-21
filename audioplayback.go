@@ -56,6 +56,7 @@ func playTrack(trackIndex int, _ string, trackID string, _ rune) {
 		Title:  tags.Title(),
 		Album:  tags.Album(),
 		Artist: tags.Artist(),
+		Year:   tags.Year(),
 		Track:  track,
 	}
 
