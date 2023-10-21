@@ -27,6 +27,18 @@ var popup = func(p tview.Primitive, width, height int) tview.Primitive {
 		AddItem(p, 1, 1, 1, 1, 0, 0, true)
 }
 
+var selectedTextStyle = tcell.StyleDefault.Foreground(tview.Styles.PrimitiveBackgroundColor).
+	Background(tview.Styles.PrimaryTextColor).Attributes(tcell.AttrBold)
+
+func setColor(list *tview.List) {
+	list.SetMainTextColor(tcell.ColorYellow).
+		SetSelectedStyle(selectedTextStyle).
+		SetSelectedTextColor(tcell.ColorBlack).
+		SetSelectedBackgroundColor(tcell.ColorTeal).
+		SetBorderColor(tcell.ColorYellow).
+		SetTitleColor(tcell.ColorYellow)
+}
+
 // generic handler used for track manipulation in [library, playlist, queue]
 func trackInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Rune() {
@@ -114,7 +126,7 @@ func initView() {
 
 	// track info page
 	trackInfoTextBox = tview.NewTextView()
-	trackInfoTextBox.SetBorder(true).SetTitle("Track info")
+	trackInfoTextBox.SetBorder(true).SetTitle(" Track info ")
 	pages.AddPage("track info", trackInfoTextBox, true, false)
 
 	// lyrics page
@@ -164,41 +176,20 @@ func initView() {
 
 	bottomPanel.AddPage("search", searchInput, true, false)
 
-	selectedTextStyle := tcell.StyleDefault.Foreground(tview.Styles.PrimitiveBackgroundColor).
-		Background(tview.Styles.PrimaryTextColor).Attributes(tcell.AttrBold)
-
 	// library page
 	artistList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
-	artistList.SetBorder(true).SetTitle("Artist")
+	artistList.SetBorder(true).SetTitle(" Artist ")
 	artistList.SetChangedFunc(fillAlbumsList)
-	artistList.
-		SetMainTextColor(tcell.ColorYellow).
-		SetSelectedTextColor(tcell.ColorBlack).
-		SetSelectedStyle(selectedTextStyle).
-		SetSelectedBackgroundColor(tcell.ColorTeal).
-		SetBorderColor(tcell.ColorYellow).
-		SetTitleColor(tcell.ColorYellow)
+	setColor(artistList)
 
 	albumList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
-	albumList.SetBorder(true).SetTitle("Albums")
+	albumList.SetBorder(true).SetTitle(" Albums ")
 	albumList.SetChangedFunc(fillTracksList)
-	albumList.
-		SetMainTextColor(tcell.ColorYellow).
-		SetSelectedStyle(selectedTextStyle).
-		SetSelectedTextColor(tcell.ColorBlack).
-		SetSelectedBackgroundColor(tcell.ColorTeal).
-		SetBorderColor(tcell.ColorYellow).
-		SetTitleColor(tcell.ColorYellow)
+	setColor(albumList)
 
 	trackList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
-	trackList.SetBorder(true).SetTitle("Tracks")
-	trackList.
-		SetMainTextColor(tcell.ColorYellow).
-		SetSelectedStyle(selectedTextStyle).
-		SetSelectedTextColor(tcell.ColorBlack).
-		SetSelectedBackgroundColor(tcell.ColorTeal).
-		SetBorderColor(tcell.ColorYellow).
-		SetTitleColor(tcell.ColorYellow)
+	trackList.SetBorder(true).SetTitle(" Tracks ")
+	setColor(trackList)
 
 	libraryFlex = tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(tview.NewFlex().SetDirection(tview.FlexColumn).
@@ -210,8 +201,9 @@ func initView() {
 
 	// queue page
 	queueList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
-	queueList.SetBorder(true).SetTitle("Queue")
+	queueList.SetBorder(true).SetTitle(" Queue ")
 	queueList.SetSelectedFunc(playTrack)
+	setColor(queueList)
 	queueFlex = tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(queueList, 0, 1, true)
 
@@ -219,11 +211,13 @@ func initView() {
 
 	// playlist
 	playlistList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
-	playlistList.SetBorder(true).SetTitle("Playlists")
+	playlistList.SetBorder(true).SetTitle(" Playlists ")
 	playlistList.SetChangedFunc(showPlaylist)
+	setColor(playlistList)
 
 	playlistTracks = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
 	playlistTracks.SetBorder(true)
+	setColor(playlistTracks)
 	playlistFlex = tview.NewFlex().
 		AddItem(playlistList, 0, 1, true).
 		AddItem(playlistTracks, 0, 3, false)

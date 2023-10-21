@@ -6,7 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"image/jpeg"
-	"io/ioutil"
+	"io"
 	"os"
 )
 
@@ -19,7 +19,7 @@ func displayNowPlaying() {
 
 	f, _ := os.Open("cover.png")
 	reader := bufio.NewReader(f)
-	content, _ := ioutil.ReadAll(reader)
+	content, _ := io.ReadAll(reader)
 
 	encoded := base64.StdEncoding.EncodeToString(content)
 
