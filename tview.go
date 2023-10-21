@@ -171,18 +171,16 @@ func initView() {
 		SetBorderColor(tcell.ColorDarkGray).
 		SetBorder(true)
 
+	// TODO: add "..." if text cannot fit
 	currentTrackText = tview.NewTextView().
 		SetDynamicColors(true)
 	currentTrackTime = tview.NewTextView().
-		SetDynamicColors(true)
-
-	//                                " xx:xx/xx:xx "
-	trackTimePlaceholder := "[::b]" + " __:__/__:__ " + "[::B]"
-	currentTrackTime.SetText(trackTimePlaceholder)
+		SetDynamicColors(true).
+		SetTextAlign(tview.AlignCenter)
 
 	currentTrackPanel.
 		AddItem(currentTrackText, 0, 1, false).
-		AddItem(currentTrackTime, len(currentTrackTime.GetText(true)), 1, false)
+		AddItem(currentTrackTime, 13, 1, false) // maximum string length for time format len([xx:xx/xx:xx]) = 13
 
 	downloadProgressText = tview.NewTextView()
 	downloadProgressText.
@@ -357,7 +355,11 @@ func updateCurrentTrackText() {
 
 	refreshProgressBar(currentTimeInt, totalTimeInt)
 
-	fmt.Fprintf(currentTrackText, "[red::b]%s:[-::-] \"%s\" [::d]by[::D] [yellow]%s[-] [::d]in[::D] [teal]%s (%d)[-]", status, currentTrack.Title, currentTrack.Artist, currentTrack.Album, currentTrack.Year)
+	fmt.Fprintf(currentTrackText, `[red::b]%s:[-::-] "%s" [::d]by[::D] [yellow]%s[-] [::d]in[::D] [teal]%s (%d)[-]`, status, currentTrack.Title, currentTrack.Artist, currentTrack.Album, currentTrack.Year)
+
+	currentTrackTime.Clear()
+	fmt.Fprintf(currentTrackTime, "[orange::b][%s/%s]", currentTime, totalTime)
+
 	app.Draw()
 }
 
