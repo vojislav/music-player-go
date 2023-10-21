@@ -21,7 +21,7 @@ func init() {
 	configFile = configDirectory + "config"
 	initScriptFile = configDirectory + "init.sql"
 
-	cacheDirectory = homeDirectory + "/.cache/music-player-go/"
+	cacheDirectory = homeDirectory + "/.cache/music-player-go/tracks/"
 	lyricsDirectory = homeDirectory + "/.cache/music-player-go/lyrics/"
 
 	if _, err := os.Stat(cacheDirectory); err != nil {
