@@ -34,7 +34,7 @@ func previousSearchResult() {
 func searchInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Key() {
 	case tcell.KeyEscape:
-		bottomPanel.SwitchToPage("current track info")
+		bottomPage.SwitchToPage("current track info")
 		app.SetFocus(searchList)
 		searchInput.SetText("") // search input shouldn't persist for next search
 		return nil
@@ -54,7 +54,7 @@ func searchInputHandler(event *tcell.EventKey) *tcell.EventKey {
 			}
 		}
 
-		bottomPanel.SwitchToPage("current track info")
+		bottomPage.SwitchToPage("current track info")
 		app.SetFocus(searchList)
 		searchInput.SetText("")
 

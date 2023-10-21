@@ -12,13 +12,13 @@ import (
 var app = tview.NewApplication()
 var pages = tview.NewPages()
 var mainPanel = tview.NewPages()
-var bottomPanel = tview.NewPages()
+var bottomPage = tview.NewPages()
 var loadingPopup tview.Primitive
-var currentTrackText, downloadProgressText, loadingTextBox, loginStatus, trackInfoTextBox,
+var currentTrackText, currentTrackTime, downloadProgressText, loadingTextBox, loginStatus, trackInfoTextBox,
 	lyricsTextBox, nowPlayingTrackTextBox, nowPlayingTimeTextBox, progressBar *tview.TextView
 var nowPlayingCover *tview.Image
 var loginGrid *tview.Grid
-var libraryFlex, queueFlex, playlistFlex, nowPlayingFlex *tview.Flex
+var libraryFlex, queueFlex, playlistFlex, nowPlayingFlex, bottomPanel *tview.Flex
 
 var popup = func(p tview.Primitive, width, height int) tview.Primitive {
 	return tview.NewGrid().
@@ -73,8 +73,8 @@ func trackInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		searchCurrentIndex = 0
 
 		searchList = app.GetFocus().(*tview.List)
-		app.SetFocus(bottomPanel)
-		bottomPanel.SwitchToPage("search")
+		app.SetFocus(bottomPage)
+		bottomPage.SwitchToPage("search")
 		return nil
 	case 'n':
 		nextSearchResult()
@@ -155,30 +155,51 @@ func initView() {
 	mainFlex := tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(mainPanel, 0, 1, true).
 		AddItem(progressBar, 1, 1, false).
-		AddItem(bottomPanel, 3, 1, false)
+		AddItem(bottomPage, 3, 1, false)
 
 	pages.AddPage("main", mainFlex, true, false)
 
-	// bottom panel
-	currentTrackText = tview.NewTextView()
-	currentTrackText.SetBorder(true)
-	currentTrackText.SetBorderColor(tcell.ColorDarkGrey)
-	currentTrackText.SetDynamicColors(true)
+	// bottom panel that contains info about current track and download progress
+	bottomPanel = tview.NewFlex().
+		SetDirection(tview.FlexColumn)
+	bottomPanel.SetBorder(false)
+
+	// panel that contains track info
+	currentTrackPanel := tview.NewFlex().
+		SetDirection(tview.FlexColumn)
+	currentTrackPanel.
+		SetBorderColor(tcell.ColorDarkGray).
+		SetBorder(true)
+
+	currentTrackText = tview.NewTextView().
+		SetDynamicColors(true)
+	currentTrackTime = tview.NewTextView().
+		SetDynamicColors(true)
+
+	//                                " xx:xx/xx:xx "
+	trackTimePlaceholder := "[::b]" + " __:__/__:__ " + "[::B]"
+	currentTrackTime.SetText(trackTimePlaceholder)
+
+	currentTrackPanel.
+		AddItem(currentTrackText, 0, 1, false).
+		AddItem(currentTrackTime, len(currentTrackTime.GetText(true)), 1, false)
+
+	downloadProgressText = tview.NewTextView()
+	downloadProgressText.
+		SetBorder(true).
+		SetBorderColor(tcell.ColorDarkGrey)
+	fmt.Fprintf(downloadProgressText, "%d%%", volumePercent)
+
+	bottomPanel.
+		AddItem(currentTrackPanel, 0, 1, false).
+		AddItem(downloadProgressText, 10, 1, false)
+
+	bottomPage.AddPage("current track info", bottomPanel, true, true)
 
 	searchInput = tview.NewInputField().
 		SetLabel("Search: ")
 
-	downloadProgressText = tview.NewTextView()
-	downloadProgressText.SetBorder(true)
-	downloadProgressText.SetBorderColor(tcell.ColorDarkGrey)
-
-	bottomPanel.AddPage("current track info", tview.NewFlex().SetDirection(tview.FlexColumn).
-		AddItem(currentTrackText, 0, 1, false).
-		AddItem(downloadProgressText, 10, 1, false), true, true)
-
-	fmt.Fprintf(downloadProgressText, "%d%%", volumePercent)
-
-	bottomPanel.AddPage("search", searchInput, true, false)
+	bottomPage.AddPage("search", searchInput, true, false)
 
 	// library page
 	artistList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
