@@ -41,11 +41,11 @@ func removeInQueueMarks(list *tview.List, trackID string) {
 		return
 	}
 
-	prim, sec := list.GetItemText(items[0])
+	trackText, _ := list.GetItemText(items[0])
 	if trackExists(trackID) { // if track didn't exist prior to adding to queue (and now exists), "not downloaded" mark should be removed
-		prim = strings.Replace(prim, trackNotDownloadedMarker, "", 1)
+		trackText = strings.Replace(trackText, trackNotDownloadedMarker, "", 1)
 	}
-	list.SetItemText(items[0], strings.Replace(prim, trackInQueueMarker, "", 1), sec)
+	list.SetItemText(items[0], strings.Replace(trackText, trackInQueueMarker, "", 1), trackID)
 }
 
 func removeFromQueue() {
