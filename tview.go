@@ -136,6 +136,7 @@ func initView() {
 
 	progressBar = tview.NewTextView().
 		SetDynamicColors(true)
+	progressBar.SetTextColor(tcell.ColorPeachPuff)
 
 	nowPlayingCover = tview.NewImage()
 	nowPlayingCover.SetSize(-90, 0)
@@ -161,12 +162,14 @@ func initView() {
 	// bottom panel
 	currentTrackText = tview.NewTextView()
 	currentTrackText.SetBorder(true)
+	currentTrackText.SetBorderColor(tcell.ColorDarkGrey)
 
 	searchInput = tview.NewInputField().
 		SetLabel("Search: ")
 
 	downloadProgressText = tview.NewTextView()
 	downloadProgressText.SetBorder(true)
+	downloadProgressText.SetBorderColor(tcell.ColorDarkGrey)
 
 	bottomPanel.AddPage("current track info", tview.NewFlex().SetDirection(tview.FlexColumn).
 		AddItem(currentTrackText, 0, 1, false).
@@ -294,11 +297,11 @@ func refreshProgressBar(currentTime int, totalTime int) {
 	// amount of padding spaces in progress bar
 	negativeProgressCount := width - progressCount
 
-	progress := " |"
-	negativeProgress := strings.Repeat(" ", negativeProgressCount) + "|"
+	progress := " [::d]|[::D]"
+	negativeProgress := strings.Repeat(" ", negativeProgressCount) + "[::d]|[::D]"
 	if progressCount != 0 {
 		// leading '=' is replaced by '>'
-		progress = " |" + strings.Repeat("=", progressCount-1) + ">"
+		progress += strings.Repeat("=", progressCount-1) + ">"
 	}
 
 	fmt.Fprintf(progressBar, "%s%s", progress, negativeProgress)
