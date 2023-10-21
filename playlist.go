@@ -47,7 +47,7 @@ func showPlaylist(_ int, playlistName, playlistIDString string, _ rune) {
 		track := Track{}
 		trackJSON, _ := json.Marshal(trackMap)
 		json.Unmarshal(trackJSON, &track)
-		playlistTracks.AddItem(fmt.Sprintf("%s%s - %s", markInQueue(track.ID), track.Artist, track.Title), fmt.Sprint(track.ID), 0, nil)
+		playlistTracks.AddItem(fmt.Sprintf("%s%s - %s", markTrack(track.ID), track.Artist, track.Title), fmt.Sprint(track.ID), 0, nil)
 	}
 }
 

@@ -17,6 +17,9 @@ var currentTrackMarker = "[::u]"
 // the way in which the tracks that are in queue are marked
 var trackInQueueMarker = "[::b]"
 
+// the way in which the tracks that are not downloaded are marked
+var trackNotDownloadedMarker = "[::d]"
+
 func addToQueue(_ int, _, trackID string, _ rune) {
 	tags := getTags(getTrackPath(trackID))
 	itemText := fmt.Sprintf("%s - %s", tags.Artist(), tags.Title())
@@ -34,10 +37,15 @@ func addToQueueAndPlay(_ int, _, trackID string, _ rune) {
 // trackList/playlistTracks are not refreshed after removing track from queue
 func removeInQueueMarks(list *tview.List, trackID string) {
 	items := list.FindItems("", trackID, true, true)
-	if len(items) > 0 { // sanity check, should always be true
-		prim, sec := list.GetItemText(items[0])
-		list.SetItemText(items[0], strings.Replace(prim, trackInQueueMarker, "", 1), sec)
+	if len(items) == 0 { // sanity check, should always be false
+		return
 	}
+
+	trackText, _ := list.GetItemText(items[0])
+	if trackExists(trackID) { // if track didn't exist prior to adding to queue (and now exists), "not downloaded" mark should be removed
+		trackText = strings.Replace(trackText, trackNotDownloadedMarker, "", 1)
+	}
+	list.SetItemText(items[0], strings.Replace(trackText, trackInQueueMarker, "", 1), trackID)
 }
 
 func removeFromQueue() {
@@ -92,14 +100,20 @@ func queuePlayHighlighted() {
 	playTrack(currentTrackIndex, currentTrackName, currentTrackID, 0)
 }
 
-// returns string which is used to "mark" tracks that are currently in queue
-func markInQueue(trackID string) string {
+// returns string which is used to "mark" tracks which are either:
+// in queue (bold);
+// not downloaded (dim)
+func markTrack(trackID string) string {
+	if !trackExists(trackID) { // track doesn't exist locally in .cache
+		return trackNotDownloadedMarker
+	}
+
 	indices := queueList.FindItems("", trackID, true, true)
-	if len(indices) == 0 {
-		return ""
-	} else {
+	if len(indices) >= 1 { // track exists in queue
 		return trackInQueueMarker
 	}
+
+	return ""
 }
 
 // marks tracks added to queue from track lists such as playlists or library
