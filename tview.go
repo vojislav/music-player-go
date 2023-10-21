@@ -20,6 +20,9 @@ var nowPlayingCover *tview.Image
 var loginGrid *tview.Grid
 var libraryFlex, queueFlex, playlistFlex, nowPlayingFlex, bottomPanel *tview.Flex
 
+// saves context of caller of track info or lyrics
+var focusedList *tview.List
+
 var popup = func(p tview.Primitive, width, height int) tview.Primitive {
 	return tview.NewGrid().
 		SetColumns(0, width, 0).
@@ -259,7 +262,6 @@ func initView() {
 
 func toggleTrackInfo() {
 	var list *tview.List
-	focused := app.GetFocus()
 
 	switch app.GetFocus() {
 	case trackList:
@@ -270,17 +272,21 @@ func toggleTrackInfo() {
 		list = queueList
 	case trackInfoTextBox:
 		pages.HidePage("track info")
+		app.SetFocus(focusedList)
+		focusedList = nil
+		return
+	default:
+		return
 	}
+	focusedList = list
 
-	if focused != trackInfoTextBox {
-		pages.ShowPage("track info")
-		trackInfoTextBox.Clear()
-		_, trackID := list.GetItemText(list.GetCurrentItem())
-		var id, title, album, artist, genre, suffix, albumID, artistID string
-		var track, year, size, duration, bitrate int
-		queryTrackInfo(toInt(trackID)).Scan(&id, &title, &album, &artist, &track, &year, &genre, &size, &suffix, &duration, &bitrate, &albumID, &artistID)
-		fmt.Fprintf(trackInfoTextBox, "Title: %s\nAlbum: %s\nArtist: %s\nYear: %d\nTrack: %d\nGenre: %s\nSize: %s\nDuration: %s\nSuffix: %s\nBit rate: %d kbps\n", title, album, artist, year, track, genre, getSizeString(size), getTimeString(duration), suffix, bitrate)
-	}
+	pages.ShowPage("track info")
+	trackInfoTextBox.Clear()
+	_, trackID := list.GetItemText(list.GetCurrentItem())
+	var id, title, album, artist, genre, suffix, albumID, artistID string
+	var track, year, size, duration, bitrate int
+	queryTrackInfo(toInt(trackID)).Scan(&id, &title, &album, &artist, &track, &year, &genre, &size, &suffix, &duration, &bitrate, &albumID, &artistID)
+	fmt.Fprintf(trackInfoTextBox, "Title: %s\nAlbum: %s\nArtist: %s\nYear: %d\nTrack: %d\nGenre: %s\nSize: %s\nDuration: %s\nSuffix: %s\nBit rate: %d kbps\n", title, album, artist, year, track, genre, getSizeString(size), getTimeString(duration), suffix, bitrate)
 }
 
 func toggleLyrics() {
@@ -294,14 +300,15 @@ func toggleLyrics() {
 		list = queueList
 	case lyricsTextBox:
 		pages.HidePage("lyrics")
+		app.SetFocus(focusedList)
+		focusedList = nil
+		return
+	default:
 		return
 	}
+	focusedList = list
 
-	if app.GetFocus() != lyricsTextBox {
-		go showLyrics(list)
-	} else {
-		pages.HidePage("lyrics")
-	}
+	go showLyrics(list)
 }
 
 // clears and draw progress bar
