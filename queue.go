@@ -37,10 +37,15 @@ func addToQueueAndPlay(_ int, _, trackID string, _ rune) {
 // trackList/playlistTracks are not refreshed after removing track from queue
 func removeInQueueMarks(list *tview.List, trackID string) {
 	items := list.FindItems("", trackID, true, true)
-	if len(items) > 0 { // sanity check, should always be true
-		prim, sec := list.GetItemText(items[0])
-		list.SetItemText(items[0], strings.Replace(prim, trackInQueueMarker, "", 1), sec)
+	if len(items) == 0 { // sanity check, should always be false
+		return
 	}
+
+	prim, sec := list.GetItemText(items[0])
+	if trackExists(trackID) { // if track didn't exist prior to adding to queue (and now exists), "not downloaded" mark should be removed
+		prim = strings.Replace(prim, trackNotDownloadedMarker, "", 1)
+	}
+	list.SetItemText(items[0], strings.Replace(prim, trackInQueueMarker, "", 1), sec)
 }
 
 func removeFromQueue() {
