@@ -242,7 +242,6 @@ func initView() {
 
 func toggleTrackInfo() {
 	var list *tview.List
-	focused := app.GetFocus()
 
 	switch app.GetFocus() {
 	case trackList:
@@ -253,17 +252,18 @@ func toggleTrackInfo() {
 		list = queueList
 	case trackInfoTextBox:
 		pages.HidePage("track info")
+		return
+	default:
+		return
 	}
 
-	if focused != trackInfoTextBox {
-		pages.ShowPage("track info")
-		trackInfoTextBox.Clear()
-		_, trackID := list.GetItemText(list.GetCurrentItem())
-		var id, title, album, artist, genre, suffix, albumID, artistID string
-		var track, year, size, duration, bitrate int
-		queryTrackInfo(toInt(trackID)).Scan(&id, &title, &album, &artist, &track, &year, &genre, &size, &suffix, &duration, &bitrate, &albumID, &artistID)
-		fmt.Fprintf(trackInfoTextBox, "Title: %s\nAlbum: %s\nArtist: %s\nYear: %d\nTrack: %d\nGenre: %s\nSize: %s\nDuration: %s\nSuffix: %s\nBit rate: %d kbps\n", title, album, artist, year, track, genre, getSizeString(size), getTimeString(duration), suffix, bitrate)
-	}
+	pages.ShowPage("track info")
+	trackInfoTextBox.Clear()
+	_, trackID := list.GetItemText(list.GetCurrentItem())
+	var id, title, album, artist, genre, suffix, albumID, artistID string
+	var track, year, size, duration, bitrate int
+	queryTrackInfo(toInt(trackID)).Scan(&id, &title, &album, &artist, &track, &year, &genre, &size, &suffix, &duration, &bitrate, &albumID, &artistID)
+	fmt.Fprintf(trackInfoTextBox, "Title: %s\nAlbum: %s\nArtist: %s\nYear: %d\nTrack: %d\nGenre: %s\nSize: %s\nDuration: %s\nSuffix: %s\nBit rate: %d kbps\n", title, album, artist, year, track, genre, getSizeString(size), getTimeString(duration), suffix, bitrate)
 }
 
 func toggleLyrics() {
@@ -278,13 +278,11 @@ func toggleLyrics() {
 	case lyricsTextBox:
 		pages.HidePage("lyrics")
 		return
+	default:
+		return
 	}
 
-	if app.GetFocus() != lyricsTextBox {
-		go showLyrics(list)
-	} else {
-		pages.HidePage("lyrics")
-	}
+	go showLyrics(list)
 }
 
 // clears and draw progress bar
