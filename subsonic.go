@@ -283,9 +283,7 @@ func getTrackPath(trackID string) string {
 
 // remove all files in cacheDirectory ending with ".XXX" (unfinished downloads)
 func removeUnfinishedDownloads() {
-	dirname := cacheDirectory
-
-	d, err := os.Open(dirname)
+	d, err := os.Open(cacheDirectory)
 	if err != nil {
 		return
 	}
