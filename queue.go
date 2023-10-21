@@ -109,7 +109,7 @@ func markTrack(trackID string) string {
 	}
 
 	indices := queueList.FindItems("", trackID, true, true)
-	if len(indices) == 1 { // track exists in queue
+	if len(indices) >= 1 { // track exists in queue
 		return trackInQueueMarker
 	}
 
