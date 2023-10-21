@@ -65,12 +65,10 @@ func searchInputHandler(event *tcell.EventKey) *tcell.EventKey {
 }
 
 func searchStatus(message, searchString string) {
-	previousText := currentTrackText.GetText(true)
 	currentTrackText.Clear()
 	fmt.Fprint(currentTrackText, message, searchString)
 	time.Sleep(2 * time.Second)
-	currentTrackText.Clear()
-	fmt.Fprint(currentTrackText, previousText)
+	updateCurrentTrackText()
 	app.Draw()
 }
 
