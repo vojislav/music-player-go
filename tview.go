@@ -20,6 +20,9 @@ var nowPlayingCover *tview.Image
 var loginGrid *tview.Grid
 var libraryFlex, queueFlex, playlistFlex, nowPlayingFlex *tview.Flex
 
+// saves context of caller of track info or lyrics
+var focusedTrack *tview.List
+
 var popup = func(p tview.Primitive, width, height int) tview.Primitive {
 	return tview.NewGrid().
 		SetColumns(0, width, 0).
@@ -252,10 +255,13 @@ func toggleTrackInfo() {
 		list = queueList
 	case trackInfoTextBox:
 		pages.HidePage("track info")
+		app.SetFocus(focusedTrack)
+		focusedTrack = nil
 		return
 	default:
 		return
 	}
+	focusedTrack = list
 
 	pages.ShowPage("track info")
 	trackInfoTextBox.Clear()
@@ -277,10 +283,13 @@ func toggleLyrics() {
 		list = queueList
 	case lyricsTextBox:
 		pages.HidePage("lyrics")
+		app.SetFocus(focusedTrack)
+		focusedTrack = nil
 		return
 	default:
 		return
 	}
+	focusedTrack = list
 
 	go showLyrics(list)
 }
