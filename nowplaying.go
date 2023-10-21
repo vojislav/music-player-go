@@ -13,6 +13,7 @@ import (
 func displayNowPlaying() {
 	// TODO cache image
 	if currentTrack.stream == nil {
+		nowPlayingTrackTextBox.Clear()
 		fmt.Fprint(nowPlayingTrackTextBox, "No currently playing track.")
 		return
 	}
