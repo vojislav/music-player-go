@@ -12,3 +12,23 @@ func trackExists(trackID string) bool {
 	}
 	return true
 }
+
+// returns bool that indicates if exact target is found, and index of it
+func binary_search(array []int, target int) (bool, int) {
+	comp := func(v int) bool { return v >= target }
+	idx := bisect(array, comp)
+	return (idx < len(array) && array[idx] == target), idx
+}
+
+func bisect(array []int, comp func(v int) bool) int {
+	lo, hi := 0, len(array)
+	for lo < hi {
+		mid := lo + (hi-lo)/2
+		if !comp(array[mid]) {
+			lo = mid + 1
+		} else {
+			hi = mid
+		}
+	}
+	return lo
+}

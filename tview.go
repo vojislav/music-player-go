@@ -73,9 +73,13 @@ func trackInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 	case '/':
 		searchIndexes = nil
-		searchCurrentIndex = 0
 
 		searchList = app.GetFocus().(*tview.List)
+
+		if searchStartContext == -1 {
+			searchStartContext = searchList.GetCurrentItem()
+		}
+
 		app.SetFocus(bottomPage)
 		bottomPage.SwitchToPage("search")
 		return nil
@@ -258,6 +262,7 @@ func initView() {
 	queueFlex.SetInputCapture(queueInputHandler)
 	playlistFlex.SetInputCapture(playlistInputHandler)
 	searchInput.SetInputCapture(searchInputHandler)
+	searchInput.SetChangedFunc(searchIncremental)
 }
 
 func toggleTrackInfo() {
