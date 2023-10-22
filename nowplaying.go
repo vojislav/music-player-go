@@ -5,9 +5,9 @@ import (
 	"encoding/base64"
 	"fmt"
 	"image/jpeg"
+	"log"
+	"os"
 )
-
-var coverArt []byte
 
 func displayNowPlaying() {
 	if currentTrack.stream == nil {
@@ -23,12 +23,31 @@ func displayNowPlaying() {
 }
 
 func displayCoverArt() {
-	// TODO cache image
 	if currentTrack.stream == nil {
 		return
 	}
 
-	coverArt = getCoverArt(currentTrack.ID) // TODO: lazy load
+	albumID := getAlbumID(currentTrack.ID)
+
+	coverPath := fmt.Sprint(cacheDirectory, albumID, ".png")
+	if _, err := os.Stat(coverPath); err != nil {
+		coverArt := getCoverArt(currentTrack.ID) // TODO: lazy load
+		f, err := os.Create(coverPath)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		_, err = f.Write(coverArt)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	coverArt, err := os.ReadFile(coverPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	encoded := base64.StdEncoding.EncodeToString(coverArt)
 
 	b, _ := base64.StdEncoding.DecodeString(encoded)
