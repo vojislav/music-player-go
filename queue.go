@@ -52,7 +52,7 @@ func removeInQueueMarks(list *tview.List, trackID string) {
 func refreshSearchIndexes(trackIndex int) {
 	var searchIndexesNew []int
 	found, loc := binary_search(searchIndexes, trackIndex)
-	if !found { // removed track may not be in searchIndexes
+	if !found { // removed track is not necessarily in searchIndexes
 		return
 	}
 
