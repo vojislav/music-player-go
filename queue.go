@@ -48,6 +48,18 @@ func removeInQueueMarks(list *tview.List, trackID string) {
 	list.SetItemText(items[0], strings.Replace(trackText, trackInQueueMarker, "", 1), trackID)
 }
 
+// if track is removed from queue list, search indexes are refreshed
+func refreshSearchIndexes(trackIndex int) {
+	var searchIndexesNew []int
+	_, loc := binary_search(searchIndexes, trackIndex)
+
+	searchIndexesNew = searchIndexes[:loc]
+	for i := loc + 1; i < len(searchIndexes); i++ {
+		searchIndexesNew = append(searchIndexesNew, searchIndexes[i]-1)
+	}
+	searchIndexes = searchIndexesNew
+}
+
 func removeFromQueue() {
 	highlightedTrackIndex := queueList.GetCurrentItem()
 	if highlightedTrackIndex < queuePosition {
@@ -59,6 +71,8 @@ func removeFromQueue() {
 	_, trackID := queueList.GetItemText(highlightedTrackIndex)
 	removeInQueueMarks(trackList, trackID)
 	removeInQueueMarks(playlistTracks, trackID)
+
+	refreshSearchIndexes(highlightedTrackIndex)
 
 	queueList.RemoveItem(highlightedTrackIndex)
 }
