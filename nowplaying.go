@@ -29,9 +29,11 @@ func displayCoverArt() {
 
 	albumID := getAlbumID(currentTrack.ID)
 
-	coverPath := fmt.Sprint(cacheDirectory, albumID, ".png")
+	coverPath := fmt.Sprint(coversDirectory, albumID, ".png")
+	var coverArt []byte
+
 	if _, err := os.Stat(coverPath); err != nil {
-		coverArt := getCoverArt(currentTrack.ID) // TODO: lazy load
+		coverArt = getCoverArt(currentTrack.ID) // TODO: lazy load
 		f, err := os.Create(coverPath)
 		if err != nil {
 			log.Fatal(err)
@@ -41,11 +43,6 @@ func displayCoverArt() {
 		if err != nil {
 			log.Fatal(err)
 		}
-	}
-
-	coverArt, err := os.ReadFile(coverPath)
-	if err != nil {
-		log.Fatal(err)
 	}
 
 	encoded := base64.StdEncoding.EncodeToString(coverArt)
