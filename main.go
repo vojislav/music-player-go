@@ -10,7 +10,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var cacheDirectory, lyricsDirectory, coversDirectory, configDirectory, playlistDirectory, databaseFile, configFile, initScriptFile string
+var tracksDirectory, lyricsDirectory, coversDirectory, configDirectory, playlistDirectory, databaseFile, configFile, initScriptFile string
 var reloadDatabaseFlag *bool
 
 func init() {
@@ -22,7 +22,7 @@ func init() {
 	configFile = path.Join(configDirectory, "config")
 	initScriptFile = path.Join(configDirectory, "init.sql")
 
-	cacheDirectory = path.Join(homeDirectory, ".cache", "music-player-go", "tracks")
+	tracksDirectory = path.Join(homeDirectory, ".cache", "music-player-go", "tracks")
 	lyricsDirectory = path.Join(homeDirectory, ".cache", "music-player-go", "lyrics")
 	coversDirectory = path.Join(homeDirectory, ".cache", "music-player-go", "covers")
 	// configDirectory = homeDirectory + "/.config/music-player-go/"
@@ -36,8 +36,8 @@ func init() {
 	// lyricsDirectory = homeDirectory + "/.cache/music-player-go/lyrics/"
 	// coversDirectory = homeDirectory + "/.cache/music-player-go/covers/"
 
-	if _, err := os.Stat(cacheDirectory); err != nil {
-		os.Mkdir(cacheDirectory, 0755)
+	if _, err := os.Stat(tracksDirectory); err != nil {
+		os.Mkdir(tracksDirectory, 0755)
 	}
 
 	if _, err := os.Stat(lyricsDirectory); err != nil {

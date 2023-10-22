@@ -281,12 +281,12 @@ func downloadCallback(trackIDString string, callback func(int, string, string, r
 // returns filepath of corresponding trackID
 func getTrackPath(trackID string) string {
 	// return fmt.Sprint(cacheDirectory, trackID, ".mp3")
-	return path.Join(cacheDirectory, trackID+".mp3")
+	return path.Join(tracksDirectory, trackID+".mp3")
 }
 
 // remove all files in cacheDirectory ending with ".XXX" (unfinished downloads)
 func removeUnfinishedDownloads() {
-	d, err := os.Open(cacheDirectory)
+	d, err := os.Open(tracksDirectory)
 	if err != nil {
 		return
 	}
@@ -301,7 +301,7 @@ func removeUnfinishedDownloads() {
 		if file.Mode().IsRegular() {
 			if filepath.Ext(file.Name()) == ".XXX" {
 				// os.Remove(cacheDirectory + file.Name())
-				os.Remove(path.Join(cacheDirectory, file.Name()))
+				os.Remove(path.Join(tracksDirectory, file.Name()))
 			}
 		}
 	}
