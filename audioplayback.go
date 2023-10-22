@@ -86,7 +86,11 @@ func togglePlay() {
 	speaker.Unlock()
 }
 
-func stopTrack() { // TODO: stop zablokira kada je prazan queue
+func stopTrack() {
+	if currentTrack.stream == nil {
+		return
+	}
+
 	speaker.Clear()
 	currentTrack = Track{stream: nil}
 	if !playerCtrl.Paused {

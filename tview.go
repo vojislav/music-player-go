@@ -342,6 +342,7 @@ func refreshProgressBar(currentTime int, totalTime int) {
 func updateCurrentTrackText() {
 	currentTrackText.Clear()
 	if currentTrack.stream == nil {
+		progressBar.Clear()
 		return
 	}
 
