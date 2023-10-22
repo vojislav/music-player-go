@@ -73,12 +73,11 @@ func trackInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 	case '/':
 		searchIndexes = nil
-		searchCurrentIndex = 0
 
 		searchList = app.GetFocus().(*tview.List)
 
-		if searchStart == -1 {
-			searchStart = searchList.GetCurrentItem()
+		if searchStartContext == -1 {
+			searchStartContext = searchList.GetCurrentItem()
 		}
 
 		app.SetFocus(bottomPage)
