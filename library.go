@@ -79,7 +79,7 @@ func fillTracksList(_ int, albumName, albumIDString string, _ rune) {
 
 // finds location of currently highlighted track in library.
 // should only be used in queue or playlist.
-// TODO: error handling; TODO: what if files aren't downloaded? getTags breaks
+// TODO: error handling;
 func findInLibrary(list *tview.List) {
 	focused := app.GetFocus()
 	if focused != list || list.GetItemCount() == 0 {
