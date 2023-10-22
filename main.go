@@ -69,6 +69,7 @@ func main() {
 	} else if !ping() {
 		stopApp()
 	} else if _, err := os.Stat(databaseFile); err != nil || *reloadDatabaseFlag {
+		// TODO: after initial load, playlist page isn't loaded
 		gotoLoadingPage()
 	} else {
 		gotoLibraryPage()
