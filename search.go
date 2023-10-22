@@ -8,6 +8,8 @@ import (
 	"github.com/rivo/tview"
 )
 
+// if search is cancelled with Esc, user is returned to searchStart index
+var searchStart = -1
 var searchList *tview.List
 var searchInput *tview.InputField
 var searchIndexes []int
@@ -31,33 +33,48 @@ func previousSearchResult() {
 	}
 }
 
+// called every time on searchInput change
+func searchIncremental(text string) {
+	searchString := searchInput.GetText()
+	if len(searchString) == 0 {
+		return
+	}
+
+	searchIndexes = searchList.FindItems(searchString, "", true, true)
+	if len(searchIndexes) == 0 {
+		go searchStatus("No results found!", "")
+	} else {
+		searchList.SetCurrentItem(searchIndexes[0])
+	}
+}
+
+// restores context prior to search.
+// search results are cleared, 'n'/'N' aren't available until next search
+func cancelSearch() {
+	searchIndexes = nil
+	searchList.SetCurrentItem(searchStart)
+	go searchStatus("Search cleared", "")
+
+	closeSearch()
+}
+
+// closes search bar, returning focus to list where search was initiated.
+// search results are persisted, user can still use 'n'/'N'
+func closeSearch() {
+	searchStart = -1
+	bottomPage.SwitchToPage("current track info")
+	app.SetFocus(searchList)
+	searchInput.SetText("")
+}
+
 func searchInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Key() {
 	case tcell.KeyEscape:
-		bottomPage.SwitchToPage("current track info")
-		app.SetFocus(searchList)
-		searchInput.SetText("") // search input shouldn't persist for next search
+		cancelSearch()
 		return nil
 
 	case tcell.KeyEnter:
-		searchString := searchInput.GetText()
-		if len(searchString) == 0 {
-			searchIndexes = nil
-			go searchStatus("Search cleared", "")
-		} else {
-			searchIndexes = searchList.FindItems(searchString, "-", false, true)
-			if len(searchIndexes) == 0 {
-				go searchStatus("No results found!", "")
-			} else {
-				searchList.SetCurrentItem(searchIndexes[0])
-				go searchStatus("Searching: ", searchString)
-			}
-		}
-
-		bottomPage.SwitchToPage("current track info")
-		app.SetFocus(searchList)
-		searchInput.SetText("")
-
+		closeSearch()
 		return nil
 	}
 
