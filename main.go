@@ -10,7 +10,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var tracksDirectory, lyricsDirectory, coversDirectory, configDirectory, playlistDirectory, databaseFile, configFile, initScriptFile string
+var cacheDirectory, tracksDirectory, lyricsDirectory, coversDirectory, configDirectory, playlistDirectory, databaseFile, configFile, initScriptFile string
 var reloadDatabaseFlag *bool
 
 func init() {
@@ -22,9 +22,10 @@ func init() {
 	configFile = path.Join(configDirectory, "config")
 	initScriptFile = path.Join(configDirectory, "init.sql")
 
-	tracksDirectory = path.Join(homeDirectory, ".cache", "music-player-go", "tracks")
-	lyricsDirectory = path.Join(homeDirectory, ".cache", "music-player-go", "lyrics")
-	coversDirectory = path.Join(homeDirectory, ".cache", "music-player-go", "covers")
+	cacheDirectory = path.Join(homeDirectory, ".cache", "music-player-go")
+	tracksDirectory = path.Join(cacheDirectory, "tracks")
+	lyricsDirectory = path.Join(cacheDirectory, "lyrics")
+	coversDirectory = path.Join(cacheDirectory, "covers")
 	// configDirectory = homeDirectory + "/.config/music-player-go/"
 	// playlistDirectory = configDirectory + "playlists/"
 
@@ -35,6 +36,10 @@ func init() {
 	// cacheDirectory = homeDirectory + "/.cache/music-player-go/tracks/"
 	// lyricsDirectory = homeDirectory + "/.cache/music-player-go/lyrics/"
 	// coversDirectory = homeDirectory + "/.cache/music-player-go/covers/"
+
+	if _, err := os.Stat(cacheDirectory); err != nil {
+		os.MkdirAll(cacheDirectory, 0755)
+	}
 
 	if _, err := os.Stat(tracksDirectory); err != nil {
 		os.Mkdir(tracksDirectory, 0755)
@@ -49,7 +54,7 @@ func init() {
 	}
 
 	if _, err := os.Stat(configDirectory); err != nil {
-		os.Mkdir(configDirectory, 0755)
+		os.MkdirAll(configDirectory, 0755)
 		makeInitScript()
 	}
 
