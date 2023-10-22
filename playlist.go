@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/itchyny/gojq"
@@ -28,7 +29,8 @@ func fillPlaylists() {
 func showPlaylist(_ int, playlistName, playlistIDString string, _ rune) {
 	playlistTracks.Clear()
 
-	playlistTracksJSON, err := os.ReadFile(playlistDirectory + playlistName + ".json")
+	// playlistTracksJSON, err := os.ReadFile(playlistDirectory + playlistName + ".json")
+	playlistTracksJSON, err := os.ReadFile(path.Join(playlistDirectory, playlistName+".json"))
 	if err != nil {
 		log.Fatal(err)
 	}

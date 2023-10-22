@@ -9,6 +9,7 @@ import (
 	"image/png"
 	"log"
 	"os"
+	"path"
 
 	"github.com/nfnt/resize"
 )
@@ -44,7 +45,9 @@ func displayCoverArt() {
 			log.Fatal(err)
 		}
 
-		coverPath = fmt.Sprint(coversDirectory, albumID, ".", format)
+		// coverPath = fmt.Sprint(coversDirectory, albumID, ".", format)
+		coverFileName := fmt.Sprint(albumID, ".", format)
+		coverPath = path.Join(coversDirectory, coverFileName)
 
 		f, err := os.Create(coverPath)
 		if err != nil {

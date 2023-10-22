@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"os"
+	"path"
 	"time"
 
 	"github.com/faiface/beep/speaker"
@@ -14,16 +15,26 @@ var reloadDatabaseFlag *bool
 
 func init() {
 	homeDirectory, _ := os.UserHomeDir()
-	configDirectory = homeDirectory + "/.config/music-player-go/"
-	playlistDirectory = configDirectory + "playlists/"
+	configDirectory = path.Join(homeDirectory, ".config", "music-player-go")
+	playlistDirectory = path.Join(configDirectory, "playlists")
 
-	databaseFile = configDirectory + "database.db"
-	configFile = configDirectory + "config"
-	initScriptFile = configDirectory + "init.sql"
+	databaseFile = path.Join(configDirectory, "database.db")
+	configFile = path.Join(configDirectory, "config")
+	initScriptFile = path.Join(configDirectory, "init.sql")
 
-	cacheDirectory = homeDirectory + "/.cache/music-player-go/tracks/"
-	lyricsDirectory = homeDirectory + "/.cache/music-player-go/lyrics/"
-	coversDirectory = homeDirectory + "/.cache/music-player-go/covers/"
+	cacheDirectory = path.Join(homeDirectory, ".cache", "music-player-go", "tracks")
+	lyricsDirectory = path.Join(homeDirectory, ".cache", "music-player-go", "lyrics")
+	coversDirectory = path.Join(homeDirectory, ".cache", "music-player-go", "covers")
+	// configDirectory = homeDirectory + "/.config/music-player-go/"
+	// playlistDirectory = configDirectory + "playlists/"
+
+	// databaseFile = configDirectory + "database.db"
+	// configFile = configDirectory + "config"
+	// initScriptFile = configDirectory + "init.sql"
+
+	// cacheDirectory = homeDirectory + "/.cache/music-player-go/tracks/"
+	// lyricsDirectory = homeDirectory + "/.cache/music-player-go/lyrics/"
+	// coversDirectory = homeDirectory + "/.cache/music-player-go/covers/"
 
 	if _, err := os.Stat(cacheDirectory); err != nil {
 		os.Mkdir(cacheDirectory, 0755)

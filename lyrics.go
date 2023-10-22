@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path"
 
 	lyrics "github.com/rhnvrm/lyric-api-go"
 	"github.com/rivo/tview"
@@ -24,7 +25,8 @@ func getLyrics(trackID string) string {
 	var track, year, size, duration, bitrate int
 	queryTrackInfo(toInt(trackID)).Scan(&id, &title, &album, &artist, &track, &year, &genre, &size, &suffix, &duration, &bitrate, &albumID, &artistID)
 
-	lyricsPath := fmt.Sprint(lyricsDirectory, trackID, ".txt")
+	// lyricsPath := fmt.Sprint(lyricsDirectory, trackID, ".txt")
+	lyricsPath := path.Join(lyricsDirectory, trackID+".txt")
 	if _, err := os.Stat(lyricsPath); err == nil {
 		lyrics, err := os.ReadFile(lyricsPath)
 		if err != nil {
