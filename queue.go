@@ -20,19 +20,6 @@ var trackInQueueMarker = "[::b]"
 // the way in which the tracks that are not downloaded are marked
 var trackNotDownloadedMarker = "[::d]"
 
-func addToQueue(_ int, _, trackID string, _ rune) {
-	tags := getTags(getTrackPath(trackID))
-	itemText := fmt.Sprintf("%s - %s", tags.Artist(), tags.Title())
-	queueList.AddItem(itemText, trackID, 0, nil)
-}
-
-func addToQueueAndPlay(_ int, _, trackID string, _ rune) {
-	addToQueue(0, "", trackID, 0)
-
-	setQueuePosition(queueList.GetItemCount() - 1)
-	playTrack(queuePosition, "", trackID, 0)
-}
-
 // removes indicator that track is in queue. This fixes the situation where
 // trackList/playlistTracks are not refreshed after removing track from queue
 func removeInQueueMarks(list *tview.List, trackID string) {
@@ -121,13 +108,13 @@ func queuePlayHighlighted() {
 // in queue (bold);
 // not downloaded (dim)
 func markTrack(trackID string) string {
-	if !trackExists(trackID) { // track doesn't exist locally in .cache
-		return trackNotDownloadedMarker
-	}
-
 	indices := queueList.FindItems("", trackID, true, true)
 	if len(indices) >= 1 { // track exists in queue
 		return trackInQueueMarker
+	}
+
+	if !trackExists(trackID) { // track doesn't exist locally in .cache
+		return trackNotDownloadedMarker
 	}
 
 	return ""
