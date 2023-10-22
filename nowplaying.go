@@ -13,6 +13,9 @@ import (
 	"github.com/nfnt/resize"
 )
 
+// used to test if cover art needs changing as it is costly
+var currentAlbumID = -1
+
 func displayNowPlaying() {
 	if currentTrack.stream == nil {
 		nowPlayingTrackTextBox.Clear()
@@ -26,16 +29,32 @@ func displayNowPlaying() {
 	displayCoverArt()
 }
 
+// returns file path (string) of album cover with id albumID
+func getCoverPath(albumID int) string {
+	return fmt.Sprint(coversDirectory, albumID, ".jpg")
+}
+
+// removes cover art from nowplaying page
+func removeCoverArt() {
+	currentAlbumID = -1
+	nowPlayingCover.SetImage(nil)
+}
+
+// caches cover art to disk if it doesn't exist and displays it on nowplaying page
 func displayCoverArt() {
 	if currentTrack.stream == nil {
 		return
 	}
 
 	albumID := getAlbumID(currentTrack.ID)
+	if currentAlbumID == albumID { // skip changing cover art if possible
+		return
+	}
+	currentAlbumID = albumID
 
-	var coverPath string
+	var coverPath string = getCoverPath(albumID)
 
-	if _, err := os.Stat(coverPath); err != nil {
+	if !fileExists(coverPath) {
 		coverArtBytes := getCoverArt(currentTrack.ID) // TODO: lazy load
 
 		var format string
@@ -44,19 +63,18 @@ func displayCoverArt() {
 			log.Fatal(err)
 		}
 
-		coverPath = fmt.Sprint(coversDirectory, albumID, ".", format)
-
-		f, err := os.Create(coverPath)
+		coverFile, err := os.Create(coverPath)
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		resizedCoverArt := resize.Resize(300, 0, coverArt, resize.Lanczos3)
 
+		// Encode writes into file coverFile
 		if format == "jpeg" {
-			err = jpeg.Encode(f, resizedCoverArt, nil)
+			err = jpeg.Encode(coverFile, resizedCoverArt, nil)
 		} else if format == "png" {
-			err = png.Encode(f, resizedCoverArt)
+			err = png.Encode(coverFile, resizedCoverArt)
 		}
 
 		if err != nil {
