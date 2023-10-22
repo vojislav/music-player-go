@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -13,8 +14,7 @@ func createDatabase() {
 	db, _ := sql.Open("sqlite3", databaseFile)
 	defer db.Close()
 
-	initScript := configDirectory + "init.sql"
-	script, err := os.ReadFile(initScript)
+	script, err := os.ReadFile(initScriptFile)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -151,7 +151,8 @@ func loadDatabase() {
 		}
 		playlistTracks := getPlaylistTracks(toInt(playlist.ID))
 
-		os.WriteFile(playlistDirectory+playlist.Name+".json", playlistTracks, 0755)
+		// os.WriteFile(playlistDirectory+playlist.Name+".json", playlistTracks, 0755)
+		os.WriteFile(path.Join(playlistDirectory, playlist.Name+".json"), playlistTracks, 0755)
 	}
 
 	var trackNum int
