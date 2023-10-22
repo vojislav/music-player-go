@@ -115,11 +115,11 @@ func findInLibrary(list *tview.List) {
 
 // enqueues (and downloads if necessary) a single track from current track list (either in "library" or in "playlists" views)
 func listEnqueueTrack(list *tview.List, play bool) {
-	currentTrackIndex := list.GetCurrentItem()
-	currentTrackText, currentTrackID := list.GetItemText(currentTrackIndex)
-	downloadAndEnqueueTrack(currentTrackText, currentTrackID, play)
-	list.SetCurrentItem(currentTrackIndex + 1)
-	markList(list, currentTrackIndex)
+	trackIndex := list.GetCurrentItem()
+	trackText, trackID := list.GetItemText(trackIndex)
+	downloadAndEnqueueTrack(trackText, trackID, play)
+	list.SetCurrentItem(trackIndex + 1)
+	markList(list, trackIndex)
 }
 
 // enqueues (and downloads if necessary) all tracks from current album or playlist
