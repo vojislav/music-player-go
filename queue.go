@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/gdamore/tcell/v2"
+	"github.com/rivo/tview"
 )
 
 // position in queue of currently played track [0-indexed]. Should only be set setQueuePosition()
@@ -13,8 +14,14 @@ var queuePosition = -1
 // the way in which the current playing track is marked.
 var currentTrackMarker = "[::u]"
 
+// the way in which the tracks that are in queue are marked
+var trackInQueueMarker = "[::b]"
+
+// the way in which the tracks that are not downloaded are marked
+var trackNotDownloadedMarker = "[::d]"
+
 func addToQueue(_ int, _, trackID string, _ rune) {
-	tags := getTags(cacheDirectory + trackID + ".mp3")
+	tags := getTags(getTrackPath(trackID))
 	itemText := fmt.Sprintf("%s - %s", tags.Artist(), tags.Title())
 	queueList.AddItem(itemText, trackID, 0, nil)
 }
@@ -26,6 +33,21 @@ func addToQueueAndPlay(_ int, _, trackID string, _ rune) {
 	playTrack(queuePosition, "", trackID, 0)
 }
 
+// removes indicator that track is in queue. This fixes the situation where
+// trackList/playlistTracks are not refreshed after removing track from queue
+func removeInQueueMarks(list *tview.List, trackID string) {
+	items := list.FindItems("", trackID, true, true)
+	if len(items) == 0 { // sanity check, should always be false
+		return
+	}
+
+	trackText, _ := list.GetItemText(items[0])
+	if trackExists(trackID) { // if track didn't exist prior to adding to queue (and now exists), "not downloaded" mark should be removed
+		trackText = strings.Replace(trackText, trackNotDownloadedMarker, "", 1)
+	}
+	list.SetItemText(items[0], strings.Replace(trackText, trackInQueueMarker, "", 1), trackID)
+}
+
 func removeFromQueue() {
 	highlightedTrackIndex := queueList.GetCurrentItem()
 	if highlightedTrackIndex < queuePosition {
@@ -33,6 +55,11 @@ func removeFromQueue() {
 	} else if highlightedTrackIndex == queuePosition {
 		stopTrack()
 	}
+
+	_, trackID := queueList.GetItemText(highlightedTrackIndex)
+	removeInQueueMarks(trackList, trackID)
+	removeInQueueMarks(playlistTracks, trackID)
+
 	queueList.RemoveItem(highlightedTrackIndex)
 }
 
@@ -73,6 +100,29 @@ func queuePlayHighlighted() {
 	playTrack(currentTrackIndex, currentTrackName, currentTrackID, 0)
 }
 
+// returns string which is used to "mark" tracks which are either:
+// in queue (bold);
+// not downloaded (dim)
+func markTrack(trackID string) string {
+	if !trackExists(trackID) { // track doesn't exist locally in .cache
+		return trackNotDownloadedMarker
+	}
+
+	indices := queueList.FindItems("", trackID, true, true)
+	if len(indices) >= 1 { // track exists in queue
+		return trackInQueueMarker
+	}
+
+	return ""
+}
+
+// marks tracks added to queue from track lists such as playlists or library
+// TODO: this can be stacked infinitely. What are the implications?
+func markList(list *tview.List, idx int) {
+	prim, sec := list.GetItemText(idx)
+	list.SetItemText(idx, trackInQueueMarker+prim, sec)
+}
+
 func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Key() {
 	case tcell.KeyRight, tcell.KeyEnter:
@@ -96,6 +146,9 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 	case 'x':
 		removeFromQueue()
+		return nil
+	case 'o':
+		findInLibrary(queueList)
 		return nil
 	}
 

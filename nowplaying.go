@@ -11,6 +11,7 @@ import (
 
 func displayNowPlaying() {
 	if currentTrack.stream == nil {
+		nowPlayingTrackTextBox.Clear()
 		fmt.Fprint(nowPlayingTrackTextBox, "No currently playing track.")
 		return
 	}

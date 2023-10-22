@@ -47,7 +47,7 @@ func showPlaylist(_ int, playlistName, playlistIDString string, _ rune) {
 		track := Track{}
 		trackJSON, _ := json.Marshal(trackMap)
 		json.Unmarshal(trackJSON, &track)
-		playlistTracks.AddItem(fmt.Sprintf("%s - %s", track.Artist, track.Title), fmt.Sprint(track.ID), 0, nil)
+		playlistTracks.AddItem(fmt.Sprintf("%s%s - %s", markTrack(track.ID), track.Artist, track.Title), fmt.Sprint(track.ID), 0, nil)
 	}
 }
 
@@ -61,6 +61,7 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 			_, currentTrackID := playlistTracks.GetItemText(currentTrackIndex)
 			go downloadCallback(currentTrackID, addToQueueAndPlay)
 			playlistTracks.SetCurrentItem(currentTrackIndex + 1)
+			markList(playlistTracks, currentTrackIndex)
 		}
 		return nil
 
@@ -78,6 +79,7 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 			_, currentTrackID := playlistTracks.GetItemText(currentTrackIndex)
 			go downloadCallback(currentTrackID, addToQueueAndPlay)
 			playlistTracks.SetCurrentItem(currentTrackIndex + 1)
+			markList(playlistTracks, currentTrackIndex)
 		}
 		return nil
 	}
@@ -100,6 +102,7 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 			_, currentTrackID := playlistTracks.GetItemText(currentTrackIndex)
 			go downloadCallback(currentTrackID, addToQueueAndPlay)
 			playlistTracks.SetCurrentItem(currentTrackIndex + 1)
+			markList(playlistTracks, currentTrackIndex)
 		}
 		return nil
 
@@ -109,7 +112,12 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 			_, currentTrackID := playlistTracks.GetItemText(currentTrackIndex)
 			go downloadCallback(currentTrackID, addToQueue)
 			playlistTracks.SetCurrentItem(currentTrackIndex + 1)
+			markList(playlistTracks, currentTrackIndex)
 		}
+		return nil
+
+	case 'o':
+		findInLibrary(playlistTracks)
 		return nil
 	}
 

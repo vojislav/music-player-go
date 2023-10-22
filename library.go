@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -60,8 +61,46 @@ func fillTracksList(_ int, albumName, albumIDString string, _ rune) {
 		var trackID, track, year, size, duration, bitrate int
 		rows.Scan(&trackID, &title, &album, &artist, &track, &year, &genre, &size, &suffix, &duration, &bitrate, &albumID, &artistID)
 
-		trackList.AddItem(fmt.Sprintf("%d. %s", track, title), fmt.Sprint(trackID), 0, nil)
+		alreadyInQueue := markTrack(strconv.FormatInt(int64(trackID), 10))
+
+		trackList.AddItem(fmt.Sprintf("%s%d. %s", alreadyInQueue, track, title), fmt.Sprint(trackID), 0, nil)
 	}
+}
+
+// finds location of currently highlighted track in library.
+// should only be used in queue or playlist.
+// TODO: error handling; TODO: what if files aren't downloaded? getTags breaks
+func findInLibrary(list *tview.List) {
+	focused := app.GetFocus()
+	if focused != list || list.GetItemCount() == 0 {
+		return
+	}
+
+	idx := list.GetCurrentItem()
+	_, trackID := list.GetItemText(idx)
+	var artist, album string
+	queryArtistAndAlbum(toInt(trackID)).Scan(&artist, &album)
+
+	artists := artistList.FindItems(artist, "", true, true)
+	if len(artists) == 0 {
+		return
+	}
+	artistList.SetCurrentItem(artists[0])
+
+	albums := albumList.FindItems(album, "", true, true)
+	if len(albums) == 0 {
+		return
+	}
+	albumList.SetCurrentItem(albums[0])
+
+	tracks := trackList.FindItems("", trackID, true, true)
+	if len(tracks) == 0 {
+		return
+	}
+	trackList.SetCurrentItem(tracks[0])
+
+	mainPanel.SwitchToPage("library")
+	app.SetFocus(trackList)
 }
 
 func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
@@ -74,6 +113,7 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 			_, currentTrackID := trackList.GetItemText(currentTrackIndex)
 			go downloadCallback(currentTrackID, addToQueueAndPlay)
 			trackList.SetCurrentItem(currentTrackIndex + 1)
+			markList(trackList, currentTrackIndex)
 		}
 		return nil
 
@@ -95,6 +135,7 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 			_, currentTrackID := trackList.GetItemText(currentTrackIndex)
 			go downloadCallback(currentTrackID, addToQueueAndPlay)
 			trackList.SetCurrentItem(currentTrackIndex + 1)
+			markList(trackList, currentTrackIndex)
 		}
 		return nil
 	}
@@ -118,6 +159,7 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 			_, currentTrackID := trackList.GetItemText(currentTrackIndex)
 			go downloadCallback(currentTrackID, addToQueueAndPlay)
 			trackList.SetCurrentItem(currentTrackIndex + 1)
+			markList(trackList, currentTrackIndex)
 		}
 		return nil
 
@@ -127,6 +169,7 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 			_, currentTrackID := trackList.GetItemText(currentTrackIndex)
 			go downloadCallback(currentTrackID, addToQueue)
 			trackList.SetCurrentItem(currentTrackIndex + 1)
+			markList(trackList, currentTrackIndex)
 		} else if focused == albumList {
 			currentAlbumIndex := albumList.GetCurrentItem()
 			_, currentAlbumID := trackList.GetItemText(currentAlbumIndex)
