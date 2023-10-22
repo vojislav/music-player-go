@@ -129,6 +129,7 @@ func listEnqueueSublist(list *tview.List, sublist *tview.List, play bool) {
 	for idx := 0; idx < sublist.GetItemCount(); idx++ {
 		trackText, trackID := sublist.GetItemText(idx)
 		downloadAndEnqueueTrack(trackText, trackID, play && idx == 0)
+		markList(sublist, idx)
 	}
 
 	list.SetCurrentItem(currentListIndex + 1)
