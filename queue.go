@@ -64,6 +64,10 @@ func refreshSearchIndexes(trackIndex int) {
 }
 
 func removeFromQueue() {
+	if queueList.GetItemCount() == 0 {
+		return
+	}
+
 	highlightedTrackIndex := queueList.GetCurrentItem()
 	if highlightedTrackIndex < queuePosition {
 		queuePosition -= 1
@@ -78,10 +82,6 @@ func removeFromQueue() {
 	refreshSearchIndexes(highlightedTrackIndex)
 
 	queueList.RemoveItem(highlightedTrackIndex)
-}
-
-func addAlbumToQueue(albumID string) {
-
 }
 
 // should only be called when current song is changed

@@ -49,6 +49,9 @@ func init() {
 	if _, err := os.Stat(playlistDirectory); err != nil {
 		os.Mkdir(playlistDirectory, 0755)
 	}
+
+	go downloadAddToQueue()
+	go downloadAddToQueuePriority()
 }
 
 // the only way you should kill the app. ensures required work is done before it's stopped

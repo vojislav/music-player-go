@@ -113,17 +113,64 @@ func findInLibrary(list *tview.List) {
 	setAndSaveFocus(trackList)
 }
 
+// enqueues (and downloads if necessary) a single track from current track list (either in "library" or in "playlists" views)
+func listEnqueueTrack(list *tview.List, play bool) {
+	currentTrackIndex := list.GetCurrentItem()
+	currentTrackText, currentTrackID := list.GetItemText(currentTrackIndex)
+	downloadAndEnqueueTrack(currentTrackText, currentTrackID, play)
+	list.SetCurrentItem(currentTrackIndex + 1)
+	markList(list, currentTrackIndex)
+}
+
+// enqueues (and downloads if necessary) all tracks from current album or playlist
+func listEnqueueSublist(list *tview.List, sublist *tview.List, play bool) {
+	currentListIndex := list.GetCurrentItem()
+
+	for idx := 0; idx < sublist.GetItemCount(); idx++ {
+		trackText, trackID := sublist.GetItemText(idx)
+		downloadAndEnqueueTrack(trackText, trackID, play && idx == 0)
+	}
+
+	list.SetCurrentItem(currentListIndex + 1)
+}
+
+// adds dummy placeholder to queue, and downloads track and puts it on that place
+func downloadAndEnqueueTrack(trackText string, trackID string, play bool) {
+	queueList.AddItem(trackNotDownloadedMarker+trackText, trackID, 0, nil)
+	idx := queueList.GetItemCount() - 1
+
+	if play {
+		go sendToPriorityDownloadQueue(trackID, idx)
+	} else {
+		go sendToDownloadQueue(trackID, idx)
+	}
+}
+
 func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	focused := app.GetFocus()
+
+	switch event.Rune() {
+	case 'h': // override 'h' to KeyLeft
+		event = tcell.NewEventKey(tcell.KeyLeft, 0, tcell.ModNone)
+
+	case 'l': // override 'l' to KeyRight
+		event = tcell.NewEventKey(tcell.KeyRight, 0, tcell.ModNone)
+
+	case ' ': // space key
+		if focused == trackList {
+			listEnqueueTrack(trackList, false)
+		} else if focused == albumList {
+			listEnqueueSublist(albumList, trackList, false)
+		}
+		return nil
+	}
 
 	switch event.Key() {
 	case tcell.KeyEnter:
 		if focused == trackList {
-			currentTrackIndex := trackList.GetCurrentItem()
-			_, currentTrackID := trackList.GetItemText(currentTrackIndex)
-			go downloadCallback(currentTrackID, addToQueueAndPlay)
-			trackList.SetCurrentItem(currentTrackIndex + 1)
-			markList(trackList, currentTrackIndex)
+			listEnqueueTrack(trackList, true)
+		} else if focused == albumList {
+			listEnqueueSublist(albumList, trackList, true)
 		}
 		return nil
 
@@ -141,49 +188,7 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		} else if focused == albumList {
 			setAndSaveFocus(trackList)
 		} else if focused == trackList {
-			currentTrackIndex := trackList.GetCurrentItem()
-			_, currentTrackID := trackList.GetItemText(currentTrackIndex)
-			go downloadCallback(currentTrackID, addToQueueAndPlay)
-			trackList.SetCurrentItem(currentTrackIndex + 1)
-			markList(trackList, currentTrackIndex)
-		}
-		return nil
-	}
-
-	switch event.Rune() {
-	case 'h':
-		if focused == albumList {
-			setAndSaveFocus(artistList)
-		} else if focused == trackList {
-			setAndSaveFocus(albumList)
-		}
-		return nil
-
-	case 'l':
-		if focused == artistList {
-			setAndSaveFocus(albumList)
-		} else if focused == albumList {
-			setAndSaveFocus(trackList)
-		} else if focused == trackList {
-			currentTrackIndex := trackList.GetCurrentItem()
-			_, currentTrackID := trackList.GetItemText(currentTrackIndex)
-			go downloadCallback(currentTrackID, addToQueueAndPlay)
-			trackList.SetCurrentItem(currentTrackIndex + 1)
-			markList(trackList, currentTrackIndex)
-		}
-		return nil
-
-	case ' ':
-		if focused == trackList {
-			currentTrackIndex := trackList.GetCurrentItem()
-			_, currentTrackID := trackList.GetItemText(currentTrackIndex)
-			go downloadCallback(currentTrackID, addToQueue)
-			trackList.SetCurrentItem(currentTrackIndex + 1)
-			markList(trackList, currentTrackIndex)
-		} else if focused == albumList {
-			currentAlbumIndex := albumList.GetCurrentItem()
-			_, currentAlbumID := trackList.GetItemText(currentAlbumIndex)
-			addAlbumToQueue(currentAlbumID)
+			listEnqueueTrack(trackList, true)
 		}
 		return nil
 	}

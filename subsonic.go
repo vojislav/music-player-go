@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/itchyny/gojq"
@@ -51,8 +52,18 @@ type Playlist struct {
 	CoverArt  string    `json:"coverArt"`
 }
 
+type TrackInfo struct {
+	trackID    string
+	trackIndex int
+}
+
 var artists = make(map[int]*Artist)
 var downloadPercent float64
+
+var mu sync.Mutex
+var idPlayed string = ""
+var downloadChan = make(chan TrackInfo, 20)
+var downloadPriorityChan = make(chan TrackInfo, 1)
 
 func ping() bool {
 	req, err := http.NewRequest("GET", config.ServerURL+"ping", nil)
@@ -271,10 +282,61 @@ func getTracks(albumID int) bool {
 	return true
 }
 
-func downloadCallback(trackIDString string, callback func(int, string, string, rune)) {
-	_ = download(trackIDString)
-	callback(0, "", trackIDString, 0)
-	app.Draw()
+// synchronously send track to download channel.
+func sendToDownloadQueue(trackID string, idx int) {
+	downloadChan <- TrackInfo{trackID, idx}
+}
+
+// pull tracks from download channel and download them one-by-one
+func downloadAddToQueue() {
+	for {
+		select {
+		case info := <-downloadChan:
+			_ = download(info.trackID, info.trackIndex)
+			tags := getTags(getTrackPath(info.trackID))
+			itemText := fmt.Sprintf("%s - %s", tags.Artist(), tags.Title())
+			queueList.SetItemText(info.trackIndex, itemText, info.trackID)
+		}
+	}
+}
+
+// synchronously send track to priority download channel. if there is some other track waiting for priority download, remove it from priority channel
+func sendToPriorityDownloadQueue(trackID string, idx int) {
+	mu.Lock()
+	idPlayed = trackID
+	mu.Unlock()
+
+L:
+	for { // clear out priority channel if it is occupied
+		select {
+		case track := <-downloadPriorityChan:
+			downloadChan <- track
+		default:
+			break L
+		}
+	}
+	downloadPriorityChan <- TrackInfo{trackID, idx}
+}
+
+// pull track from priority download channel and download it. there should be only one track at a time
+func downloadAddToQueuePriority() {
+	for {
+		select {
+		case info := <-downloadPriorityChan:
+			_ = download(info.trackID, info.trackIndex)
+			tags := getTags(getTrackPath(info.trackID))
+			itemText := fmt.Sprintf("%s - %s", tags.Artist(), tags.Title())
+			queueList.SetItemText(info.trackIndex, itemText, info.trackID)
+
+			mu.Lock()
+			if info.trackID == idPlayed {
+				setQueuePosition(info.trackIndex)
+				playTrack(queuePosition, "", info.trackID, 0)
+				idPlayed = ""
+			}
+			mu.Unlock()
+		}
+	}
 }
 
 // returns filepath of corresponding trackID
@@ -304,7 +366,7 @@ func removeUnfinishedDownloads() {
 	}
 }
 
-func download(trackIDString string) string {
+func download(trackIDString string, trackIndex int) string {
 	trueFilePath := getTrackPath(trackIDString)
 	// indicates that file is downloading
 	fakeFilePath := strings.Replace(trueFilePath, ".mp3", ".XXX", 1)
@@ -351,7 +413,7 @@ func download(trackIDString string) string {
 		defer res.Body.Close()
 
 		downloadDone := make(chan bool)
-		go getDownloadProgress(downloadDone, fakeFilePath, fileSize)
+		go getDownloadProgress(downloadDone, fakeFilePath, fileSize, trackIndex)
 
 		file, err := os.Create(fakeFilePath)
 		if err != nil {

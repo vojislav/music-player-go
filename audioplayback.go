@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/dhowden/tag"
@@ -45,7 +47,7 @@ var volume = effects.Volume{
 }
 
 func playTrack(trackIndex int, _ string, trackID string, _ rune) {
-	fileName := download(trackID)
+	fileName := download(trackID, trackIndex)
 
 	stream := getStream(fileName)
 	tags := getTags(fileName)
@@ -191,7 +193,10 @@ func getTags(path string) tag.Metadata {
 	return tags
 }
 
-func getDownloadProgress(done chan bool, filePath string, fileSize int) {
+func getDownloadProgress(done chan bool, filePath string, fileSize int, trackIndex int) {
+	pattern := `\[::b\]-> \(\d+%\)\s`
+	re, _ := regexp.Compile(pattern)
+
 	for {
 		select {
 		case <-done:
@@ -219,6 +224,18 @@ func getDownloadProgress(done chan bool, filePath string, fileSize int) {
 			downloadProgressText.Clear()
 			fmt.Fprintf(downloadProgressText, "%.0f%%", downloadPercent)
 
+			// add progress to track
+			progress := fmt.Sprintf("[::b]-> (%.0f%%) ", downloadPercent)
+
+			trackName, trackID := queueList.GetItemText(trackIndex)
+			found := re.FindString(trackName)
+			if found == "" {
+				trackName = progress + trackName
+			} else {
+				trackName = strings.Replace(trackName, found, progress, 1)
+			}
+
+			queueList.SetItemText(trackIndex, trackName, trackID)
 			app.Draw()
 		}
 		time.Sleep(time.Second)
