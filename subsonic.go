@@ -297,7 +297,7 @@ func removeUnfinishedDownloads() {
 	for _, file := range files {
 		if file.Mode().IsRegular() {
 			if filepath.Ext(file.Name()) == ".XXX" {
-				os.Remove(dirname + file.Name())
+				os.Remove(cacheDirectory + file.Name())
 			}
 		}
 	}
