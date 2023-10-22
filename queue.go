@@ -51,7 +51,10 @@ func removeInQueueMarks(list *tview.List, trackID string) {
 // if track is removed from queue list, search indexes are refreshed
 func refreshSearchIndexes(trackIndex int) {
 	var searchIndexesNew []int
-	_, loc := binary_search(searchIndexes, trackIndex)
+	found, loc := binary_search(searchIndexes, trackIndex)
+	if !found { // removed track may not be in searchIndexes
+		return
+	}
 
 	searchIndexesNew = searchIndexes[:loc]
 	for i := loc + 1; i < len(searchIndexes); i++ {
