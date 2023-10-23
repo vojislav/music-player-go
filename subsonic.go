@@ -58,6 +58,10 @@ var downloadPercent float64
 // idx of next song to be played
 var playNext int = -1
 
+// idx of last downloaded song. used for optimization only.
+// starts at -1 because +1 is always added to it
+var lastDownloaded int = -1
+
 // guards playNext as it is accessed from concurrent routines
 var playNextMutex sync.Mutex
 
@@ -290,7 +294,7 @@ func nextDownloadRequest() (string, int) {
 
 	var startIdx int
 	if playNext == -1 {
-		startIdx = queuePosition
+		startIdx = lastDownloaded + 1
 	} else {
 		startIdx = playNext
 	}
@@ -427,6 +431,8 @@ func download(trackIDString string, trackIndex int) string {
 		}
 
 		downloadDone <- true
+
+		lastDownloaded = trackIndex
 
 		os.Rename(fakeFilePath, trueFilePath)
 	}
