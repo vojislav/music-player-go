@@ -285,13 +285,17 @@ func getTracks(albumID int) bool {
 	return true
 }
 
-// blocks caller until next download is ready
+// blocks caller until next download is ready.
+// returns download request in form of (trackID, trackQueueIdx)
 func nextDownloadRequest() (string, int) {
+	// wait for download request here
 	<-downloadSemaphore
 
+	// lock because map is shared resource
 	downloadMutex.Lock()
 	defer downloadMutex.Unlock()
 
+	// either download track that is to be played next or closest one to it
 	var startIdx int
 	if playNext == -1 {
 		startIdx = lastDownloaded + 1
@@ -299,6 +303,7 @@ func nextDownloadRequest() (string, int) {
 		startIdx = playNext
 	}
 
+	// iterate through queue to find next track to download
 	for i := startIdx; i < queueList.GetItemCount(); i++ {
 		val, ok := downloadMap[i]
 		if ok {
@@ -313,6 +318,7 @@ func nextDownloadRequest() (string, int) {
 		}
 	}
 
+	// unreachable - fatal error
 	log.Panic()
 	return "", -1
 }
