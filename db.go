@@ -91,6 +91,17 @@ func queryPlaylistTracks(playlistID int) *sql.Rows {
 	return rows
 }
 
+func queryArtistAndTitle(trackID int) *sql.Row {
+	db, err := sql.Open("sqlite3", databaseFile)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+	row := db.QueryRow("SELECT artist, title FROM tracks WHERE id=?", trackID)
+	return row
+}
+
 func getAlbumID(trackID string) int {
 	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
