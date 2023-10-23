@@ -19,10 +19,10 @@ func showLyrics(list *tview.List) {
 	app.Draw()
 }
 
-func getLyrics(trackID string) string {
+func getLyrics(trackID string) string { // TODO: separate query for just artist and title
 	var id, title, album, artist, genre, suffix, albumID, artistID string
-	var track, year, size, duration, bitrate int
-	queryTrackInfo(toInt(trackID)).Scan(&id, &title, &album, &artist, &track, &year, &genre, &size, &suffix, &duration, &bitrate, &albumID, &artistID)
+	var track, disc, year, size, duration, bitrate int
+	queryTrackInfo(toInt(trackID)).Scan(&id, &title, &album, &artist, &track, &year, &genre, &size, &suffix, &duration, &bitrate, &disc, &albumID, &artistID)
 
 	lyricsPath := fmt.Sprint(lyricsDirectory, trackID, ".txt")
 	if _, err := os.Stat(lyricsPath); err == nil {

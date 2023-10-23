@@ -289,9 +289,9 @@ func toggleTrackInfo() {
 	trackInfoTextBox.Clear()
 	_, trackID := list.GetItemText(list.GetCurrentItem())
 	var id, title, album, artist, genre, suffix, albumID, artistID string
-	var track, year, size, duration, bitrate int
-	queryTrackInfo(toInt(trackID)).Scan(&id, &title, &album, &artist, &track, &year, &genre, &size, &suffix, &duration, &bitrate, &albumID, &artistID)
-	fmt.Fprintf(trackInfoTextBox, "Title: %s\nAlbum: %s\nArtist: %s\nYear: %d\nTrack: %d\nGenre: %s\nSize: %s\nDuration: %s\nSuffix: %s\nBit rate: %d kbps\n", title, album, artist, year, track, genre, getSizeString(size), getTimeString(duration), suffix, bitrate)
+	var track, disc, year, size, duration, bitrate int
+	queryTrackInfo(toInt(trackID)).Scan(&id, &title, &album, &artist, &track, &year, &genre, &size, &suffix, &duration, &bitrate, &disc, &albumID, &artistID)
+	fmt.Fprintf(trackInfoTextBox, "Title: %s\nAlbum: %s\nArtist: %s\nYear: %d\nTrack: %d\nDisc: %d\nGenre: %s\nSize: %s\nDuration: %s\nSuffix: %s\nBit rate: %d kbps\n", title, album, artist, year, track, disc, genre, getSizeString(size), getTimeString(duration), suffix, bitrate)
 }
 
 func toggleLyrics() {

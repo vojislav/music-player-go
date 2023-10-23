@@ -58,8 +58,8 @@ func fillTracksList(_ int, albumName, albumIDString string, _ rune) {
 	rows := queryAlbumTracks(albumID)
 	for rows.Next() {
 		var title, album, artist, genre, suffix, albumID, artistID string
-		var trackID, trackNo, discNo, year, size, duration, bitrate int
-		rows.Scan(&trackID, &title, &album, &artist, &trackNo, &year, &genre, &size, &suffix, &duration, &bitrate, &discNo, &albumID, &artistID)
+		var trackID, track, disc, year, size, duration, bitrate int
+		rows.Scan(&trackID, &title, &album, &artist, &track, &year, &genre, &size, &suffix, &duration, &bitrate, &disc, &albumID, &artistID)
 
 		var trackText string
 
@@ -67,8 +67,8 @@ func fillTracksList(_ int, albumName, albumIDString string, _ rune) {
 
 		trackText = alreadyInQueue
 
-		if trackNo != 0 {
-			trackText += fmt.Sprintf("%d. ", trackNo)
+		if track != 0 {
+			trackText += fmt.Sprintf("%d. ", track)
 		}
 
 		trackText += title
