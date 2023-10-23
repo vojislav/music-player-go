@@ -54,7 +54,7 @@ func queryAlbumTracks(albumID int) *sql.Rows {
 	}
 	defer db.Close()
 
-	rows, _ := db.Query("SELECT * FROM tracks WHERE albumID=? ORDER BY track", albumID)
+	rows, _ := db.Query("SELECT * FROM tracks WHERE albumID=? ORDER BY disc, track", albumID)
 	return rows
 }
 
@@ -123,7 +123,7 @@ func loadDatabase() {
 		return
 	}
 
-	trackQuery, err := db.Prepare("INSERT OR IGNORE INTO tracks(id, title, album, artist, track, year, genre, size, suffix, duration, bitrate, albumID, artistID) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)")
+	trackQuery, err := db.Prepare("INSERT OR IGNORE INTO tracks(id, title, album, artist, track, year, genre, size, suffix, duration, bitrate, disc, albumID, artistID) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -173,7 +173,7 @@ func loadDatabase() {
 			}
 			getTracks(albumID)
 			for k, v := range artists[artistID].albums[albumID].tracks {
-				_, err := trackQuery.Exec(k, v.Title, v.Album, v.Artist, v.Track, v.Year, v.Genre, v.Size, v.Suffix, v.Duration, v.BitRate, v.AlbumID, v.ArtistID)
+				_, err := trackQuery.Exec(k, v.Title, v.Album, v.Artist, v.Track, v.Year, v.Genre, v.Size, v.Suffix, v.Duration, v.BitRate, v.Disc, v.AlbumID, v.ArtistID)
 				if err != nil {
 					fmt.Println(err)
 					return
@@ -219,6 +219,7 @@ CREATE TABLE tracks (
 	suffix TEXT,
 	duration INTEGER,
 	bitrate INTEGER,
+	disc INTEGER,
 	albumID INTEGER,
 	artistID INTEGER,
 	FOREIGN KEY (artistID) REFERENCES artists(id),

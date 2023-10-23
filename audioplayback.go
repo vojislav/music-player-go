@@ -34,6 +34,7 @@ type Track struct {
 	Suffix   string `json:"suffix"`
 	Duration int    `json:"duration"`
 	BitRate  int    `json:"bitRate"`
+	Disc     int    `json:"discNumber"`
 	AlbumID  string `json:"albumId"`
 	ArtistID string `json:"artistId"`
 }
