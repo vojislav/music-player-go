@@ -483,8 +483,8 @@ func gotoLoadingPage() {
 
 		loadDatabase()
 
-		pages.SwitchToPage("main")
-		initLibraryPage()
+		gotoLibraryPage()
+		initPlaylistPage()
 		app.Draw()
 	}()
 }
