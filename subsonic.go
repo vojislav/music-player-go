@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"container/list"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -53,11 +52,6 @@ type Playlist struct {
 	CoverArt  string    `json:"coverArt"`
 }
 
-type TrackDownloadInfo struct {
-	trackID    string
-	trackIndex int
-}
-
 var artists = make(map[int]*Artist)
 var downloadPercent float64
 
@@ -67,8 +61,8 @@ var playNext int = -1
 // guards playNext as it is accessed from concurrent routines
 var playNextMutex sync.Mutex
 
-// linked list of stuff to download. Shared between main thread and downloader thread
-var downloadQueue *list.List = list.New()
+// map of stuff (idxInQueue: trackID) to download. Shared between main thread and downloader thread
+var downloadMap map[int]string = make(map[int]string)
 
 func ping() bool {
 	req, err := http.NewRequest("GET", config.ServerURL+"ping", nil)
@@ -288,38 +282,58 @@ func getTracks(albumID int) bool {
 }
 
 // blocks caller until next download is ready
-func nextDownloadRequest() TrackDownloadInfo {
+func nextDownloadRequest() (string, int) {
 	<-downloadSemaphore
 
 	downloadMutex.Lock()
+	defer downloadMutex.Unlock()
 
-	elem := downloadQueue.Front()
-	downloadQueue.Remove(elem)
+	var startIdx int
+	if playNext == -1 {
+		startIdx = queuePosition
+	} else {
+		startIdx = playNext
+	}
 
-	downloadMutex.Unlock()
+	for i := startIdx; i < queueList.GetItemCount(); i++ {
+		val, ok := downloadMap[i]
+		if ok {
+			delete(downloadMap, i)
+			return val, i
+		}
+	}
 
-	return elem.Value.(TrackDownloadInfo)
+	for i := 0; i < startIdx; i++ {
+		val, ok := downloadMap[i]
+		if ok {
+			delete(downloadMap, i)
+			return val, i
+		}
+	}
+
+	log.Panic()
+	return "", -1
 }
 
 // pull tracks from download channel and download them one-by-one
 func downloadWorker() {
 	for {
 		// blocking
-		info := nextDownloadRequest()
+		trackID, trackIndex := nextDownloadRequest()
 
 		// carry out the download request
-		_ = download(info.trackID, info.trackIndex)
+		_ = download(trackID, trackIndex)
 
 		// swap placeholder with downloaded track
-		tags := getTags(getTrackPath(info.trackID))
+		tags := getTags(getTrackPath(trackID))
 		itemText := fmt.Sprintf("%s - %s", tags.Artist(), tags.Title())
-		queueList.SetItemText(info.trackIndex, itemText, info.trackID)
+		queueList.SetItemText(trackIndex, itemText, trackID)
 
 		// if track was to be played, play it
 		playNextMutex.Lock()
-		if info.trackIndex == playNext {
-			setQueuePosition(info.trackIndex)
-			playTrack(queuePosition, "", info.trackID, 0)
+		if trackIndex == playNext {
+			setQueuePosition(trackIndex)
+			playTrack(queuePosition, "", trackID, 0)
 			playNext = -1
 		}
 		playNextMutex.Unlock()

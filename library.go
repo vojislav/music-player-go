@@ -155,11 +155,7 @@ func downloadAndEnqueueTrack(trackText string, trackID string, play bool) {
 	}
 
 	downloadMutex.Lock()
-	if play {
-		downloadQueue.PushFront(TrackDownloadInfo{trackID, idx})
-	} else {
-		downloadQueue.PushBack(TrackDownloadInfo{trackID, idx})
-	}
+	downloadMap[idx] = trackID
 	downloadMutex.Unlock()
 
 	downloadSemaphore <- true
