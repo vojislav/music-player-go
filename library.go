@@ -136,7 +136,7 @@ func listEnqueueSublist(list *tview.List, sublist *tview.List, play bool) {
 	list.SetCurrentItem(currentListIndex + 1)
 }
 
-// guards downloadQueue
+// guards downloadMap
 var downloadMutex sync.Mutex
 
 // TODO: do not hard code the size of channel

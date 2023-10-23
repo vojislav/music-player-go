@@ -319,7 +319,7 @@ func nextDownloadRequest() (string, int) {
 	return "", -1
 }
 
-// pull tracks from download channel and download them one-by-one
+// pull tracks from download channel and download them one-by-one. Started as goroutine at program init
 func downloadWorker() {
 	for {
 		// blocking
