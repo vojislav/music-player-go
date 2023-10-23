@@ -339,10 +339,17 @@ func refreshProgressBar(currentTime int, totalTime int) {
 	fmt.Fprintf(progressBar, "%s%s", progress, negativeProgress)
 }
 
-func updateCurrentTrackText() {
+func updateCurrentTrackText() { // TODO: better name as this function is getting bloated and affects other stuff
 	currentTrackText.Clear()
+	currentTrackTime.Clear()
+
+	nowPlayingTrackTextBox.Clear()
+	nowPlayingTimeTextBox.Clear()
+
 	if currentTrack.stream == nil {
 		progressBar.Clear()
+		nowPlayingTrackTextBox.SetText("No currently playing track.")
+		removeCoverArt()
 		return
 	}
 
@@ -360,18 +367,18 @@ func updateCurrentTrackText() {
 	totalTime := getTimeString(totalTimeInt)
 
 	// TODO: lazy refresh (for progress bar aswell)
-	nowPlayingTrackTextBox.Clear()
-	fmt.Fprintf(nowPlayingTrackTextBox, "%s - %s", currentTrack.Artist, currentTrack.Title)
 
-	nowPlayingTimeTextBox.Clear()
-	fmt.Fprintf(nowPlayingTimeTextBox, "%s / %s", currentTime, totalTime)
+	// update bottomPanel info
+	fmt.Fprintf(currentTrackText, `[red::b]%s:[-::-] "%s" [::d]by[::D] [yellow]%s[-] [::d]in[::D] [teal]%s (%d)[-]`, status, currentTrack.Title, currentTrack.Artist, currentTrack.Album, currentTrack.Year)
+	fmt.Fprintf(currentTrackTime, "[blue::b][%s/%s]", currentTime, totalTime)
 
+	// update progress bar
 	refreshProgressBar(currentTimeInt, totalTimeInt)
 
-	fmt.Fprintf(currentTrackText, `[red::b]%s:[-::-] "%s" [::d]by[::D] [yellow]%s[-] [::d]in[::D] [teal]%s (%d)[-]`, status, currentTrack.Title, currentTrack.Artist, currentTrack.Album, currentTrack.Year)
-
-	currentTrackTime.Clear()
-	fmt.Fprintf(currentTrackTime, "[blue::b][%s/%s]", currentTime, totalTime)
+	// update nowplaying
+	fmt.Fprintf(nowPlayingTrackTextBox, "%s - %s", currentTrack.Artist, currentTrack.Title)
+	fmt.Fprintf(nowPlayingTimeTextBox, "%s / %s", currentTime, totalTime)
+	displayCoverArt()
 
 	app.Draw()
 }

@@ -5,12 +5,17 @@ import (
 	"os"
 )
 
-// returns true if track with ID trackID exists locally
-func trackExists(trackID string) bool {
-	if _, err := os.Stat(getTrackPath(trackID)); errors.Is(err, os.ErrNotExist) {
+// returns true if file exists at location loc
+func fileExists(loc string) bool {
+	if _, err := os.Stat(loc); errors.Is(err, os.ErrNotExist) {
 		return false
 	}
 	return true
+}
+
+// returns true if track with ID trackID exists locally
+func trackExists(trackID string) bool {
+	return fileExists(getTrackPath(trackID))
 }
 
 // returns bool that indicates if exact target is found, and index of it
