@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strconv"
+	"sync"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -135,16 +136,33 @@ func listEnqueueSublist(list *tview.List, sublist *tview.List, play bool) {
 	list.SetCurrentItem(currentListIndex + 1)
 }
 
+// guards downloadQueue
+var downloadMutex sync.Mutex
+
+// TODO: do not hard code the size of channel
+var downloadSemaphore = make(chan bool, 1500)
+
 // adds dummy placeholder to queue, and downloads track and puts it on that place
+// play argument indicates whether track should be played immediately upon download
 func downloadAndEnqueueTrack(trackText string, trackID string, play bool) {
 	queueList.AddItem(trackNotDownloadedMarker+trackText, trackID, 0, nil)
 	idx := queueList.GetItemCount() - 1
 
 	if play {
-		go sendToPriorityDownloadQueue(trackID, idx)
-	} else {
-		go sendToDownloadQueue(trackID, idx)
+		playNextMutex.Lock()
+		playNext = idx
+		playNextMutex.Unlock()
 	}
+
+	downloadMutex.Lock()
+	if play {
+		downloadQueue.PushFront(TrackDownloadInfo{trackID, idx})
+	} else {
+		downloadQueue.PushBack(TrackDownloadInfo{trackID, idx})
+	}
+	downloadMutex.Unlock()
+
+	downloadSemaphore <- true
 }
 
 func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {

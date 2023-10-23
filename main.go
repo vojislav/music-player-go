@@ -50,8 +50,7 @@ func init() {
 		os.Mkdir(playlistDirectory, 0755)
 	}
 
-	go downloadAddToQueue()
-	go downloadAddToQueuePriority()
+	go downloadWorker()
 }
 
 // the only way you should kill the app. ensures required work is done before it's stopped

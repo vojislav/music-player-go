@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"container/list"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -52,7 +53,7 @@ type Playlist struct {
 	CoverArt  string    `json:"coverArt"`
 }
 
-type TrackInfo struct {
+type TrackDownloadInfo struct {
 	trackID    string
 	trackIndex int
 }
@@ -60,10 +61,14 @@ type TrackInfo struct {
 var artists = make(map[int]*Artist)
 var downloadPercent float64
 
-var mu sync.Mutex
-var idPlayed string = ""
-var downloadChan = make(chan TrackInfo, 20)
-var downloadPriorityChan = make(chan TrackInfo, 1)
+// idx of next song to be played
+var playNext int = -1
+
+// guards playNext as it is accessed from concurrent routines
+var playNextMutex sync.Mutex
+
+// linked list of stuff to download. Shared between main thread and downloader thread
+var downloadQueue *list.List = list.New()
 
 func ping() bool {
 	req, err := http.NewRequest("GET", config.ServerURL+"ping", nil)
@@ -282,60 +287,42 @@ func getTracks(albumID int) bool {
 	return true
 }
 
-// synchronously send track to download channel.
-func sendToDownloadQueue(trackID string, idx int) {
-	downloadChan <- TrackInfo{trackID, idx}
+// blocks caller until next download is ready
+func nextDownloadRequest() TrackDownloadInfo {
+	<-downloadSemaphore
+
+	downloadMutex.Lock()
+
+	elem := downloadQueue.Front()
+	downloadQueue.Remove(elem)
+
+	downloadMutex.Unlock()
+
+	return elem.Value.(TrackDownloadInfo)
 }
 
 // pull tracks from download channel and download them one-by-one
-func downloadAddToQueue() {
+func downloadWorker() {
 	for {
-		select {
-		case info := <-downloadChan:
-			_ = download(info.trackID, info.trackIndex)
-			tags := getTags(getTrackPath(info.trackID))
-			itemText := fmt.Sprintf("%s - %s", tags.Artist(), tags.Title())
-			queueList.SetItemText(info.trackIndex, itemText, info.trackID)
+		// blocking
+		info := nextDownloadRequest()
+
+		// carry out the download request
+		_ = download(info.trackID, info.trackIndex)
+
+		// swap placeholder with downloaded track
+		tags := getTags(getTrackPath(info.trackID))
+		itemText := fmt.Sprintf("%s - %s", tags.Artist(), tags.Title())
+		queueList.SetItemText(info.trackIndex, itemText, info.trackID)
+
+		// if track was to be played, play it
+		playNextMutex.Lock()
+		if info.trackIndex == playNext {
+			setQueuePosition(info.trackIndex)
+			playTrack(queuePosition, "", info.trackID, 0)
+			playNext = -1
 		}
-	}
-}
-
-// synchronously send track to priority download channel. if there is some other track waiting for priority download, remove it from priority channel
-func sendToPriorityDownloadQueue(trackID string, idx int) {
-	mu.Lock()
-	idPlayed = trackID
-	mu.Unlock()
-
-L:
-	for { // clear out priority channel if it is occupied
-		select {
-		case track := <-downloadPriorityChan:
-			downloadChan <- track
-		default:
-			break L
-		}
-	}
-	downloadPriorityChan <- TrackInfo{trackID, idx}
-}
-
-// pull track from priority download channel and download it. there should be only one track at a time
-func downloadAddToQueuePriority() {
-	for {
-		select {
-		case info := <-downloadPriorityChan:
-			_ = download(info.trackID, info.trackIndex)
-			tags := getTags(getTrackPath(info.trackID))
-			itemText := fmt.Sprintf("%s - %s", tags.Artist(), tags.Title())
-			queueList.SetItemText(info.trackIndex, itemText, info.trackID)
-
-			mu.Lock()
-			if info.trackID == idPlayed {
-				setQueuePosition(info.trackIndex)
-				playTrack(queuePosition, "", info.trackID, 0)
-				idPlayed = ""
-			}
-			mu.Unlock()
-		}
+		playNextMutex.Unlock()
 	}
 }
 
