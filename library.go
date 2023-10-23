@@ -110,7 +110,7 @@ func findInLibrary(list *tview.List) {
 	trackList.SetCurrentItem(tracks[0])
 
 	mainPanel.SwitchToPage("library")
-	app.SetFocus(trackList)
+	setAndSaveFocus(trackList)
 }
 
 func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
@@ -129,17 +129,17 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 	case tcell.KeyLeft:
 		if focused == albumList {
-			app.SetFocus(artistList)
+			setAndSaveFocus(artistList)
 		} else if focused == trackList {
-			app.SetFocus(albumList)
+			setAndSaveFocus(albumList)
 		}
 		return nil
 
 	case tcell.KeyRight:
 		if focused == artistList {
-			app.SetFocus(albumList)
+			setAndSaveFocus(albumList)
 		} else if focused == albumList {
-			app.SetFocus(trackList)
+			setAndSaveFocus(trackList)
 		} else if focused == trackList {
 			currentTrackIndex := trackList.GetCurrentItem()
 			_, currentTrackID := trackList.GetItemText(currentTrackIndex)
@@ -153,17 +153,17 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Rune() {
 	case 'h':
 		if focused == albumList {
-			app.SetFocus(artistList)
+			setAndSaveFocus(artistList)
 		} else if focused == trackList {
-			app.SetFocus(albumList)
+			setAndSaveFocus(albumList)
 		}
 		return nil
 
 	case 'l':
 		if focused == artistList {
-			app.SetFocus(albumList)
+			setAndSaveFocus(albumList)
 		} else if focused == albumList {
-			app.SetFocus(trackList)
+			setAndSaveFocus(trackList)
 		} else if focused == trackList {
 			currentTrackIndex := trackList.GetCurrentItem()
 			_, currentTrackID := trackList.GetItemText(currentTrackIndex)

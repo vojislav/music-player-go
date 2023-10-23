@@ -71,7 +71,7 @@ func cancelSearch() {
 func closeSearch() {
 	searchStartContext = -1
 	bottomPage.SwitchToPage("current track info")
-	app.SetFocus(searchList)
+	restoreFocus()
 	searchInput.SetText("")
 }
 
