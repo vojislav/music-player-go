@@ -67,13 +67,13 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 	case tcell.KeyLeft:
 		if focused == playlistTracks {
-			app.SetFocus(playlistList)
+			setAndSaveFocus(playlistList)
 		}
 		return nil
 
 	case tcell.KeyRight:
 		if focused == playlistList {
-			app.SetFocus(playlistTracks)
+			setAndSaveFocus(playlistTracks)
 		} else if focused == playlistTracks {
 			currentTrackIndex := playlistTracks.GetCurrentItem()
 			_, currentTrackID := playlistTracks.GetItemText(currentTrackIndex)
@@ -87,7 +87,7 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Rune() {
 	case 'h':
 		if focused == playlistTracks {
-			app.SetFocus(playlistList)
+			setAndSaveFocus(playlistList)
 		}
 		return nil
 	case 'j':
@@ -96,7 +96,7 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		return tcell.NewEventKey(tcell.KeyUp, 0, tcell.ModNone)
 	case 'l':
 		if focused == playlistList {
-			app.SetFocus(playlistTracks)
+			setAndSaveFocus(playlistTracks)
 		} else if focused == playlistTracks {
 			currentTrackIndex := playlistTracks.GetCurrentItem()
 			_, currentTrackID := playlistTracks.GetItemText(currentTrackIndex)

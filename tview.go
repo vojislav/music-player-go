@@ -20,6 +20,27 @@ var nowPlayingCover *tview.Image
 var loginGrid *tview.Grid
 var libraryFlex, queueFlex, playlistFlex, nowPlayingFlex, bottomPanel *tview.Flex
 
+// for each page remember which *tview.List was focused last so context can be restored
+// IMPORTANT: this and setAndSaveFocus() and restoreFocus() work only on mainFrontPage.
+// if focus is on bottomPage (i.e. during search) using these functions would lead to undefined behaviour
+var pageFocus map[string]*tview.List = make(map[string]*tview.List)
+
+// every time focus is set save that information
+func setAndSaveFocus(list *tview.List) {
+	mainFrontPage, _ := mainPanel.GetFrontPage()
+	pageFocus[mainFrontPage] = list
+	app.SetFocus(list)
+}
+
+// on certain multi-listed pages [library, playlists] context should be restored
+func restoreFocus() {
+	mainFrontPage, _ := mainPanel.GetFrontPage()
+	list, ok := pageFocus[mainFrontPage]
+	if ok && list != nil {
+		app.SetFocus(list)
+	}
+}
+
 // saves context of caller of track info or lyrics
 var focusedList *tview.List
 
@@ -76,10 +97,15 @@ func trackInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 		searchList = app.GetFocus().(*tview.List)
 
+		// this prevents bug which happens when search is called while pageFocus map is empty
+		setAndSaveFocus(searchList)
+
 		if searchStartContext == -1 {
 			searchStartContext = searchList.GetCurrentItem()
 		}
 
+		// freak situation where we don't use setAndSaveFocus() because we don't want to return to
+		// bottomPage, but to context before bottomPage is focused.
 		app.SetFocus(bottomPage)
 		bottomPage.SwitchToPage("search")
 		return nil
@@ -277,7 +303,7 @@ func toggleTrackInfo() {
 		list = queueList
 	case trackInfoTextBox:
 		pages.HidePage("track info")
-		app.SetFocus(focusedList)
+		setAndSaveFocus(focusedList)
 		focusedList = nil
 		return
 	default:
@@ -305,7 +331,7 @@ func toggleLyrics() {
 		list = queueList
 	case lyricsTextBox:
 		pages.HidePage("lyrics")
-		app.SetFocus(focusedList)
+		setAndSaveFocus(focusedList)
 		focusedList = nil
 		return
 	default:
@@ -424,10 +450,12 @@ func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	case '2':
 		pages.SwitchToPage("main")
 		mainPanel.SwitchToPage("library")
+		restoreFocus()
 		return nil
 	case '3':
 		pages.SwitchToPage("main")
 		mainPanel.SwitchToPage("playlists")
+		restoreFocus()
 		return nil
 	case '4':
 		pages.SwitchToPage("nowplaying")
