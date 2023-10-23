@@ -302,7 +302,6 @@ func nextDownloadRequest() (string, int) {
 	for i := startIdx; i < queueList.GetItemCount(); i++ {
 		val, ok := downloadMap[i]
 		if ok {
-			delete(downloadMap, i)
 			return val, i
 		}
 	}
@@ -310,13 +309,30 @@ func nextDownloadRequest() (string, int) {
 	for i := 0; i < startIdx; i++ {
 		val, ok := downloadMap[i]
 		if ok {
-			delete(downloadMap, i)
 			return val, i
 		}
 	}
 
 	log.Panic()
 	return "", -1
+}
+
+// should be called only when track can be added to queue (it was
+// just downloaded or already has been on disk)
+func addTrackToQueue(trackID string, trackIndex int) {
+	// swap placeholder with downloaded track
+	tags := getTags(getTrackPath(trackID))
+	itemText := fmt.Sprintf("%s - %s", tags.Artist(), tags.Title())
+	queueList.SetItemText(trackIndex, itemText, trackID)
+
+	// if track was to be played, play it
+	playNextMutex.Lock()
+	if trackIndex == playNext {
+		setQueuePosition(trackIndex)
+		playTrack(queuePosition, "", trackID, 0)
+		playNext = -1
+	}
+	playNextMutex.Unlock()
 }
 
 // pull tracks from download channel and download them one-by-one. Started as goroutine at program init
@@ -328,19 +344,11 @@ func downloadWorker() {
 		// carry out the download request
 		_ = download(trackID, trackIndex)
 
-		// swap placeholder with downloaded track
-		tags := getTags(getTrackPath(trackID))
-		itemText := fmt.Sprintf("%s - %s", tags.Artist(), tags.Title())
-		queueList.SetItemText(trackIndex, itemText, trackID)
+		// remove the request from map
+		delete(downloadMap, trackIndex)
 
-		// if track was to be played, play it
-		playNextMutex.Lock()
-		if trackIndex == playNext {
-			setQueuePosition(trackIndex)
-			playTrack(queuePosition, "", trackID, 0)
-			playNext = -1
-		}
-		playNextMutex.Unlock()
+		// replace placeholder
+		addTrackToQueue(trackID, trackIndex)
 	}
 }
 

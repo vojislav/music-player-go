@@ -145,6 +145,7 @@ var downloadSemaphore = make(chan bool, 1500)
 // adds dummy placeholder to queue, and downloads track and puts it on that place
 // play argument indicates whether track should be played immediately upon download
 func downloadAndEnqueueTrack(trackText string, trackID string, play bool) {
+	// add placeholder and get its index
 	queueList.AddItem(trackNotDownloadedMarker+trackText, trackID, 0, nil)
 	idx := queueList.GetItemCount() - 1
 
@@ -154,6 +155,12 @@ func downloadAndEnqueueTrack(trackText string, trackID string, play bool) {
 		playNextMutex.Unlock()
 	}
 
+	if trackExists(trackID) { // no need to add it to download map if it exists
+		addTrackToQueue(trackID, idx)
+		return
+	}
+
+	// request download
 	downloadMutex.Lock()
 	downloadMap[idx] = trackID
 	downloadMutex.Unlock()

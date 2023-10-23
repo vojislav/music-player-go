@@ -47,6 +47,11 @@ var volume = effects.Volume{
 }
 
 func playTrack(trackIndex int, _ string, trackID string, _ rune) {
+	// track is scheduled for download - don't play it yet
+	if _, ok := downloadMap[trackIndex]; ok {
+		return
+	}
+
 	fileName := download(trackID, trackIndex)
 
 	stream := getStream(fileName)
