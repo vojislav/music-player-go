@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/itchyny/gojq"
@@ -53,6 +54,26 @@ type Playlist struct {
 
 var artists = make(map[int]*Artist)
 var downloadPercent float64
+
+// idx of next song to be played
+var playNext int = -1
+
+// idx of last downloaded song. used for optimization only.
+// starts at -1 because +1 is always added to it
+var lastDownloaded int = -1
+
+// guards playNext as it is accessed from concurrent routines
+var playNextMutex sync.Mutex
+
+// map of stuff (idxInQueue: trackID) to download. Shared between main thread and downloader thread
+var downloadMap map[int]string = make(map[int]string)
+
+// guards downloadMap
+var downloadMutex sync.Mutex
+
+// signals if download is ready for downloadWorker() to pick up
+// TODO: do not hard code the size of channel
+var downloadSemaphore = make(chan bool, 1500)
 
 func ping() bool {
 	req, err := http.NewRequest("GET", config.ServerURL+"ping", nil)
@@ -271,10 +292,77 @@ func getTracks(albumID int) bool {
 	return true
 }
 
-func downloadCallback(trackIDString string, callback func(int, string, string, rune)) {
-	_ = download(trackIDString)
-	callback(0, "", trackIDString, 0)
-	app.Draw()
+// blocks caller until next download is ready.
+// returns download request in form of (trackID, trackQueueIdx)
+func nextDownloadRequest() (string, int) {
+	// wait for download request here
+	<-downloadSemaphore
+
+	// lock because map is shared resource
+	downloadMutex.Lock()
+	defer downloadMutex.Unlock()
+
+	// either download track that is to be played next or closest one to it
+	var startIdx int
+	if playNext == -1 {
+		startIdx = lastDownloaded + 1
+	} else {
+		startIdx = playNext
+	}
+
+	// iterate through queue to find next track to download
+	for i := startIdx; i < queueList.GetItemCount(); i++ {
+		val, ok := downloadMap[i]
+		if ok {
+			return val, i
+		}
+	}
+
+	for i := 0; i < startIdx; i++ {
+		val, ok := downloadMap[i]
+		if ok {
+			return val, i
+		}
+	}
+
+	// unreachable - fatal error
+	log.Panic()
+	return "", -1
+}
+
+// should be called only when track can be added to queue (it was
+// just downloaded or already has been on disk)
+func addTrackToQueue(trackID string, trackIndex int) {
+	// swap placeholder with downloaded track
+	tags := getTags(getTrackPath(trackID))
+	itemText := fmt.Sprintf("%s - %s", tags.Artist(), tags.Title())
+	queueList.SetItemText(trackIndex, itemText, trackID)
+
+	// if track was to be played, play it
+	playNextMutex.Lock()
+	if trackIndex == playNext {
+		setQueuePosition(trackIndex)
+		playTrack(queuePosition, "", trackID, 0)
+		playNext = -1
+	}
+	playNextMutex.Unlock()
+}
+
+// pull tracks from download channel and download them one-by-one. Started as goroutine at program init
+func downloadWorker() {
+	for {
+		// blocking
+		trackID, trackIndex := nextDownloadRequest()
+
+		// carry out the download request
+		_ = download(trackID, trackIndex)
+
+		// remove the request from map
+		delete(downloadMap, trackIndex)
+
+		// replace placeholder
+		addTrackToQueue(trackID, trackIndex)
+	}
 }
 
 // returns filepath of corresponding trackID
@@ -304,7 +392,7 @@ func removeUnfinishedDownloads() {
 	}
 }
 
-func download(trackIDString string) string {
+func download(trackIDString string, trackIndex int) string {
 	trueFilePath := getTrackPath(trackIDString)
 	// indicates that file is downloading
 	fakeFilePath := strings.Replace(trueFilePath, ".mp3", ".XXX", 1)
@@ -351,7 +439,7 @@ func download(trackIDString string) string {
 		defer res.Body.Close()
 
 		downloadDone := make(chan bool)
-		go getDownloadProgress(downloadDone, fakeFilePath, fileSize)
+		go getDownloadProgress(downloadDone, fakeFilePath, fileSize, trackIndex)
 
 		file, err := os.Create(fakeFilePath)
 		if err != nil {
@@ -364,6 +452,8 @@ func download(trackIDString string) string {
 		}
 
 		downloadDone <- true
+
+		lastDownloaded = trackIndex
 
 		os.Rename(fakeFilePath, trueFilePath)
 	}

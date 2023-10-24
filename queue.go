@@ -20,19 +20,6 @@ var trackInQueueMarker = "[::b]"
 // the way in which the tracks that are not downloaded are marked
 var trackNotDownloadedMarker = "[::d]"
 
-func addToQueue(_ int, _, trackID string, _ rune) {
-	tags := getTags(getTrackPath(trackID))
-	itemText := fmt.Sprintf("%s - %s", tags.Artist(), tags.Title())
-	queueList.AddItem(itemText, trackID, 0, nil)
-}
-
-func addToQueueAndPlay(_ int, _, trackID string, _ rune) {
-	addToQueue(0, "", trackID, 0)
-
-	setQueuePosition(queueList.GetItemCount() - 1)
-	playTrack(queuePosition, "", trackID, 0)
-}
-
 // removes indicator that track is in queue. This fixes the situation where
 // trackList/playlistTracks are not refreshed after removing track from queue
 func removeInQueueMarks(list *tview.List, trackID string) {
@@ -64,6 +51,10 @@ func refreshSearchIndexes(trackIndex int) {
 }
 
 func removeFromQueue() {
+	if queueList.GetItemCount() == 0 {
+		return
+	}
+
 	highlightedTrackIndex := queueList.GetCurrentItem()
 	if highlightedTrackIndex < queuePosition {
 		queuePosition -= 1
@@ -78,10 +69,6 @@ func removeFromQueue() {
 	refreshSearchIndexes(highlightedTrackIndex)
 
 	queueList.RemoveItem(highlightedTrackIndex)
-}
-
-func addAlbumToQueue(albumID string) {
-
 }
 
 // should only be called when current song is changed
@@ -121,13 +108,13 @@ func queuePlayHighlighted() {
 // in queue (bold);
 // not downloaded (dim)
 func markTrack(trackID string) string {
-	if !trackExists(trackID) { // track doesn't exist locally in .cache
-		return trackNotDownloadedMarker
-	}
-
 	indices := queueList.FindItems("", trackID, true, true)
 	if len(indices) >= 1 { // track exists in queue
 		return trackInQueueMarker
+	}
+
+	if !trackExists(trackID) { // track doesn't exist locally in .cache
+		return trackNotDownloadedMarker
 	}
 
 	return ""
@@ -138,6 +125,58 @@ func markTrack(trackID string) string {
 func markList(list *tview.List, idx int) {
 	prim, sec := list.GetItemText(idx)
 	list.SetItemText(idx, trackInQueueMarker+prim, sec)
+}
+
+// adds dummy placeholder to queue, and downloads track and puts it on that place
+// play argument indicates whether track should be played immediately upon download
+func downloadAndEnqueueTrack(trackID string, play bool) {
+	var artist, title string
+	queryArtistAndTitle(toInt(trackID)).Scan(&artist, &title)
+	trackText := fmt.Sprintf("%s - %s", artist, title)
+
+	// add placeholder and get its index
+	queueList.AddItem(trackNotDownloadedMarker+trackText, trackID, 0, nil)
+	idx := queueList.GetItemCount() - 1
+
+	if play {
+		playNextMutex.Lock()
+		playNext = idx
+		playNextMutex.Unlock()
+	}
+
+	if trackExists(trackID) { // no need to add it to download map if it exists
+		addTrackToQueue(trackID, idx)
+		return
+	}
+
+	// request download
+	downloadMutex.Lock()
+	downloadMap[idx] = trackID
+	downloadMutex.Unlock()
+
+	downloadSemaphore <- true
+}
+
+// enqueues (and downloads if necessary) a single track from current track list (either in "library" or in "playlists" views)
+func listEnqueueTrack(list *tview.List, play bool) {
+	trackIndex := list.GetCurrentItem()
+	_, trackID := list.GetItemText(trackIndex)
+	downloadAndEnqueueTrack(trackID, play)
+	list.SetCurrentItem(trackIndex + 1)
+	markList(list, trackIndex)
+}
+
+// enqueues (and downloads if necessary) all tracks from current album or playlist
+func listEnqueueSublist(list *tview.List, sublist *tview.List, play bool) {
+	currentListIndex := list.GetCurrentItem()
+
+	for idx := 0; idx < sublist.GetItemCount(); idx++ {
+		_, trackID := sublist.GetItemText(idx)
+		downloadAndEnqueueTrack(trackID, play && idx == 0)
+		markList(sublist, idx)
+	}
+
+	list.SetCurrentItem(currentListIndex + 1)
 }
 
 func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
