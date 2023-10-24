@@ -117,8 +117,8 @@ func findInLibrary(list *tview.List) {
 // enqueues (and downloads if necessary) a single track from current track list (either in "library" or in "playlists" views)
 func listEnqueueTrack(list *tview.List, play bool) {
 	trackIndex := list.GetCurrentItem()
-	trackText, trackID := list.GetItemText(trackIndex)
-	downloadAndEnqueueTrack(trackText, trackID, play)
+	_, trackID := list.GetItemText(trackIndex)
+	downloadAndEnqueueTrack(trackID, play)
 	list.SetCurrentItem(trackIndex + 1)
 	markList(list, trackIndex)
 }
@@ -128,8 +128,8 @@ func listEnqueueSublist(list *tview.List, sublist *tview.List, play bool) {
 	currentListIndex := list.GetCurrentItem()
 
 	for idx := 0; idx < sublist.GetItemCount(); idx++ {
-		trackText, trackID := sublist.GetItemText(idx)
-		downloadAndEnqueueTrack(trackText, trackID, play && idx == 0)
+		_, trackID := sublist.GetItemText(idx)
+		downloadAndEnqueueTrack(trackID, play && idx == 0)
 		markList(sublist, idx)
 	}
 
@@ -144,7 +144,11 @@ var downloadSemaphore = make(chan bool, 1500)
 
 // adds dummy placeholder to queue, and downloads track and puts it on that place
 // play argument indicates whether track should be played immediately upon download
-func downloadAndEnqueueTrack(trackText string, trackID string, play bool) {
+func downloadAndEnqueueTrack(trackID string, play bool) {
+	var artist, title string
+	queryArtistAndTitle(toInt(trackID)).Scan(&artist, &title)
+	trackText := fmt.Sprintf("%s - %s", artist, title)
+
 	// add placeholder and get its index
 	queueList.AddItem(trackNotDownloadedMarker+trackText, trackID, 0, nil)
 	idx := queueList.GetItemCount() - 1
