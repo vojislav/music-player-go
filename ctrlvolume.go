@@ -15,7 +15,9 @@ type CtrlVolume struct {
 }
 
 var volumeStep = 0.2
-var volumePercent = 100
+var baseVolume = 100
+
+const MIN_VOLUME, MAX_VOLUME = 0, 150
 
 func (cv *CtrlVolume) Stream(samples [][2]float64) (n int, ok bool) {
 	if cv.Streamer == nil {

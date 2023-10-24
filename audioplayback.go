@@ -8,7 +8,6 @@ import (
 
 	"github.com/dhowden/tag"
 	"github.com/faiface/beep"
-	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
 )
@@ -37,11 +36,6 @@ type Track struct {
 	Disc     int    `json:"discNumber"`
 	AlbumID  string `json:"albumId"`
 	ArtistID string `json:"artistId"`
-}
-
-var volume = effects.Volume{
-	Base:   2.0,
-	Silent: false,
 }
 
 func playTrack(trackIndex int, _ string, trackID string, _ rune) {
@@ -149,8 +143,14 @@ func previousTrack() {
 }
 
 func changeVolume(step float64) {
+	newVolume := playerCtrl.Volume + step
+	newVolumePercent := baseVolume + int(newVolume*10)
+
+	if newVolumePercent < MIN_VOLUME || newVolumePercent > MAX_VOLUME {
+		return
+	}
+
 	playerCtrl.Volume += step
-	volumePercent += int(step * 10)
 	updateVolumeText()
 }
 
@@ -160,11 +160,12 @@ func toggleMute() {
 }
 
 func updateVolumeText() {
+	volumePercent := baseVolume + int(playerCtrl.Volume*10)
 	downloadProgressText.Clear()
 	if playerCtrl.Silent {
-		fmt.Fprint(downloadProgressText, "muted")
+		fmt.Fprint(downloadProgressText, " muted ")
 	} else {
-		fmt.Fprintf(downloadProgressText, "%d%%", volumePercent)
+		fmt.Fprintf(downloadProgressText, "  %d%% ", volumePercent)
 	}
 }
 
@@ -205,7 +206,7 @@ func getDownloadProgress(done chan bool, filePath string, fileSize int) {
 		select {
 		case <-done:
 			downloadProgressText.Clear()
-			fmt.Fprintf(downloadProgressText, "%d%%", volumePercent)
+			updateVolumeText()
 			return
 		default:
 			file, err := os.Open(filePath)
