@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -15,7 +18,7 @@ var mainPanel = tview.NewPages()
 var bottomPage = tview.NewPages()
 var loadingPopup tview.Primitive
 var currentTrackText, currentTrackTime, downloadProgressText, loadingTextBox, loginStatus, trackInfoTextBox,
-	lyricsTextBox, nowPlayingTrackTextBox, nowPlayingTimeTextBox, progressBar *tview.TextView
+	lyricsTextBox, helpWindowTextBox, nowPlayingTrackTextBox, nowPlayingTimeTextBox, progressBar *tview.TextView
 var nowPlayingCover *tview.Image
 var loginGrid *tview.Grid
 var libraryFlex, queueFlex, playlistFlex, nowPlayingFlex, bottomPanel *tview.Flex
@@ -167,6 +170,12 @@ func initView() {
 	lyricsTextBox.SetBorder(true)
 	pages.AddPage("lyrics", lyricsTextBox, true, false)
 
+	// help window
+	helpWindowTextBox = tview.NewTextView()
+	helpWindowTextBox.SetBorder(true)
+	initHelpWindow()
+	pages.AddPage("help", helpWindowTextBox, true, false)
+
 	progressBar = tview.NewTextView().
 		SetDynamicColors(true)
 	progressBar.SetTextColor(tcell.ColorPeachPuff)
@@ -280,8 +289,6 @@ func initView() {
 
 	mainPanel.AddPage("playlists", playlistFlex, true, false)
 
-	pages.SendToFront("track info")
-
 	// key handlers
 	app.SetInputCapture(appInputHandler)
 	libraryFlex.SetInputCapture(libraryInputHandler)
@@ -312,6 +319,7 @@ func toggleTrackInfo() {
 	focusedList = list
 
 	pages.ShowPage("track info")
+	pages.SendToFront("track info")
 	trackInfoTextBox.Clear()
 	_, trackID := list.GetItemText(list.GetCurrentItem())
 	var id, title, album, artist, genre, suffix, albumID, artistID string
@@ -340,6 +348,45 @@ func toggleLyrics() {
 	focusedList = list
 
 	go showLyrics(list)
+}
+
+func toggleHelpWindow() {
+	var list *tview.List
+	switch app.GetFocus() {
+	case artistList:
+		list = artistList
+	case albumList:
+		list = albumList
+	case trackList:
+		list = trackList
+	case playlistTracks:
+		list = playlistTracks
+	case queueList:
+		list = queueList
+	case helpWindowTextBox:
+		pages.HidePage("help")
+		setAndSaveFocus(focusedList)
+		focusedList = nil
+		return
+	default:
+		return
+	}
+	focusedList = list
+
+	pages.ShowPage("help")
+	pages.SendToFront("help")
+}
+
+func initHelpWindow() {
+	readme, err := os.ReadFile("README.md")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	r, _ := regexp.Compile("(?s)keyboard shortcuts.*")
+	match := r.Find(readme)
+
+	fmt.Fprint(helpWindowTextBox, string(match))
 }
 
 // clears and draw progress bar
@@ -467,6 +514,12 @@ func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 	case '.':
 		toggleLyrics()
+		return nil
+	}
+
+	switch event.Key() {
+	case tcell.KeyF1:
+		toggleHelpWindow()
 		return nil
 	}
 
