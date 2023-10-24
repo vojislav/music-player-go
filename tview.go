@@ -387,6 +387,11 @@ func initHelpWindow() {
 	match := r.Find(readme)
 
 	fmt.Fprint(helpWindowTextBox, string(match))
+
+	fmt.Fprintf(helpWindowTextBox, "\n\n---\n\nMemory usage:\n")
+	fmt.Fprintf(helpWindowTextBox, "Tracks cache: %s\n", getSizeString(getDirSize(cacheDirectory)))
+	fmt.Fprintf(helpWindowTextBox, "Covers cache: %s\n", getSizeString(getDirSize(coversDirectory)))
+	fmt.Fprintf(helpWindowTextBox, "Lyrics cache: %s\n", getSizeString(getDirSize(lyricsDirectory)))
 }
 
 // clears and draw progress bar
@@ -465,10 +470,6 @@ func getTimeString(time int) string {
 	}
 
 	return fmt.Sprint(minutes, ":", seconds)
-}
-
-func getSizeString(size int) string {
-	return fmt.Sprintf("%.1fM", float64(size)/(1024*1024))
 }
 
 func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
