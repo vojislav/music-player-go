@@ -79,7 +79,7 @@ func fillTracksList(_ int, albumName, albumIDString string, _ rune) {
 
 // finds location of currently highlighted track in library.
 // should only be used in queue or playlist.
-// TODO: error handling; TODO: what if files aren't downloaded? getTags breaks
+// TODO: error handling;
 func findInLibrary(list *tview.List) {
 	focused := app.GetFocus()
 	if focused != list || list.GetItemCount() == 0 {
@@ -113,17 +113,47 @@ func findInLibrary(list *tview.List) {
 	setAndSaveFocus(trackList)
 }
 
+// enqueues artist
+func libraryEnqueueArtist(play bool) {
+	currentArtistIndex := artistList.GetCurrentItem()
+
+	for idx := 0; idx < albumList.GetItemCount(); idx++ {
+		albumList.SetCurrentItem(idx)
+		listEnqueueSublist(albumList, trackList, play && idx == 0)
+	}
+
+	artistList.SetCurrentItem(currentArtistIndex + 1)
+}
+
 func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	focused := app.GetFocus()
 
+	switch event.Rune() {
+	case 'h': // override 'h' to KeyLeft
+		event = tcell.NewEventKey(tcell.KeyLeft, 0, tcell.ModNone)
+
+	case 'l': // override 'l' to KeyRight
+		event = tcell.NewEventKey(tcell.KeyRight, 0, tcell.ModNone)
+
+	case ' ': // space key
+		if focused == artistList {
+			libraryEnqueueArtist(false)
+		} else if focused == albumList {
+			listEnqueueSublist(albumList, trackList, false)
+		} else {
+			listEnqueueTrack(trackList, false)
+		}
+		return nil
+	}
+
 	switch event.Key() {
 	case tcell.KeyEnter:
-		if focused == trackList {
-			currentTrackIndex := trackList.GetCurrentItem()
-			_, currentTrackID := trackList.GetItemText(currentTrackIndex)
-			go downloadCallback(currentTrackID, addToQueueAndPlay)
-			trackList.SetCurrentItem(currentTrackIndex + 1)
-			markList(trackList, currentTrackIndex)
+		if focused == artistList {
+			libraryEnqueueArtist(true)
+		} else if focused == albumList {
+			listEnqueueSublist(albumList, trackList, true)
+		} else {
+			listEnqueueTrack(trackList, true)
 		}
 		return nil
 
@@ -141,49 +171,7 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		} else if focused == albumList {
 			setAndSaveFocus(trackList)
 		} else if focused == trackList {
-			currentTrackIndex := trackList.GetCurrentItem()
-			_, currentTrackID := trackList.GetItemText(currentTrackIndex)
-			go downloadCallback(currentTrackID, addToQueueAndPlay)
-			trackList.SetCurrentItem(currentTrackIndex + 1)
-			markList(trackList, currentTrackIndex)
-		}
-		return nil
-	}
-
-	switch event.Rune() {
-	case 'h':
-		if focused == albumList {
-			setAndSaveFocus(artistList)
-		} else if focused == trackList {
-			setAndSaveFocus(albumList)
-		}
-		return nil
-
-	case 'l':
-		if focused == artistList {
-			setAndSaveFocus(albumList)
-		} else if focused == albumList {
-			setAndSaveFocus(trackList)
-		} else if focused == trackList {
-			currentTrackIndex := trackList.GetCurrentItem()
-			_, currentTrackID := trackList.GetItemText(currentTrackIndex)
-			go downloadCallback(currentTrackID, addToQueueAndPlay)
-			trackList.SetCurrentItem(currentTrackIndex + 1)
-			markList(trackList, currentTrackIndex)
-		}
-		return nil
-
-	case ' ':
-		if focused == trackList {
-			currentTrackIndex := trackList.GetCurrentItem()
-			_, currentTrackID := trackList.GetItemText(currentTrackIndex)
-			go downloadCallback(currentTrackID, addToQueue)
-			trackList.SetCurrentItem(currentTrackIndex + 1)
-			markList(trackList, currentTrackIndex)
-		} else if focused == albumList {
-			currentAlbumIndex := albumList.GetCurrentItem()
-			_, currentAlbumID := trackList.GetItemText(currentAlbumIndex)
-			addAlbumToQueue(currentAlbumID)
+			listEnqueueTrack(trackList, true)
 		}
 		return nil
 	}
