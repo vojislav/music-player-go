@@ -2,7 +2,9 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
+	"path/filepath"
 )
 
 // returns true if file exists at location loc
@@ -36,4 +38,25 @@ func bisect(array []int, comp func(v int) bool) int {
 		}
 	}
 	return lo
+}
+
+func getSizeString(size int) string {
+	return fmt.Sprintf("%.1fM", float64(size)/(1024*1024))
+}
+
+func getDirSize(path string) int {
+	var dirSize int64 = 0
+
+	walkDirFunc := func(path string, d os.DirEntry, err error) error {
+		if !d.IsDir() {
+			fileInfo, _ := d.Info()
+			dirSize += fileInfo.Size()
+		}
+
+		return nil
+	}
+
+	filepath.WalkDir(path, walkDirFunc)
+
+	return int(dirSize)
 }
