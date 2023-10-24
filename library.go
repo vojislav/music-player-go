@@ -136,6 +136,18 @@ func listEnqueueSublist(list *tview.List, sublist *tview.List, play bool) {
 	list.SetCurrentItem(currentListIndex + 1)
 }
 
+// enqueues artist
+func libraryEnqueueArtist(play bool) {
+	currentArtistIndex := artistList.GetCurrentItem()
+
+	for idx := 0; idx < albumList.GetItemCount(); idx++ {
+		albumList.SetCurrentItem(idx)
+		listEnqueueSublist(albumList, trackList, play && idx == 0)
+	}
+
+	artistList.SetCurrentItem(currentArtistIndex + 1)
+}
+
 // guards downloadMap
 var downloadMutex sync.Mutex
 
@@ -183,20 +195,24 @@ func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		event = tcell.NewEventKey(tcell.KeyRight, 0, tcell.ModNone)
 
 	case ' ': // space key
-		if focused == trackList {
-			listEnqueueTrack(trackList, false)
+		if focused == artistList {
+			libraryEnqueueArtist(false)
 		} else if focused == albumList {
 			listEnqueueSublist(albumList, trackList, false)
+		} else {
+			listEnqueueTrack(trackList, false)
 		}
 		return nil
 	}
 
 	switch event.Key() {
 	case tcell.KeyEnter:
-		if focused == trackList {
-			listEnqueueTrack(trackList, true)
+		if focused == artistList {
+			libraryEnqueueArtist(true)
 		} else if focused == albumList {
 			listEnqueueSublist(albumList, trackList, true)
+		} else {
+			listEnqueueTrack(trackList, true)
 		}
 		return nil
 
