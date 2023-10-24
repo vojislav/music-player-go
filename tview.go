@@ -185,8 +185,13 @@ func initView() {
 
 	// lyrics page
 	lyricsTextBox = tview.NewTextView()
-	lyricsTextBox.SetBorder(true)
-	pages.AddPage("lyrics", lyricsTextBox, true, false)
+	lyricsTextBox.
+		SetDynamicColors(true).
+		SetBorder(true)
+	lyricsTextBox.
+		SetBorderColor(tcell.ColorYellow).
+		SetTitleColor(tcell.ColorYellow)
+	pages.AddPage("lyrics", Center(75, 30, lyricsTextBox), true, false)
 
 	// help window
 	helpWindowTextBox = tview.NewTextView()
