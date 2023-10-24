@@ -68,6 +68,13 @@ var playNextMutex sync.Mutex
 // map of stuff (idxInQueue: trackID) to download. Shared between main thread and downloader thread
 var downloadMap map[int]string = make(map[int]string)
 
+// guards downloadMap
+var downloadMutex sync.Mutex
+
+// signals if download is ready for downloadWorker() to pick up
+// TODO: do not hard code the size of channel
+var downloadSemaphore = make(chan bool, 1500)
+
 func ping() bool {
 	req, err := http.NewRequest("GET", config.ServerURL+"ping", nil)
 	if err != nil {

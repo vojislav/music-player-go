@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"strconv"
-	"sync"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -114,28 +113,6 @@ func findInLibrary(list *tview.List) {
 	setAndSaveFocus(trackList)
 }
 
-// enqueues (and downloads if necessary) a single track from current track list (either in "library" or in "playlists" views)
-func listEnqueueTrack(list *tview.List, play bool) {
-	trackIndex := list.GetCurrentItem()
-	_, trackID := list.GetItemText(trackIndex)
-	downloadAndEnqueueTrack(trackID, play)
-	list.SetCurrentItem(trackIndex + 1)
-	markList(list, trackIndex)
-}
-
-// enqueues (and downloads if necessary) all tracks from current album or playlist
-func listEnqueueSublist(list *tview.List, sublist *tview.List, play bool) {
-	currentListIndex := list.GetCurrentItem()
-
-	for idx := 0; idx < sublist.GetItemCount(); idx++ {
-		_, trackID := sublist.GetItemText(idx)
-		downloadAndEnqueueTrack(trackID, play && idx == 0)
-		markList(sublist, idx)
-	}
-
-	list.SetCurrentItem(currentListIndex + 1)
-}
-
 // enqueues artist
 func libraryEnqueueArtist(play bool) {
 	currentArtistIndex := artistList.GetCurrentItem()
@@ -146,42 +123,6 @@ func libraryEnqueueArtist(play bool) {
 	}
 
 	artistList.SetCurrentItem(currentArtistIndex + 1)
-}
-
-// guards downloadMap
-var downloadMutex sync.Mutex
-
-// TODO: do not hard code the size of channel
-var downloadSemaphore = make(chan bool, 1500)
-
-// adds dummy placeholder to queue, and downloads track and puts it on that place
-// play argument indicates whether track should be played immediately upon download
-func downloadAndEnqueueTrack(trackID string, play bool) {
-	var artist, title string
-	queryArtistAndTitle(toInt(trackID)).Scan(&artist, &title)
-	trackText := fmt.Sprintf("%s - %s", artist, title)
-
-	// add placeholder and get its index
-	queueList.AddItem(trackNotDownloadedMarker+trackText, trackID, 0, nil)
-	idx := queueList.GetItemCount() - 1
-
-	if play {
-		playNextMutex.Lock()
-		playNext = idx
-		playNextMutex.Unlock()
-	}
-
-	if trackExists(trackID) { // no need to add it to download map if it exists
-		addTrackToQueue(trackID, idx)
-		return
-	}
-
-	// request download
-	downloadMutex.Lock()
-	downloadMap[idx] = trackID
-	downloadMutex.Unlock()
-
-	downloadSemaphore <- true
 }
 
 func libraryInputHandler(event *tcell.EventKey) *tcell.EventKey {

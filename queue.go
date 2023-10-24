@@ -127,6 +127,58 @@ func markList(list *tview.List, idx int) {
 	list.SetItemText(idx, trackInQueueMarker+prim, sec)
 }
 
+// adds dummy placeholder to queue, and downloads track and puts it on that place
+// play argument indicates whether track should be played immediately upon download
+func downloadAndEnqueueTrack(trackID string, play bool) {
+	var artist, title string
+	queryArtistAndTitle(toInt(trackID)).Scan(&artist, &title)
+	trackText := fmt.Sprintf("%s - %s", artist, title)
+
+	// add placeholder and get its index
+	queueList.AddItem(trackNotDownloadedMarker+trackText, trackID, 0, nil)
+	idx := queueList.GetItemCount() - 1
+
+	if play {
+		playNextMutex.Lock()
+		playNext = idx
+		playNextMutex.Unlock()
+	}
+
+	if trackExists(trackID) { // no need to add it to download map if it exists
+		addTrackToQueue(trackID, idx)
+		return
+	}
+
+	// request download
+	downloadMutex.Lock()
+	downloadMap[idx] = trackID
+	downloadMutex.Unlock()
+
+	downloadSemaphore <- true
+}
+
+// enqueues (and downloads if necessary) a single track from current track list (either in "library" or in "playlists" views)
+func listEnqueueTrack(list *tview.List, play bool) {
+	trackIndex := list.GetCurrentItem()
+	_, trackID := list.GetItemText(trackIndex)
+	downloadAndEnqueueTrack(trackID, play)
+	list.SetCurrentItem(trackIndex + 1)
+	markList(list, trackIndex)
+}
+
+// enqueues (and downloads if necessary) all tracks from current album or playlist
+func listEnqueueSublist(list *tview.List, sublist *tview.List, play bool) {
+	currentListIndex := list.GetCurrentItem()
+
+	for idx := 0; idx < sublist.GetItemCount(); idx++ {
+		_, trackID := sublist.GetItemText(idx)
+		downloadAndEnqueueTrack(trackID, play && idx == 0)
+		markList(sublist, idx)
+	}
+
+	list.SetCurrentItem(currentListIndex + 1)
+}
+
 func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Key() {
 	case tcell.KeyRight, tcell.KeyEnter:
