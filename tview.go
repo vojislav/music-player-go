@@ -190,7 +190,13 @@ func initView() {
 
 	// help window
 	helpWindowTextBox = tview.NewTextView()
-	helpWindowTextBox.SetBorder(true)
+	helpWindowTextBox.
+		SetDynamicColors(true).
+		SetBorder(true).
+		SetTitle(" Help ")
+	helpWindowTextBox.
+		SetBorderColor(tcell.ColorYellow).
+		SetTitleColor(tcell.ColorYellow)
 	initHelpWindow()
 	pages.AddPage("help", helpWindowTextBox, true, false)
 
@@ -405,11 +411,19 @@ func initHelpWindow() {
 	}
 
 	r, _ := regexp.Compile("(?s)keyboard shortcuts.*")
-	match := r.Find(readme)
+	shortcuts := r.Find(readme)
 
-	fmt.Fprint(helpWindowTextBox, string(match))
+	shortcutsString := string(shortcuts)
+	shortcutsString = strings.Replace(shortcutsString, "keyboard shortcuts", "[yellow::b]Keyboard shortcuts:[-::-]", 1)
 
-	fmt.Fprintf(helpWindowTextBox, "\n\n---\n\nMemory usage:\n")
+	itemBegin, _ := regexp.Compile(`\*\s*` + "`")
+	itemEnd, _ := regexp.Compile("`" + `\s`)
+	shortcutsString = string(itemBegin.ReplaceAll([]byte(shortcutsString), []byte("[yellow::b]")))
+	shortcutsString = string(itemEnd.ReplaceAll([]byte(shortcutsString), []byte("[-::-] ")))
+
+	fmt.Fprint(helpWindowTextBox, shortcutsString)
+
+	fmt.Fprintf(helpWindowTextBox, "\n\n---\n\n[yellow::b]Memory usage:[-::-]\n\n")
 	fmt.Fprintf(helpWindowTextBox, "Tracks cache: %s\n", getSizeString(getDirSize(cacheDirectory)))
 	fmt.Fprintf(helpWindowTextBox, "Covers cache: %s\n", getSizeString(getDirSize(coversDirectory)))
 	fmt.Fprintf(helpWindowTextBox, "Lyrics cache: %s\n", getSizeString(getDirSize(lyricsDirectory)))
