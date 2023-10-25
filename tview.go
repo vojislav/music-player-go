@@ -51,6 +51,17 @@ var popup = func(p tview.Primitive, width, height int) tview.Primitive {
 		AddItem(p, 1, 1, 1, 1, 0, 0, true)
 }
 
+func Center(width, height int, p tview.Primitive) tview.Primitive {
+	return tview.NewFlex().
+		AddItem(nil, 0, 1, false).
+		AddItem(tview.NewFlex().
+			SetDirection(tview.FlexRow).
+			AddItem(nil, 0, 1, false).
+			AddItem(p, height, 1, true).
+			AddItem(nil, 0, 1, false), width, 1, true).
+		AddItem(nil, 0, 1, false)
+}
+
 var selectedTextStyle = tcell.StyleDefault.Foreground(tview.Styles.PrimitiveBackgroundColor).
 	Background(tview.Styles.PrimaryTextColor).Attributes(tcell.AttrBold)
 
@@ -158,9 +169,16 @@ func initView() {
 	pages.AddPage("loading library", loadingPopup, true, false)
 
 	// track info page
-	trackInfoTextBox = tview.NewTextView()
-	trackInfoTextBox.SetBorder(true).SetTitle(" Track info ")
-	pages.AddPage("track info", trackInfoTextBox, true, false)
+	trackInfoTextBox = tview.NewTextView().
+		SetDynamicColors(true).
+		SetScrollable(false)
+	trackInfoTextBox.
+		SetBorder(true).
+		SetTitle(" Track info ")
+	trackInfoTextBox.
+		SetBorderColor(tcell.ColorYellow).
+		SetTitleColor(tcell.ColorYellow)
+	pages.AddPage("track info", Center(50, 20, trackInfoTextBox), true, false)
 
 	// lyrics page
 	lyricsTextBox = tview.NewTextView()
@@ -317,7 +335,10 @@ func toggleTrackInfo() {
 	var id, title, album, artist, genre, suffix, albumID, artistID string
 	var track, disc, year, size, duration, bitrate int
 	queryTrackInfo(toInt(trackID)).Scan(&id, &title, &album, &artist, &track, &year, &genre, &size, &suffix, &duration, &bitrate, &disc, &albumID, &artistID)
-	fmt.Fprintf(trackInfoTextBox, "Title: %s\nAlbum: %s\nArtist: %s\nYear: %d\nTrack: %d\nDisc: %d\nGenre: %s\nSize: %s\nDuration: %s\nSuffix: %s\nBit rate: %d kbps\n", title, album, artist, year, track, disc, genre, getSizeString(size), getTimeString(duration), suffix, bitrate)
+	if genre == "" {
+		genre = "-"
+	}
+	fmt.Fprintf(trackInfoTextBox, "[yellow::b]Title[-::B]: %s\n[yellow::b]Album[-::B]: %s\n[yellow::b]Artist[-::B]: %s\n[yellow::b]Year[-::B]: %d\n[yellow::b]Track[-::B]: %d\n[yellow::b]Disc[-::B]: %d\n[yellow::b]Genre[-::B]: %s\n[yellow::b]Size[-::B]: %s\n[yellow::b]Duration[-::B]: %s\n[yellow::b]Suffix[-::B]: %s\n[yellow::b]Bit rate[-::B]: %d kbps\n", title, album, artist, year, track, disc, genre, getSizeString(size), getTimeString(duration), suffix, bitrate)
 }
 
 func toggleLyrics() {
