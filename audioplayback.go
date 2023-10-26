@@ -47,12 +47,16 @@ var volume = effects.Volume{
 }
 
 func playTrack(trackIndex int, _ string, trackID string, _ rune) {
-	// track is scheduled for download - don't play it yet
+	// track is scheduled for download - play it as soon as it downloads
 	if _, ok := downloadMap[trackIndex]; ok {
+		// TODO: notification for saying "this will play next when downloaded"
+		playNextMutex.Lock()
+		playNext = trackIndex
+		playNextMutex.Unlock()
 		return
 	}
 
-	fileName := download(trackID, trackIndex)
+	fileName := getTrackPath(trackID)
 
 	stream := getStream(fileName)
 	tags := getTags(fileName)

@@ -341,8 +341,7 @@ func addTrackToQueue(trackID string, trackIndex int) {
 	// if track was to be played, play it
 	playNextMutex.Lock()
 	if trackIndex == playNext {
-		setQueuePosition(trackIndex)
-		playTrack(queuePosition, "", trackID, 0)
+		playTrack(trackIndex, "", trackID, 0)
 		playNext = -1
 	}
 	playNextMutex.Unlock()
