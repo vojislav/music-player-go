@@ -47,14 +47,17 @@ var volume = effects.Volume{
 }
 
 func playTrack(trackIndex int, _ string, trackID string, _ rune) {
+	downloadMutex.Lock()
 	// track is scheduled for download - play it as soon as it downloads
 	if _, ok := downloadMap[trackIndex]; ok {
+		downloadMutex.Unlock()
 		// TODO: notification for saying "this will play next when downloaded"
 		playNextMutex.Lock()
 		playNext = trackIndex
 		playNextMutex.Unlock()
 		return
 	}
+	downloadMutex.Unlock()
 
 	fileName := getTrackPath(trackID)
 

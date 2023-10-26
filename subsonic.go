@@ -298,17 +298,19 @@ func nextDownloadRequest() (string, int) {
 	// wait for download request here
 	<-downloadSemaphore
 
-	// lock because map is shared resource
-	downloadMutex.Lock()
-	defer downloadMutex.Unlock()
-
 	// either download track that is to be played next or closest one to it
 	var startIdx int
+	playNextMutex.Lock()
 	if playNext == -1 {
 		startIdx = lastDownloaded + 1
 	} else {
 		startIdx = playNext
 	}
+	playNextMutex.Unlock()
+
+	// lock because map is shared resource
+	downloadMutex.Lock()
+	defer downloadMutex.Unlock()
 
 	// iterate through queue to find next track to download
 	for i := startIdx; i < queueList.GetItemCount(); i++ {
@@ -357,7 +359,9 @@ func downloadWorker() {
 		_ = download(trackID, trackIndex)
 
 		// remove the request from map
+		downloadMutex.Lock()
 		delete(downloadMap, trackIndex)
+		downloadMutex.Unlock()
 
 		// replace placeholder
 		addTrackToQueue(trackID, trackIndex)
