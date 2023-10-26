@@ -398,7 +398,7 @@ func toggleHelpPage() {
 }
 
 func initHelpWindow() {
-	readme, err := os.ReadFile("README.md")
+	readme, err := os.ReadFile(readmeFile)
 	if err != nil {
 		log.Fatal(err)
 	}

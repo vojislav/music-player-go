@@ -9,7 +9,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var cacheDirectory, lyricsDirectory, coversDirectory, configDirectory, playlistDirectory, databaseFile, configFile, initScriptFile string
+var cacheDirectory, lyricsDirectory, coversDirectory, configDirectory, playlistDirectory, databaseFile, configFile, initScriptFile, readmeFile string
 var reloadDatabaseFlag *bool
 
 func init() {
@@ -20,6 +20,7 @@ func init() {
 	databaseFile = configDirectory + "database.db"
 	configFile = configDirectory + "config"
 	initScriptFile = configDirectory + "init.sql"
+	readmeFile = "README.md"
 
 	cacheDirectory = homeDirectory + "/.cache/music-player-go/tracks/"
 	lyricsDirectory = homeDirectory + "/.cache/music-player-go/lyrics/"
