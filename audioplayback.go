@@ -146,11 +146,13 @@ func changeVolume(step float64) {
 	newVolume := playerCtrl.Volume + step
 	newVolumePercent := baseVolume + int(newVolume*10)
 
-	if newVolumePercent < MIN_VOLUME || newVolumePercent > MAX_VOLUME {
-		return
+	if newVolumePercent < MIN_VOLUME {
+		newVolume = float64(MIN_VOLUME-baseVolume) / 10
+	} else if newVolumePercent > MAX_VOLUME {
+		newVolume = float64(MAX_VOLUME-baseVolume) / 10
 	}
 
-	playerCtrl.Volume += step
+	playerCtrl.Volume = newVolume
 	updateVolumeText()
 }
 
