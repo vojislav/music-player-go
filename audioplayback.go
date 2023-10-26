@@ -208,13 +208,22 @@ func getTags(path string) tag.Metadata {
 func getDownloadProgress(done chan bool, filePath string, fileSize int, trackIndex int) {
 	pattern := `\[::b\]-> \(\d+%\)\s`
 	re, _ := regexp.Compile(pattern)
+	var originalTrackName, originalTrackID string
 
 	for {
 		select {
 		case <-done:
 			downloadProgressText.Clear()
 			fmt.Fprintf(downloadProgressText, "%d%%", volumePercent)
+
+			// remove placeholder
+			originalTrackName = strings.Replace(originalTrackName, trackNotDownloadedMarker, "", 1)
+			queueList.SetItemText(trackIndex, originalTrackName, originalTrackID)
+			app.Draw()
+
+			playIfNext(originalTrackID, trackIndex)
 			return
+
 		default:
 			file, err := os.Open(filePath)
 			if err != nil {
@@ -242,6 +251,7 @@ func getDownloadProgress(done chan bool, filePath string, fileSize int, trackInd
 			trackName, trackID := queueList.GetItemText(trackIndex)
 			found := re.FindString(trackName)
 			if found == "" {
+				originalTrackName, originalTrackID = trackName, trackID
 				trackName = progress + trackName
 			} else {
 				trackName = strings.Replace(trackName, found, progress, 1)

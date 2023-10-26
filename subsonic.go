@@ -332,14 +332,7 @@ func nextDownloadRequest() (string, int) {
 	return "", -1
 }
 
-// should be called only when track can be added to queue (it was
-// just downloaded or already has been on disk)
-func addTrackToQueue(trackID string, trackIndex int) {
-	// swap placeholder with downloaded track
-	tags := getTags(getTrackPath(trackID))
-	itemText := fmt.Sprintf("%s - %s", tags.Artist(), tags.Title())
-	queueList.SetItemText(trackIndex, itemText, trackID)
-
+func playIfNext(trackID string, trackIndex int) {
 	// if track was to be played, play it
 	playNextMutex.Lock()
 	if trackIndex == playNext {
@@ -362,9 +355,6 @@ func downloadWorker() {
 		downloadMutex.Lock()
 		delete(downloadMap, trackIndex)
 		downloadMutex.Unlock()
-
-		// replace placeholder
-		addTrackToQueue(trackID, trackIndex)
 	}
 }
 
@@ -454,11 +444,11 @@ func download(trackIDString string, trackIndex int) string {
 			log.Fatal(err)
 		}
 
-		downloadDone <- true
-
 		lastDownloaded = trackIndex
 
 		os.Rename(fakeFilePath, trueFilePath)
+
+		downloadDone <- true
 	}
 
 	return trueFilePath

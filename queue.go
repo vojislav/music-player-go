@@ -143,7 +143,7 @@ func downloadAndEnqueueTrack(trackID string, play bool) {
 	trackText := fmt.Sprintf("%s - %s", artist, title)
 
 	// add placeholder and get its index
-	queueList.AddItem(trackNotDownloadedMarker+trackText, trackID, 0, nil)
+	queueList.AddItem("_", trackID, 0, nil) // this item must be added before playNext is set because of race condition
 	idx := queueList.GetItemCount() - 1
 
 	if play {
@@ -153,9 +153,13 @@ func downloadAndEnqueueTrack(trackID string, play bool) {
 	}
 
 	if trackExists(trackID) { // no need to add it to download map if it exists
-		addTrackToQueue(trackID, idx)
+		queueList.SetItemText(idx, trackText, trackID)
+		playIfNext(trackID, idx)
 		return
 	}
+
+	// set placeholder text
+	queueList.SetItemText(idx, trackNotDownloadedMarker+trackText, trackID)
 
 	// request download
 	downloadMutex.Lock()
