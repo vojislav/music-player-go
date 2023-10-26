@@ -55,6 +55,14 @@ func removeFromQueue() {
 		return
 	}
 
+	downloadMutex.Lock()
+	if len(downloadMap) > 0 { // if anything is downloading; don't remove from queue
+		// TODO: notif info
+		downloadMutex.Unlock()
+		return
+	}
+	downloadMutex.Unlock()
+
 	highlightedTrackIndex := queueList.GetCurrentItem()
 	if highlightedTrackIndex < queuePosition {
 		queuePosition -= 1
