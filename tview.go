@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
+	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -15,10 +18,13 @@ var mainPanel = tview.NewPages()
 var bottomPage = tview.NewPages()
 var loadingPopup tview.Primitive
 var currentTrackText, currentTrackTime, downloadProgressText, loadingTextBox, loginStatus, trackInfoTextBox,
-	lyricsTextBox, nowPlayingTrackTextBox, nowPlayingTimeTextBox, progressBar *tview.TextView
+	lyricsTextBox, helpWindowTextBox, nowPlayingTrackTextBox, nowPlayingTimeTextBox, progressBar *tview.TextView
 var nowPlayingCover *tview.Image
 var loginGrid *tview.Grid
 var libraryFlex, queueFlex, playlistFlex, nowPlayingFlex, bottomPanel *tview.Flex
+
+// remembers which page was last before going to help page
+var lastPage string
 
 // for each page remember which *tview.List was focused last so context can be restored
 // IMPORTANT: this and setAndSaveFocus() and restoreFocus() work only on mainFrontPage.
@@ -182,8 +188,25 @@ func initView() {
 
 	// lyrics page
 	lyricsTextBox = tview.NewTextView()
-	lyricsTextBox.SetBorder(true)
-	pages.AddPage("lyrics", lyricsTextBox, true, false)
+	lyricsTextBox.
+		SetDynamicColors(true).
+		SetBorder(true)
+	lyricsTextBox.
+		SetBorderColor(tcell.ColorYellow).
+		SetTitleColor(tcell.ColorYellow)
+	pages.AddPage("lyrics", Center(75, 30, lyricsTextBox), true, false)
+
+	// help window
+	helpWindowTextBox = tview.NewTextView()
+	helpWindowTextBox.
+		SetDynamicColors(true).
+		SetBorder(true).
+		SetTitle(" Help ")
+	helpWindowTextBox.
+		SetBorderColor(tcell.ColorYellow).
+		SetTitleColor(tcell.ColorYellow)
+	initHelpWindow()
+	pages.AddPage("help", helpWindowTextBox, true, false)
 
 	progressBar = tview.NewTextView().
 		SetDynamicColors(true)
@@ -298,8 +321,6 @@ func initView() {
 
 	mainPanel.AddPage("playlists", playlistFlex, true, false)
 
-	pages.SendToFront("track info")
-
 	// key handlers
 	app.SetInputCapture(appInputHandler)
 	libraryFlex.SetInputCapture(libraryInputHandler)
@@ -330,6 +351,7 @@ func toggleTrackInfo() {
 	focusedList = list
 
 	pages.ShowPage("track info")
+	pages.SendToFront("track info")
 	trackInfoTextBox.Clear()
 	_, trackID := list.GetItemText(list.GetCurrentItem())
 	var id, title, album, artist, genre, suffix, albumID, artistID string
@@ -361,6 +383,43 @@ func toggleLyrics() {
 	focusedList = list
 
 	go showLyrics(list)
+}
+
+// toggles between whichever page is current and help page
+func toggleHelpPage() {
+	frontPage, _ := pages.GetFrontPage()
+	if frontPage == "help" {
+		pages.SwitchToPage(lastPage)
+		restoreFocus()
+	} else {
+		lastPage = frontPage
+		pages.SwitchToPage("help")
+	}
+}
+
+func initHelpWindow() {
+	readme, err := os.ReadFile(readmeFile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	r, _ := regexp.Compile("(?s)keyboard shortcuts.*")
+	shortcuts := r.Find(readme)
+
+	shortcutsString := string(shortcuts)
+	shortcutsString = strings.Replace(shortcutsString, "keyboard shortcuts", "[yellow::b]Keyboard shortcuts:[-::-]", 1)
+
+	itemBegin, _ := regexp.Compile(`\*\s*` + "`")
+	itemEnd, _ := regexp.Compile("`" + `\s`)
+	shortcutsString = string(itemBegin.ReplaceAll([]byte(shortcutsString), []byte("[yellow::b]")))
+	shortcutsString = string(itemEnd.ReplaceAll([]byte(shortcutsString), []byte("[-::-] ")))
+
+	fmt.Fprint(helpWindowTextBox, shortcutsString)
+
+	fmt.Fprintf(helpWindowTextBox, "\n\n---\n\n[yellow::b]Memory usage:[-::-]\n\n")
+	fmt.Fprintf(helpWindowTextBox, "Tracks cache: %s\n", getSizeString(getDirSize(cacheDirectory)))
+	fmt.Fprintf(helpWindowTextBox, "Covers cache: %s\n", getSizeString(getDirSize(coversDirectory)))
+	fmt.Fprintf(helpWindowTextBox, "Lyrics cache: %s\n", getSizeString(getDirSize(lyricsDirectory)))
 }
 
 // clears and draw progress bar
@@ -441,10 +500,6 @@ func getTimeString(time int) string {
 	return fmt.Sprint(minutes, ":", seconds)
 }
 
-func getSizeString(size int) string {
-	return fmt.Sprintf("%.1fM", float64(size)/(1024*1024))
-}
-
 func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	focused := app.GetFocus()
 	frontPage, _ := pages.GetFrontPage()
@@ -488,6 +543,12 @@ func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 	case '.':
 		toggleLyrics()
+		return nil
+	}
+
+	switch event.Key() {
+	case tcell.KeyF1:
+		toggleHelpPage()
 		return nil
 	}
 
