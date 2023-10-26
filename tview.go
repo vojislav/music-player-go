@@ -23,6 +23,9 @@ var nowPlayingCover *tview.Image
 var loginGrid *tview.Grid
 var libraryFlex, queueFlex, playlistFlex, nowPlayingFlex, bottomPanel *tview.Flex
 
+// remembers which page was last before going to help page
+var lastPage string
+
 // for each page remember which *tview.List was focused last so context can be restored
 // IMPORTANT: this and setAndSaveFocus() and restoreFocus() work only on mainFrontPage.
 // if focus is on bottomPage (i.e. during search) using these functions would lead to undefined behaviour
@@ -382,31 +385,16 @@ func toggleLyrics() {
 	go showLyrics(list)
 }
 
-func toggleHelpWindow() {
-	var list *tview.List
-	switch app.GetFocus() {
-	case artistList:
-		list = artistList
-	case albumList:
-		list = albumList
-	case trackList:
-		list = trackList
-	case playlistTracks:
-		list = playlistTracks
-	case queueList:
-		list = queueList
-	case helpWindowTextBox:
-		pages.HidePage("help")
-		setAndSaveFocus(focusedList)
-		focusedList = nil
-		return
-	default:
-		return
+// toggles between whichever page is current and help page
+func toggleHelpPage() {
+	frontPage, _ := pages.GetFrontPage()
+	if frontPage == "help" {
+		pages.SwitchToPage(lastPage)
+		restoreFocus()
+	} else {
+		lastPage = frontPage
+		pages.SwitchToPage("help")
 	}
-	focusedList = list
-
-	pages.ShowPage("help")
-	pages.SendToFront("help")
 }
 
 func initHelpWindow() {
@@ -560,7 +548,7 @@ func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 	switch event.Key() {
 	case tcell.KeyF1:
-		toggleHelpWindow()
+		toggleHelpPage()
 		return nil
 	}
 
