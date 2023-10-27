@@ -69,7 +69,7 @@ var playNextMutex sync.Mutex
 var downloadMap map[int]string = make(map[int]string)
 
 // guards downloadMap
-var downloadMutex sync.Mutex
+var downloadMutex sync.RWMutex
 
 // signals if download is ready for downloadWorker() to pick up
 // TODO: do not hard code the size of channel
@@ -309,8 +309,8 @@ func nextDownloadRequest() (string, int) {
 	playNextMutex.Unlock()
 
 	// lock because map is shared resource
-	downloadMutex.Lock()
-	defer downloadMutex.Unlock()
+	downloadMutex.RLock()
+	defer downloadMutex.RUnlock()
 
 	// iterate through queue to find next track to download
 	for i := startIdx; i < queueList.GetItemCount(); i++ {
