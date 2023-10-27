@@ -131,7 +131,7 @@ func trackTime() {
 				scrobble(toInt(currentTrack.ID), "true")
 			}
 			if currentTrack.stream.Position() == currentTrack.stream.Len() {
-				nextTrack()
+				requestNextTrack()
 			}
 			updateCurrentTrackText()
 		case <-killTicker:
@@ -145,12 +145,12 @@ func trackTime() {
 
 func nextTrack() {
 	if queuePosition+1 == queueList.GetItemCount() {
-		stopTrack()
+		requestStopTrack()
 		return
 	}
 
 	nextTrackName, nextTrackID := queueList.GetItemText(queuePosition + 1)
-	playTrack(queuePosition+1, nextTrackName, nextTrackID, 0)
+	requestPlayTrack(queuePosition+1, nextTrackName, nextTrackID, 0)
 }
 
 func previousTrack() {
@@ -159,7 +159,7 @@ func previousTrack() {
 	}
 
 	nextTrackName, nextTrackID := queueList.GetItemText(queuePosition - 1)
-	playTrack(queuePosition-1, nextTrackName, nextTrackID, 0)
+	requestPlayTrack(queuePosition-1, nextTrackName, nextTrackID, 0)
 }
 
 func changeVolume(step float64) {

@@ -97,16 +97,16 @@ func trackInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		return tcell.NewEventKey(tcell.KeyPgUp, 0, tcell.ModNone)
 
 	case 'p':
-		togglePlay()
+		requestTogglePlay()
 		return nil
 	case 's':
-		stopTrack()
+		requestStopTrack()
 		return nil
 	case '>':
-		nextTrack()
+		requestNextTrack()
 		return nil
 	case '<':
-		previousTrack()
+		requestPreviousTrack()
 		return nil
 
 	case '/':
@@ -134,13 +134,13 @@ func trackInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 
 	case '=':
-		changeVolume(volumeStep)
+		requestChangeVolume(volumeStep)
 		return nil
 	case '-':
-		changeVolume(-volumeStep)
+		requestChangeVolume(-volumeStep)
 		return nil
 	case 'm':
-		toggleMute()
+		requestMute()
 		return nil
 	}
 	return event
@@ -299,7 +299,7 @@ func initView() {
 	// queue page
 	queueList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
 	queueList.SetBorder(true).SetTitle(" Queue ")
-	queueList.SetSelectedFunc(playTrack)
+	queueList.SetSelectedFunc(requestPlayTrack)
 	setColor(queueList)
 	queueFlex = tview.NewFlex().SetDirection(tview.FlexRow).
 		AddItem(queueList, 0, 1, true)

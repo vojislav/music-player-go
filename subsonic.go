@@ -336,7 +336,7 @@ func playIfNext(trackID string, trackIndex int) {
 	// if track was to be played, play it
 	playNextMutex.Lock()
 	if trackIndex == playNext {
-		playTrack(trackIndex, "", trackID, 0)
+		requestPlayTrack(trackIndex, "", trackID, 0)
 		playNext = -1
 	}
 	playNextMutex.Unlock()

@@ -67,7 +67,7 @@ func removeFromQueue() {
 	if highlightedTrackIndex < queuePosition {
 		queuePosition -= 1
 	} else if highlightedTrackIndex == queuePosition {
-		stopTrack()
+		requestStopTrack()
 	}
 
 	_, trackID := queueList.GetItemText(highlightedTrackIndex)
@@ -109,7 +109,7 @@ func queuePlayHighlighted() {
 	}
 	currentTrackIndex := queueList.GetCurrentItem()
 	currentTrackName, currentTrackID := queueList.GetItemText(currentTrackIndex)
-	playTrack(currentTrackIndex, currentTrackName, currentTrackID, 0)
+	requestPlayTrack(currentTrackIndex, currentTrackName, currentTrackID, 0)
 }
 
 // returns string which is used to "mark" tracks which are either:

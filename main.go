@@ -52,6 +52,7 @@ func init() {
 	}
 
 	go downloadWorker()
+	go playerWorker()
 }
 
 // the only way you should kill the app. ensures required work is done before it's stopped
