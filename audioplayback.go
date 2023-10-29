@@ -178,23 +178,35 @@ func trackTime() {
 	}
 }
 
+func nextTrackIndex(incr int) int {
+	if playNext == -1 {
+		return queuePosition + incr
+	} else {
+		return playNext + incr
+	}
+}
+
 func nextTrack() {
-	if queuePosition+1 == queueList.GetItemCount() {
+	nextIndex := nextTrackIndex(+1)
+
+	if nextIndex >= queueList.GetItemCount() {
 		stopTrack()
 		return
 	}
 
-	nextTrackName, nextTrackID := queueList.GetItemText(queuePosition + 1)
-	playTrack(queuePosition+1, nextTrackName, nextTrackID, 0)
+	nextTrackName, nextTrackID := queueList.GetItemText(nextIndex)
+	playTrack(nextIndex, nextTrackName, nextTrackID, 0)
 }
 
 func previousTrack() {
-	if queuePosition-1 < 0 {
+	nextIndex := nextTrackIndex(-1)
+
+	if nextIndex < 0 {
 		return
 	}
 
-	nextTrackName, nextTrackID := queueList.GetItemText(queuePosition - 1)
-	playTrack(queuePosition-1, nextTrackName, nextTrackID, 0)
+	nextTrackName, nextTrackID := queueList.GetItemText(nextIndex)
+	playTrack(nextIndex, nextTrackName, nextTrackID, 0)
 }
 
 func changeVolume(step float64) {
