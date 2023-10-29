@@ -31,6 +31,9 @@ var trackRequestChan = make(chan TrackRequest)
 // idx of next song to be played
 var playNext = -1
 
+// in-queue indicator of what song will be played next when downloaded
+const playNextIndicator = "[pink::] >>> "
+
 func requestPlayTrack(trackIndex int, _ string, trackID string, _ rune) {
 	trackRequestChan <- TrackRequest{
 		Play,
@@ -88,14 +91,6 @@ func requestGetNext() int {
 }
 
 func playerWorker() {
-	// if next song is to be played, play it
-	playIfNext := func(args PlayRequest) {
-		if args.trackIndex == playNext {
-			playTrack(args.trackIndex, "", args.trackID, 0)
-			playNext = -1
-		}
-	}
-
 	for {
 		message := <-trackRequestChan
 		request := message.request
@@ -119,7 +114,7 @@ func playerWorker() {
 		case PlayIfNext:
 			playIfNext(message.args.(PlayRequest))
 		case SetNext:
-			playNext = message.args.(int)
+			setNext(message.args.(int))
 		case GetNext:
 			ch := message.args.(chan int)
 			ch <- playNext

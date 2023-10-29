@@ -373,12 +373,6 @@ func download(trackIDString string, trackIndex int) string {
 	// indicates that file is downloading
 	fakeFilePath := strings.Replace(trueFilePath, ".mp3", ".XXX", 1)
 
-	// case where same download was already started in another goroutine.
-	// control is returned when the file downloads in another goroutine.
-	for _, err := os.Stat(fakeFilePath); err == nil; {
-		time.Sleep(5 * time.Second)
-	}
-
 	// if the track isn't already downloaded - download it
 	if _, err := os.Stat(trueFilePath); err != nil {
 		trackID := toInt(trackIDString)
@@ -415,7 +409,7 @@ func download(trackIDString string, trackIndex int) string {
 		defer res.Body.Close()
 
 		downloadDone := make(chan bool)
-		go getDownloadProgress(downloadDone, fakeFilePath, fileSize, trackIndex)
+		go trackDownloadProgress(downloadDone, fakeFilePath, fileSize, trackIndex)
 
 		file, err := os.Create(fakeFilePath)
 		if err != nil {
