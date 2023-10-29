@@ -53,9 +53,7 @@ func playTrack(trackIndex int, _ string, trackID string, _ rune) {
 	// track is scheduled for download - play it as soon as it downloads
 	if _, ok := downloadMap[trackIndex]; ok {
 		// TODO: notification for saying "this will play next when downloaded"
-		playNextMutex.Lock()
-		playNext = trackIndex
-		playNextMutex.Unlock()
+		requestSetNext(trackIndex)
 		return
 	}
 
@@ -116,6 +114,7 @@ func stopTrack() {
 	setQueuePosition(-1)
 }
 
+// this is not executed in player thread
 func trackTime() {
 	updateCurrentTrackText()
 	ticker = time.NewTicker(time.Second)
@@ -145,12 +144,12 @@ func trackTime() {
 
 func nextTrack() {
 	if queuePosition+1 == queueList.GetItemCount() {
-		requestStopTrack()
+		stopTrack()
 		return
 	}
 
 	nextTrackName, nextTrackID := queueList.GetItemText(queuePosition + 1)
-	requestPlayTrack(queuePosition+1, nextTrackName, nextTrackID, 0)
+	playTrack(queuePosition+1, nextTrackName, nextTrackID, 0)
 }
 
 func previousTrack() {
@@ -159,7 +158,7 @@ func previousTrack() {
 	}
 
 	nextTrackName, nextTrackID := queueList.GetItemText(queuePosition - 1)
-	requestPlayTrack(queuePosition-1, nextTrackName, nextTrackID, 0)
+	playTrack(queuePosition-1, nextTrackName, nextTrackID, 0)
 }
 
 func changeVolume(step float64) {
@@ -221,7 +220,7 @@ func getDownloadProgress(done chan bool, filePath string, fileSize int, trackInd
 			queueList.SetItemText(trackIndex, originalTrackName, originalTrackID)
 			app.Draw()
 
-			playIfNext(originalTrackID, trackIndex)
+			requestPlayIfNext(originalTrackID, trackIndex)
 			return
 
 		default:
@@ -260,6 +259,6 @@ func getDownloadProgress(done chan bool, filePath string, fileSize int, trackInd
 			queueList.SetItemText(trackIndex, trackName, trackID)
 			app.Draw()
 		}
-		time.Sleep(time.Second)
+		time.Sleep(time.Second / 2)
 	}
 }

@@ -55,15 +55,9 @@ type Playlist struct {
 var artists = make(map[int]*Artist)
 var downloadPercent float64
 
-// idx of next song to be played
-var playNext int = -1
-
 // idx of last downloaded song. used for optimization only.
 // starts at -1 because +1 is always added to it
 var lastDownloaded int = -1
-
-// guards playNext as it is accessed from concurrent routines
-var playNextMutex sync.Mutex
 
 // map of stuff (idxInQueue: trackID) to download. Shared between main thread and downloader thread
 var downloadMap map[int]string = make(map[int]string)
@@ -300,13 +294,12 @@ func nextDownloadRequest() (string, int) {
 
 	// either download track that is to be played next or closest one to it
 	var startIdx int
-	playNextMutex.Lock()
-	if playNext == -1 {
+	next := requestGetNext()
+	if next == -1 {
 		startIdx = lastDownloaded + 1
 	} else {
-		startIdx = playNext
+		startIdx = next
 	}
-	playNextMutex.Unlock()
 
 	// lock because map is shared resource
 	downloadMutex.RLock()
@@ -330,16 +323,6 @@ func nextDownloadRequest() (string, int) {
 	// unreachable - fatal error
 	log.Panic()
 	return "", -1
-}
-
-func playIfNext(trackID string, trackIndex int) {
-	// if track was to be played, play it
-	playNextMutex.Lock()
-	if trackIndex == playNext {
-		requestPlayTrack(trackIndex, "", trackID, 0)
-		playNext = -1
-	}
-	playNextMutex.Unlock()
 }
 
 // pull tracks from download channel and download them one-by-one. Started as goroutine at program init

@@ -147,14 +147,12 @@ func downloadAndEnqueueTrack(trackID string, play bool) {
 	idx := queueList.GetItemCount() - 1
 
 	if play {
-		playNextMutex.Lock()
-		playNext = idx
-		playNextMutex.Unlock()
+		requestSetNext(idx)
 	}
 
 	if trackExists(trackID) { // no need to add it to download map if it exists
 		queueList.SetItemText(idx, trackText, trackID)
-		playIfNext(trackID, idx)
+		requestPlayIfNext(trackID, idx)
 		return
 	}
 

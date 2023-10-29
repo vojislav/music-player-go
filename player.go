@@ -11,6 +11,9 @@ const (
 	Previous
 	ChangeVolume
 	Mute
+	PlayIfNext
+	SetNext
+	GetNext
 )
 
 type TrackRequest struct {
@@ -56,7 +59,37 @@ func requestMute() {
 	trackRequestChan <- TrackRequest{Mute, nil}
 }
 
+func requestPlayIfNext(trackID string, trackIndex int) {
+	trackRequestChan <- TrackRequest{
+		PlayIfNext,
+		PlayRequest{trackIndex, trackID},
+	}
+}
+
+func requestSetNext(next int) {
+	trackRequestChan <- TrackRequest{SetNext, next}
+}
+
+func requestGetNext() int {
+	ch := make(chan int)
+	defer close(ch)
+
+	trackRequestChan <- TrackRequest{GetNext, ch}
+	return <-ch
+}
+
 func playerWorker() {
+	// idx of next song to be played
+	playNext := -1
+
+	// if next song is to be played, play it
+	playIfNext := func(args PlayRequest) {
+		if args.trackIndex == playNext {
+			playTrack(args.trackIndex, "", args.trackID, 0)
+			playNext = -1
+		}
+	}
+
 	for {
 		message := <-trackRequestChan
 		request := message.request
@@ -77,6 +110,13 @@ func playerWorker() {
 			changeVolume(step)
 		case Mute:
 			toggleMute()
+		case PlayIfNext:
+			playIfNext(message.args.(PlayRequest))
+		case SetNext:
+			playNext = message.args.(int)
+		case GetNext:
+			ch := message.args.(chan int)
+			ch <- playNext
 		}
 	}
 }
