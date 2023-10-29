@@ -56,19 +56,21 @@ func setNext(trackIndex int) {
 	}
 
 	oldPlayNext := playNext
+	// remove old playNext marker
 	if oldPlayNext >= 0 && oldPlayNext < queueList.GetItemCount() {
 		trackText, trackID := queueList.GetItemText(oldPlayNext)
 		trackText = strings.Replace(trackText, playNextIndicator, "", 1)
 		queueList.SetItemText(oldPlayNext, trackText, trackID)
 	}
 
-	playNext = trackIndex
-
+	// set new playNext marker
 	if trackIndex >= 0 {
 		trackText, trackID := queueList.GetItemText(trackIndex)
 		trackText = playNextIndicator + trackText
 		queueList.SetItemText(trackIndex, trackText, trackID)
 	}
+
+	playNext = trackIndex
 }
 
 func playTrack(trackIndex int, _ string, trackID string, _ rune) {
