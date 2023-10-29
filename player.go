@@ -26,7 +26,10 @@ type PlayRequest struct {
 	trackID    string
 }
 
-var trackRequestChan = make(chan TrackRequest, 10)
+var trackRequestChan = make(chan TrackRequest)
+
+// idx of next song to be played
+var playNext = -1
 
 func requestPlayTrack(trackIndex int, _ string, trackID string, _ rune) {
 	trackRequestChan <- TrackRequest{
@@ -59,7 +62,13 @@ func requestMute() {
 	trackRequestChan <- TrackRequest{Mute, nil}
 }
 
-func requestPlayIfNext(trackID string, trackIndex int) {
+// play the track if (play || (playNext == trackIndex))
+func requestPlayIfNext(trackID string, trackIndex int, play bool) {
+	if play {
+		requestPlayTrack(trackIndex, "", trackID, 0)
+		return
+	}
+
 	trackRequestChan <- TrackRequest{
 		PlayIfNext,
 		PlayRequest{trackIndex, trackID},
@@ -79,9 +88,6 @@ func requestGetNext() int {
 }
 
 func playerWorker() {
-	// idx of next song to be played
-	playNext := -1
-
 	// if next song is to be played, play it
 	playIfNext := func(args PlayRequest) {
 		if args.trackIndex == playNext {

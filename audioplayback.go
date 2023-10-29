@@ -53,7 +53,7 @@ func playTrack(trackIndex int, _ string, trackID string, _ rune) {
 	// track is scheduled for download - play it as soon as it downloads
 	if _, ok := downloadMap[trackIndex]; ok {
 		// TODO: notification for saying "this will play next when downloaded"
-		requestSetNext(trackIndex)
+		playNext = trackIndex
 		return
 	}
 
@@ -220,7 +220,7 @@ func getDownloadProgress(done chan bool, filePath string, fileSize int, trackInd
 			queueList.SetItemText(trackIndex, originalTrackName, originalTrackID)
 			app.Draw()
 
-			requestPlayIfNext(originalTrackID, trackIndex)
+			requestPlayIfNext(originalTrackID, trackIndex, false)
 			return
 
 		default:

@@ -146,14 +146,14 @@ func downloadAndEnqueueTrack(trackID string, play bool) {
 	queueList.AddItem("_", trackID, 0, nil) // this item must be added before playNext is set because of race condition
 	idx := queueList.GetItemCount() - 1
 
-	if play {
-		requestSetNext(idx)
-	}
-
 	if trackExists(trackID) { // no need to add it to download map if it exists
 		queueList.SetItemText(idx, trackText, trackID)
-		requestPlayIfNext(trackID, idx)
+		requestPlayIfNext(trackID, idx, play)
 		return
+	}
+
+	if play {
+		requestSetNext(idx)
 	}
 
 	// set placeholder text
