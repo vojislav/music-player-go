@@ -50,6 +50,13 @@ func refreshSearchIndexes(trackIndex int) {
 	searchIndexes = searchIndexesNew
 }
 
+func remove(index int) {
+	cnt := queueNumberList.GetItemCount()
+	queueList.RemoveItem(index)
+	queueNumberList.RemoveItem(cnt - 1)
+	queueLengthList.RemoveItem(index)
+}
+
 func removeFromQueue() {
 	if queueList.GetItemCount() == 0 {
 		return
@@ -76,7 +83,7 @@ func removeFromQueue() {
 
 	refreshSearchIndexes(highlightedTrackIndex)
 
-	queueList.RemoveItem(highlightedTrackIndex)
+	remove(highlightedTrackIndex)
 }
 
 // should only be called when current song is changed
@@ -135,16 +142,24 @@ func markList(list *tview.List, idx int) {
 	list.SetItemText(idx, trackInQueueMarker+prim, sec)
 }
 
+// adds song to queue (including numbering and track duration)
+func addToQueue(trackText string, trackID string, position int, trackDurationString string) {
+	queueList.AddItem(trackText, trackID, 0, nil)
+	queueNumberList.AddItem(fmt.Sprintf("%d.", position+1), "", 0, nil)
+	queueLengthList.AddItem(fmt.Sprintf("[%s[]", trackDurationString), "", 0, nil)
+}
+
 // adds dummy placeholder to queue, and downloads track and puts it on that place
 // play argument indicates whether track should be played immediately upon download
 func downloadAndEnqueueTrack(trackID string, play bool) {
 	var artist, title string
-	queryArtistAndTitle(toInt(trackID)).Scan(&artist, &title)
+	var duration int
+	queryArtistAndTitleAndDuration(toInt(trackID)).Scan(&artist, &title, &duration)
 	trackText := fmt.Sprintf("%s - %s", artist, title)
 
 	// add placeholder and get its index
-	queueList.AddItem("_", trackID, 0, nil) // this item must be added before playNext is set because of race condition
-	idx := queueList.GetItemCount() - 1
+	idx := queueList.GetItemCount()
+	addToQueue("_", trackID, idx, getTimeString(duration)) // this item must be added before playNext is set because of race condition
 
 	if trackExists(trackID) { // no need to add it to download map if it exists
 		queueList.SetItemText(idx, trackText, trackID)
@@ -189,7 +204,23 @@ func listEnqueueSublist(list *tview.List, sublist *tview.List, play bool) {
 	list.SetCurrentItem(currentListIndex + 1)
 }
 
+func queueOnChange(index int, _ string, _ string, _ rune) {
+	queueNumberList.SetCurrentItem(index)
+	queueLengthList.SetCurrentItem(index)
+}
+
 func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
+	switch event.Rune() {
+	case 'l':
+		event = tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModNone)
+
+	case 'x':
+		event = tcell.NewEventKey(tcell.KeyDelete, 0, tcell.ModNone)
+	case 'o':
+		findInLibrary(queueList)
+		return nil
+	}
+
 	switch event.Key() {
 	case tcell.KeyRight, tcell.KeyEnter:
 		queuePlayHighlighted()
@@ -198,23 +229,6 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 	case tcell.KeyDelete:
 		removeFromQueue()
-		return nil
-	}
-
-	switch event.Rune() {
-	case 'j':
-		return tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone)
-	case 'k':
-		return tcell.NewEventKey(tcell.KeyUp, 0, tcell.ModNone)
-	case 'l':
-		queuePlayHighlighted()
-		return nil
-
-	case 'x':
-		removeFromQueue()
-		return nil
-	case 'o':
-		findInLibrary(queueList)
 		return nil
 	}
 

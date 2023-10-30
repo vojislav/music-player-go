@@ -305,11 +305,25 @@ func initView() {
 
 	// queue page
 	queueList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
-	queueList.SetBorder(true).SetTitle(" Queue ")
 	queueList.SetSelectedFunc(requestPlayTrack)
 	setColor(queueList)
-	queueFlex = tview.NewFlex().SetDirection(tview.FlexRow).
-		AddItem(queueList, 0, 1, true)
+	queueList.SetChangedFunc(queueOnChange)
+
+	// queue page
+	queueNumberList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
+	setColor(queueNumberList)
+	queueNumberList.SetSelectedFocusOnly(false)
+
+	// queue page
+	queueLengthList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
+	setColor(queueLengthList)
+	queueLengthList.SetSelectedFocusOnly(false)
+
+	queueFlex = tview.NewFlex().SetDirection(tview.FlexColumn).
+		AddItem(queueNumberList, 4, 0, false).
+		AddItem(queueList, 0, 1, true).
+		AddItem(queueLengthList, 8, 0, false)
+	queueFlex.SetBorder(true).SetTitle(" Queue ")
 
 	mainPanel.AddPage("queue", queueFlex, true, false)
 

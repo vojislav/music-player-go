@@ -8,7 +8,8 @@ import (
 	"github.com/rivo/tview"
 )
 
-var artistList, albumList, trackList, queueList *tview.List
+var artistList, albumList, trackList *tview.List
+var queueList, queueLengthList, queueNumberList *tview.List
 
 func gotoLibraryPage() {
 	pages.SwitchToPage("main")
