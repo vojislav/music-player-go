@@ -10,7 +10,6 @@ import (
 
 	"github.com/dhowden/tag"
 	"github.com/faiface/beep"
-	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
 )
@@ -20,8 +19,9 @@ var playerCtrl *CtrlVolume
 
 var currentTrack Track
 
-var ticker *time.Ticker
-var killTicker = make(chan bool, 1)
+var startUpdate = make(chan bool, 1)
+
+var pauseUpdate = make(chan bool, 1)
 
 // how often will download progress in queue be updated
 const downloadProgressSleepTime = time.Second
@@ -42,11 +42,6 @@ type Track struct {
 	Disc     int    `json:"discNumber"`
 	AlbumID  string `json:"albumId"`
 	ArtistID string `json:"artistId"`
-}
-
-var volume = effects.Volume{
-	Base:   2.0,
-	Silent: false,
 }
 
 // sets playNext to trackIndex, removes playNext indicator from old track (if such exists) and adds it to new (if such exists)
@@ -104,13 +99,14 @@ func playTrack(trackIndex int, _ string, trackID string, _ rune) {
 
 	speaker.Clear()
 	playerCtrl.Streamer = currentTrack.stream
+	playerCtrl.Paused = false
 	speaker.Play(playerCtrl)
 
 	setQueuePosition(trackIndex)
 
 	scrobble(toInt(currentTrack.ID), "false")
 
-	go trackTime()
+	startUpdate <- true
 }
 
 // if next song is to be played, play it
@@ -128,9 +124,9 @@ func togglePlay() {
 	speaker.Lock()
 	playerCtrl.Paused = !playerCtrl.Paused
 	if playerCtrl.Paused {
-		killTicker <- true
+		pauseUpdate <- true
 	} else {
-		go trackTime()
+		startUpdate <- true
 	}
 	speaker.Unlock()
 }
@@ -142,21 +138,28 @@ func stopTrack() {
 
 	speaker.Clear()
 	currentTrack = Track{stream: nil}
-	if !playerCtrl.Paused {
-		killTicker <- true
-	} else {
-		updateCurrentTrackText()
-	}
+	pauseUpdate <- true
 	setQueuePosition(-1)
 }
 
 // this is not executed in player thread
 func trackTime() {
-	updateCurrentTrackText()
-	ticker = time.NewTicker(time.Second)
+	stop := false
+
+	go func() {
+		for {
+			if !stop {
+				startUpdate <- true
+			}
+			time.Sleep(time.Second)
+		}
+	}()
+
 	for {
 		select {
-		case <-ticker.C:
+		case <-startUpdate:
+			stop = false
+
 			// prevents freak situation where rapidly switching songs
 			// causes track stream to be accessed before its loaded
 			if currentTrack.stream == nil {
@@ -169,11 +172,10 @@ func trackTime() {
 				requestNextTrack()
 			}
 			updateCurrentTrackText()
-		case <-killTicker:
-			ticker.Stop()
+
+		case <-pauseUpdate:
+			stop = true
 			updateCurrentTrackText()
-			app.Draw()
-			return
 		}
 	}
 }

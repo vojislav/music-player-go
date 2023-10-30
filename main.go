@@ -72,6 +72,7 @@ func main() {
 	playerCtrl = &CtrlVolume{Streamer: nil, Paused: false, Silent: false, Base: 2.0, Volume: 0.0}
 
 	initView()
+	go trackTime()
 
 	if !validConfig() {
 		pages.SwitchToPage("login")

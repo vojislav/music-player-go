@@ -93,7 +93,7 @@ func searchStatus(message, searchString string) {
 	currentTrackText.Clear()
 	fmt.Fprint(currentTrackText, message, searchString)
 	time.Sleep(2 * time.Second)
-	updateCurrentTrackText()
+	startUpdate <- true
 	app.Draw()
 }
 
