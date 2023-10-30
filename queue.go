@@ -50,7 +50,8 @@ func refreshSearchIndexes(trackIndex int) {
 	searchIndexes = searchIndexesNew
 }
 
-func remove(index int) {
+// removes numbering, track text and duration from queue lists
+func removeAllTrackInfoFromQueue(index int) {
 	cnt := queueNumberList.GetItemCount()
 	queueList.RemoveItem(index)
 	queueNumberList.RemoveItem(cnt - 1)
@@ -83,7 +84,7 @@ func removeFromQueue() {
 
 	refreshSearchIndexes(highlightedTrackIndex)
 
-	remove(highlightedTrackIndex)
+	removeAllTrackInfoFromQueue(highlightedTrackIndex)
 }
 
 // should only be called when current song is changed
@@ -143,7 +144,7 @@ func markList(list *tview.List, idx int) {
 }
 
 // adds song to queue (including numbering and track duration)
-func addToQueue(trackText string, trackID string, position int, trackDurationString string) {
+func addAllTrackInfoToQueue(trackText string, trackID string, position int, trackDurationString string) {
 	queueList.AddItem(trackText, trackID, 0, nil)
 	queueNumberList.AddItem(fmt.Sprintf("%d.", position+1), "", 0, nil)
 	queueLengthList.AddItem(fmt.Sprintf("[%s[]", trackDurationString), "", 0, nil)
@@ -159,7 +160,7 @@ func downloadAndEnqueueTrack(trackID string, play bool) {
 
 	// add placeholder and get its index
 	idx := queueList.GetItemCount()
-	addToQueue("_", trackID, idx, getTimeString(duration)) // this item must be added before playNext is set because of race condition
+	addAllTrackInfoToQueue("_", trackID, idx, getTimeString(duration)) // this item must be added before playNext is set because of race condition
 
 	if trackExists(trackID) { // no need to add it to download map if it exists
 		queueList.SetItemText(idx, trackText, trackID)
@@ -204,6 +205,7 @@ func listEnqueueSublist(list *tview.List, sublist *tview.List, play bool) {
 	list.SetCurrentItem(currentListIndex + 1)
 }
 
+// every time different track is highlighted also highlight its duration and number
 func queueOnChange(index int, _ string, _ string, _ rune) {
 	queueNumberList.SetCurrentItem(index)
 	queueLengthList.SetCurrentItem(index)

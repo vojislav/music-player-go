@@ -303,18 +303,18 @@ func initView() {
 
 	mainPanel.AddPage("library", libraryFlex, true, true)
 
-	// queue page
+	// tracks in queue
 	queueList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
-	queueList.SetSelectedFunc(requestPlayTrack)
 	setColor(queueList)
+	queueList.SetSelectedFunc(requestPlayTrack)
 	queueList.SetChangedFunc(queueOnChange)
 
-	// queue page
+	// numbering of queue
 	queueNumberList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
 	setColor(queueNumberList)
 	queueNumberList.SetSelectedFocusOnly(false)
 
-	// queue page
+	// lengths of tracks
 	queueLengthList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
 	setColor(queueLengthList)
 	queueLengthList.SetSelectedFocusOnly(false)
@@ -323,7 +323,11 @@ func initView() {
 		AddItem(queueNumberList, 4, 0, false).
 		AddItem(queueList, 0, 1, true).
 		AddItem(queueLengthList, 8, 0, false)
-	queueFlex.SetBorder(true).SetTitle(" Queue ")
+	queueFlex.
+		SetTitle(" Queue ").
+		SetTitleColor(tcell.ColorYellow).
+		SetBorder(true).
+		SetBorderColor(tcell.ColorYellow)
 
 	mainPanel.AddPage("queue", queueFlex, true, false)
 
