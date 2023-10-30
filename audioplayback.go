@@ -23,6 +23,9 @@ var currentTrack Track
 var ticker *time.Ticker
 var killTicker = make(chan bool, 1)
 
+// how often will download progress in queue be updated
+const downloadProgressSleepTime = time.Second
+
 type Track struct {
 	stream   beep.StreamSeekCloser
 	ID       string `json:"id"`
@@ -46,13 +49,44 @@ var volume = effects.Volume{
 	Silent: false,
 }
 
-func playTrack(trackIndex int, _ string, trackID string, _ rune) {
-	// track is scheduled for download - don't play it yet
-	if _, ok := downloadMap[trackIndex]; ok {
+// sets playNext to trackIndex, removes playNext indicator from old track (if such exists) and adds it to new (if such exists)
+func setNext(trackIndex int) {
+	if trackIndex == playNext {
 		return
 	}
 
-	fileName := download(trackID, trackIndex)
+	oldPlayNext := playNext
+	// remove old playNext marker
+	if oldPlayNext >= 0 && oldPlayNext < queueList.GetItemCount() {
+		trackText, trackID := queueList.GetItemText(oldPlayNext)
+		trackText = strings.Replace(trackText, playNextIndicator, "", 1)
+		queueList.SetItemText(oldPlayNext, trackText, trackID)
+	}
+
+	// set new playNext marker
+	if trackIndex >= 0 {
+		trackText, trackID := queueList.GetItemText(trackIndex)
+		trackText = playNextIndicator + trackText
+		queueList.SetItemText(trackIndex, trackText, trackID)
+	}
+
+	playNext = trackIndex
+}
+
+func playTrack(trackIndex int, _ string, trackID string, _ rune) {
+	downloadMutex.RLock()
+	defer downloadMutex.RUnlock()
+
+	// track is scheduled for download - play it as soon as it downloads
+	if _, ok := downloadMap[trackIndex]; ok {
+		// TODO: notification for saying "this will play next when downloaded"
+		setNext(trackIndex)
+		return
+	} else {
+		setNext(-1)
+	}
+
+	fileName := getTrackPath(trackID)
 
 	stream := getStream(fileName)
 	tags := getTags(fileName)
@@ -77,6 +111,13 @@ func playTrack(trackIndex int, _ string, trackID string, _ rune) {
 	scrobble(toInt(currentTrack.ID), "false")
 
 	go trackTime()
+}
+
+// if next song is to be played, play it
+func playIfNext(args PlayRequest) {
+	if args.trackIndex == playNext {
+		playTrack(args.trackIndex, "", args.trackID, 0)
+	}
 }
 
 func togglePlay() {
@@ -109,6 +150,7 @@ func stopTrack() {
 	setQueuePosition(-1)
 }
 
+// this is not executed in player thread
 func trackTime() {
 	updateCurrentTrackText()
 	ticker = time.NewTicker(time.Second)
@@ -124,7 +166,7 @@ func trackTime() {
 				scrobble(toInt(currentTrack.ID), "true")
 			}
 			if currentTrack.stream.Position() == currentTrack.stream.Len() {
-				nextTrack()
+				requestNextTrack()
 			}
 			updateCurrentTrackText()
 		case <-killTicker:
@@ -136,23 +178,35 @@ func trackTime() {
 	}
 }
 
+func nextTrackIndex(incr int) int {
+	if playNext == -1 {
+		return queuePosition + incr
+	} else {
+		return playNext + incr
+	}
+}
+
 func nextTrack() {
-	if queuePosition+1 == queueList.GetItemCount() {
+	nextIndex := nextTrackIndex(+1)
+
+	if nextIndex >= queueList.GetItemCount() {
 		stopTrack()
 		return
 	}
 
-	nextTrackName, nextTrackID := queueList.GetItemText(queuePosition + 1)
-	playTrack(queuePosition+1, nextTrackName, nextTrackID, 0)
+	nextTrackName, nextTrackID := queueList.GetItemText(nextIndex)
+	playTrack(nextIndex, nextTrackName, nextTrackID, 0)
 }
 
 func previousTrack() {
-	if queuePosition-1 < 0 {
+	nextIndex := nextTrackIndex(-1)
+
+	if nextIndex < 0 {
 		return
 	}
 
-	nextTrackName, nextTrackID := queueList.GetItemText(queuePosition - 1)
-	playTrack(queuePosition-1, nextTrackName, nextTrackID, 0)
+	nextTrackName, nextTrackID := queueList.GetItemText(nextIndex)
+	playTrack(nextIndex, nextTrackName, nextTrackID, 0)
 }
 
 func changeVolume(step float64) {
@@ -198,16 +252,28 @@ func getTags(path string) tag.Metadata {
 	return tags
 }
 
-func getDownloadProgress(done chan bool, filePath string, fileSize int, trackIndex int) {
-	pattern := `\[::b\]-> \(\d+%\)\s`
+func trackDownloadProgress(done chan bool, filePath string, fileSize int, trackIndex int) {
+	pattern := `\s\[red::b\]<- \(\d+%\)\s`
 	re, _ := regexp.Compile(pattern)
+	var originalTrackName, originalTrackID string
 
 	for {
 		select {
 		case <-done:
 			downloadProgressText.Clear()
 			fmt.Fprintf(downloadProgressText, "%d%%", volumePercent)
+
+			// remove placeholder
+			originalTrackName = strings.Replace(originalTrackName, trackNotDownloadedMarker, "", 1)
+			// remove playNext marker in case it exists
+			originalTrackName = strings.Replace(originalTrackName, playNextIndicator, "", 1)
+
+			queueList.SetItemText(trackIndex, originalTrackName, originalTrackID)
+			app.Draw()
+
+			requestPlayIfNext(originalTrackID, trackIndex, false)
 			return
+
 		default:
 			file, err := os.Open(filePath)
 			if err != nil {
@@ -230,12 +296,13 @@ func getDownloadProgress(done chan bool, filePath string, fileSize int, trackInd
 			fmt.Fprintf(downloadProgressText, "%.0f%%", downloadPercent)
 
 			// add progress to track
-			progress := fmt.Sprintf("[::b]-> (%.0f%%) ", downloadPercent)
+			progress := fmt.Sprintf(" [red::b]<- (%.0f%%) ", downloadPercent)
 
 			trackName, trackID := queueList.GetItemText(trackIndex)
 			found := re.FindString(trackName)
 			if found == "" {
-				trackName = progress + trackName
+				originalTrackName, originalTrackID = trackName, trackID
+				trackName = trackName + progress
 			} else {
 				trackName = strings.Replace(trackName, found, progress, 1)
 			}
@@ -243,6 +310,6 @@ func getDownloadProgress(done chan bool, filePath string, fileSize int, trackInd
 			queueList.SetItemText(trackIndex, trackName, trackID)
 			app.Draw()
 		}
-		time.Sleep(time.Second)
+		time.Sleep(downloadProgressSleepTime)
 	}
 }

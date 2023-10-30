@@ -55,11 +55,19 @@ func removeFromQueue() {
 		return
 	}
 
+	downloadMutex.RLock()
+	if len(downloadMap) > 0 { // if anything is downloading; don't remove from queue
+		// TODO: notif info
+		downloadMutex.RUnlock()
+		return
+	}
+	downloadMutex.RUnlock()
+
 	highlightedTrackIndex := queueList.GetCurrentItem()
 	if highlightedTrackIndex < queuePosition {
 		queuePosition -= 1
 	} else if highlightedTrackIndex == queuePosition {
-		stopTrack()
+		requestStopTrack()
 	}
 
 	_, trackID := queueList.GetItemText(highlightedTrackIndex)
@@ -101,7 +109,7 @@ func queuePlayHighlighted() {
 	}
 	currentTrackIndex := queueList.GetCurrentItem()
 	currentTrackName, currentTrackID := queueList.GetItemText(currentTrackIndex)
-	playTrack(currentTrackIndex, currentTrackName, currentTrackID, 0)
+	requestPlayTrack(currentTrackIndex, currentTrackName, currentTrackID, 0)
 }
 
 // returns string which is used to "mark" tracks which are either:
@@ -135,19 +143,21 @@ func downloadAndEnqueueTrack(trackID string, play bool) {
 	trackText := fmt.Sprintf("%s - %s", artist, title)
 
 	// add placeholder and get its index
-	queueList.AddItem(trackNotDownloadedMarker+trackText, trackID, 0, nil)
+	queueList.AddItem("_", trackID, 0, nil) // this item must be added before playNext is set because of race condition
 	idx := queueList.GetItemCount() - 1
 
-	if play {
-		playNextMutex.Lock()
-		playNext = idx
-		playNextMutex.Unlock()
-	}
-
 	if trackExists(trackID) { // no need to add it to download map if it exists
-		addTrackToQueue(trackID, idx)
+		queueList.SetItemText(idx, trackText, trackID)
+		requestPlayIfNext(trackID, idx, play)
 		return
 	}
+
+	if play {
+		requestSetNext(idx)
+	}
+
+	// set placeholder text
+	queueList.SetItemText(idx, trackNotDownloadedMarker+trackText, trackID)
 
 	// request download
 	downloadMutex.Lock()
