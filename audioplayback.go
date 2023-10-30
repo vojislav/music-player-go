@@ -171,12 +171,11 @@ func trackTime() {
 			if currentTrack.stream.Position() == currentTrack.stream.Len() {
 				requestNextTrack()
 			}
-			updateCurrentTrackText()
 
 		case <-pauseUpdate:
 			stop = true
-			updateCurrentTrackText()
 		}
+		updateCurrentTrackText()
 	}
 }
 
