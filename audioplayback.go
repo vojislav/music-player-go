@@ -176,6 +176,7 @@ func trackTime() {
 			stop = true
 		}
 		updateCurrentTrackText()
+		app.Draw()
 	}
 }
 

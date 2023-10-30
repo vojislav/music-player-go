@@ -485,8 +485,6 @@ func updateCurrentTrackText() { // TODO: better name as this function is getting
 	fmt.Fprintf(nowPlayingTrackTextBox, "%s - %s", currentTrack.Artist, currentTrack.Title)
 	fmt.Fprintf(nowPlayingTimeTextBox, "%s / %s", currentTime, totalTime)
 	displayCoverArt()
-
-	app.Draw()
 }
 
 func getTimeString(time int) string {
