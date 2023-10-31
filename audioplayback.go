@@ -13,6 +13,7 @@ import (
 	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
+	gomp3 "github.com/hajimehoshi/go-mp3"
 )
 
 var sr = beep.SampleRate(44100)
@@ -225,6 +226,14 @@ func getStream(path string) beep.StreamSeekCloser {
 	if err != nil {
 		fmt.Println(err)
 		return nil
+	}
+
+	// get sample rate of current stream and update the speaker with it
+	decodedStream, _ := gomp3.NewDecoder(f)
+	if decodedStream.SampleRate() != int(sr) {
+		sr = beep.SampleRate(decodedStream.SampleRate())
+		speaker.Close()
+		speaker.Init(sr, sr.N(time.Second/10))
 	}
 
 	streamer, _, err := mp3.Decode(f)
