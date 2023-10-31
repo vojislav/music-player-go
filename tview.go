@@ -18,7 +18,7 @@ var mainPanel = tview.NewPages()
 var bottomPage = tview.NewPages()
 var loadingPopup tview.Primitive
 var currentTrackText, currentTrackTime, downloadProgressText, loadingTextBox, loginStatus, trackInfoTextBox,
-	lyricsTextBox, helpWindowTextBox, nowPlayingTrackTextBox, nowPlayingTimeTextBox, progressBar *tview.TextView
+	lyricsTextBox, helpWindowTextBox, nowPlayingTrackTextBox, nowPlayingTimeTextBox, progressBar, queueLength *tview.TextView
 var nowPlayingCover *tview.Image
 var loginGrid *tview.Grid
 var libraryFlex, queueFlex, playlistFlex, nowPlayingFlex, bottomPanel *tview.Flex
@@ -323,13 +323,22 @@ func initView() {
 		AddItem(queueNumberList, 4, 0, false).
 		AddItem(queueList, 0, 1, true).
 		AddItem(queueLengthList, 8, 0, false)
-	queueFlex.
+
+	queueLength = tview.NewTextView().
+		SetTextAlign(tview.AlignRight).
+		SetTextColor(tcell.ColorBlue).
+		SetDynamicColors(true)
+
+	queueBigFlex := tview.NewFlex().SetDirection(tview.FlexRow).
+		AddItem(queueFlex, 0, 1, true).
+		AddItem(queueLength, 2, 1, false)
+	queueBigFlex.
 		SetTitle(" Queue ").
 		SetTitleColor(tcell.ColorYellow).
 		SetBorder(true).
 		SetBorderColor(tcell.ColorYellow)
 
-	mainPanel.AddPage("queue", queueFlex, true, false)
+	mainPanel.AddPage("queue", queueBigFlex, true, false)
 
 	// playlist
 	playlistList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
@@ -455,6 +464,8 @@ func refreshProgressBar(currentTime int, totalTime int) {
 	// width is reduced by 4 to account for " |" at the beginning and "| " at the end of progress bar
 	width -= 4
 
+	queueLength.SetText(strings.Repeat("=", width+2) + "\nQueue length: [::b]57min 3sec")
+
 	// amount of '=' characters in progress bar
 	progressCount := int(float64(currentTime) / float64(totalTime) * float64(width))
 	// amount of padding spaces in progress bar
@@ -546,6 +557,7 @@ func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		stopApp()
 		return nil
 	case '1':
+
 		pages.SwitchToPage("main")
 		mainPanel.SwitchToPage("queue")
 		return nil
