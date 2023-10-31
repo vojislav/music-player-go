@@ -144,10 +144,10 @@ func trackInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 
 	case '[':
-		seek(-5)
+		requestSeek(-5)
 		return nil
 	case ']':
-		seek(5)
+		requestSeek(5)
 		return nil
 	}
 	return event
