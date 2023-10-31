@@ -102,7 +102,7 @@ func playTrack(trackIndex int, _ string, trackID string, _ rune) {
 
 	scrobble(toInt(currentTrack.ID), "false")
 
-	requestStatusChange(StartUpdate, "", 0)
+	asyncRequestStatusUpdate()
 }
 
 // if next song is to be played, play it
@@ -120,9 +120,9 @@ func togglePlay() {
 	speaker.Lock()
 	playerCtrl.Paused = !playerCtrl.Paused
 	if playerCtrl.Paused {
-		requestStatusChange(PauseUpdate, "", 0)
+		asyncRequestStatusPause()
 	} else {
-		requestStatusChange(StartUpdate, "", 0)
+		asyncRequestStatusUpdate()
 	}
 	speaker.Unlock()
 }
@@ -134,7 +134,7 @@ func stopTrack() {
 
 	speaker.Clear()
 	currentTrack = Track{stream: nil}
-	requestStatusChange(PauseUpdate, "", 0)
+	asyncRequestStatusPause()
 	setQueuePosition(-1)
 }
 

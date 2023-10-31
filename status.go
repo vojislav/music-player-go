@@ -5,24 +5,28 @@ import (
 	"time"
 )
 
-type StatusOperation int64
-
-const (
-	StartUpdate StatusOperation = iota
-	PauseUpdate
-	CustomStatus
-)
-
-type StatusChangeRequest struct {
-	opcode  StatusOperation
+type StatusCustomMessage struct {
 	message string
 	sleepMs int
 }
 
-var statusChannel = make(chan StatusChangeRequest, 1024)
+var statusChannel = make(chan bool, 1024)
 
-func requestStatusChange(op StatusOperation, message string, sleepMs int) {
-	statusChannel <- StatusChangeRequest{op, message, sleepMs}
+var statusCustomMessageChannel = make(chan StatusCustomMessage)
+
+// update status and do it every 1 second again
+func asyncRequestStatusUpdate() {
+	statusChannel <- true
+}
+
+// update status and stop periodic updating
+func asyncRequestStatusPause() {
+	statusChannel <- false
+}
+
+// send custom status message
+func syncRequestCustomStatus(message string, sleepMs int) {
+	statusCustomMessageChannel <- StatusCustomMessage{message, sleepMs}
 }
 
 // Activates every second while track is playing.
@@ -54,20 +58,20 @@ func trackTime() {
 			}
 			updateCurrentTrackText()
 
-		case request := <-statusChannel: // we have request pending
-			switch request.opcode {
-			case StartUpdate: // continue updating
+		case request := <-statusChannel: // we have update pending
+			if request {
 				updatePeriodically = true
 				tickTrack()
-
-			case PauseUpdate: // pause updating
+			} else {
 				updatePeriodically = false
-
-			case CustomStatus:
-				currentTrackText.Clear()
-				fmt.Fprint(currentTrackText, request.message)
-				time.Sleep(time.Millisecond * time.Duration(request.sleepMs))
 			}
+			updateCurrentTrackText()
+
+		case request := <-statusCustomMessageChannel:
+			currentTrackText.Clear()
+			fmt.Fprint(currentTrackText, request.message)
+			time.Sleep(time.Millisecond * time.Duration(request.sleepMs))
+
 			updateCurrentTrackText()
 		}
 	}

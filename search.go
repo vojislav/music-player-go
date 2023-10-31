@@ -57,7 +57,7 @@ func searchIncremental(text string) {
 func cancelSearch() {
 	searchIndexes = nil
 	searchList.SetCurrentItem(searchStartContext)
-	requestStatusChange(CustomStatus, "Search cleared", 1500)
+	syncRequestCustomStatus("Search cleared.", 1500)
 
 	closeSearch()
 }
@@ -79,7 +79,7 @@ func searchInputHandler(event *tcell.EventKey) *tcell.EventKey {
 
 	case tcell.KeyEnter:
 		if len(searchIndexes) == 0 {
-			requestStatusChange(CustomStatus, "No results found!", 1500)
+			syncRequestCustomStatus("No results found!", 1500)
 		}
 		closeSearch()
 		return nil
