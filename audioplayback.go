@@ -196,7 +196,7 @@ func seek(step int) {
 	speaker.Lock()
 	currentTrack.stream.Seek(seekTo)
 	speaker.Unlock()
-	updateCurrentTrackText()
+	asyncRequestStatusUpdate()
 }
 
 func getStream(path string) beep.StreamSeekCloser {
