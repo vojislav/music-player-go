@@ -35,9 +35,7 @@ func getLyrics(trackID string) string {
 		return string(lyrics)
 	}
 
-	currentTrackText.Clear()
-	fmt.Fprintf(currentTrackText, "Downloading lyrics for %s - %s...", artist, title)
-	app.Draw()
+	syncRequestCustomStatus(fmt.Sprintf("Downloading lyrics for %s - %s...", artist, title), 2000)
 
 	l := lyrics.New()
 	lyrics, err := l.Search(artist, title)
@@ -50,9 +48,6 @@ func getLyrics(trackID string) string {
 	if err != nil {
 		return "Error writing lyrics to file"
 	}
-
-	currentTrackText.Clear()
-	app.Draw()
 
 	lyricsTextBox.SetTitle(fmt.Sprintf(" %s - %s ", artist, title))
 

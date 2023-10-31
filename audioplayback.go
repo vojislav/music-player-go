@@ -10,7 +10,6 @@ import (
 
 	"github.com/dhowden/tag"
 	"github.com/faiface/beep"
-	"github.com/faiface/beep/effects"
 	"github.com/faiface/beep/mp3"
 	"github.com/faiface/beep/speaker"
 	gomp3 "github.com/hajimehoshi/go-mp3"
@@ -20,9 +19,6 @@ var sr = beep.SampleRate(44100)
 var playerCtrl *CtrlVolume
 
 var currentTrack Track
-
-var ticker *time.Ticker
-var killTicker = make(chan bool, 1)
 
 // how often will download progress in queue be updated
 const downloadProgressSleepTime = time.Second
@@ -43,11 +39,6 @@ type Track struct {
 	Disc     int    `json:"discNumber"`
 	AlbumID  string `json:"albumId"`
 	ArtistID string `json:"artistId"`
-}
-
-var volume = effects.Volume{
-	Base:   2.0,
-	Silent: false,
 }
 
 // sets playNext to trackIndex, removes playNext indicator from old track (if such exists) and adds it to new (if such exists)
@@ -105,13 +96,14 @@ func playTrack(trackIndex int, _ string, trackID string, _ rune) {
 
 	speaker.Clear()
 	playerCtrl.Streamer = currentTrack.stream
+	playerCtrl.Paused = false
 	speaker.Play(playerCtrl)
 
 	setQueuePosition(trackIndex)
 
 	scrobble(toInt(currentTrack.ID), "false")
 
-	go trackTime()
+	asyncRequestStatusUpdate()
 }
 
 // if next song is to be played, play it
@@ -129,9 +121,9 @@ func togglePlay() {
 	speaker.Lock()
 	playerCtrl.Paused = !playerCtrl.Paused
 	if playerCtrl.Paused {
-		killTicker <- true
+		asyncRequestStatusPause()
 	} else {
-		go trackTime()
+		asyncRequestStatusUpdate()
 	}
 	speaker.Unlock()
 }
@@ -143,40 +135,8 @@ func stopTrack() {
 
 	speaker.Clear()
 	currentTrack = Track{stream: nil}
-	if !playerCtrl.Paused {
-		killTicker <- true
-	} else {
-		updateCurrentTrackText()
-	}
+	asyncRequestStatusPause()
 	setQueuePosition(-1)
-}
-
-// this is not executed in player thread
-func trackTime() {
-	updateCurrentTrackText()
-	ticker = time.NewTicker(time.Second)
-	for {
-		select {
-		case <-ticker.C:
-			// prevents freak situation where rapidly switching songs
-			// causes track stream to be accessed before its loaded
-			if currentTrack.stream == nil {
-				continue
-			}
-			if currentTrack.stream.Position() >= currentTrack.stream.Len()/2 {
-				scrobble(toInt(currentTrack.ID), "true")
-			}
-			if currentTrack.stream.Position() == currentTrack.stream.Len() {
-				requestNextTrack()
-			}
-			updateCurrentTrackText()
-		case <-killTicker:
-			ticker.Stop()
-			updateCurrentTrackText()
-			app.Draw()
-			return
-		}
-	}
 }
 
 func nextTrackIndex(incr int) int {
