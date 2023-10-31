@@ -456,6 +456,7 @@ func updateCurrentTrackText() { // TODO: better name as this function is getting
 		progressBar.Clear()
 		nowPlayingTrackTextBox.SetText("No currently playing track.")
 		removeCoverArt()
+		app.Draw()
 		return
 	}
 

@@ -19,10 +19,6 @@ var playerCtrl *CtrlVolume
 
 var currentTrack Track
 
-var startUpdate = make(chan bool, 1)
-
-var pauseUpdate = make(chan bool, 1)
-
 // how often will download progress in queue be updated
 const downloadProgressSleepTime = time.Second
 
@@ -106,7 +102,7 @@ func playTrack(trackIndex int, _ string, trackID string, _ rune) {
 
 	scrobble(toInt(currentTrack.ID), "false")
 
-	startUpdate <- true
+	requestStatusChange(StartUpdate, "", 0)
 }
 
 // if next song is to be played, play it
@@ -124,9 +120,9 @@ func togglePlay() {
 	speaker.Lock()
 	playerCtrl.Paused = !playerCtrl.Paused
 	if playerCtrl.Paused {
-		pauseUpdate <- true
+		requestStatusChange(PauseUpdate, "", 0)
 	} else {
-		startUpdate <- true
+		requestStatusChange(StartUpdate, "", 0)
 	}
 	speaker.Unlock()
 }
@@ -138,46 +134,8 @@ func stopTrack() {
 
 	speaker.Clear()
 	currentTrack = Track{stream: nil}
-	pauseUpdate <- true
+	requestStatusChange(PauseUpdate, "", 0)
 	setQueuePosition(-1)
-}
-
-// this is not executed in player thread
-func trackTime() {
-	stop := false
-
-	go func() {
-		for {
-			if !stop {
-				startUpdate <- true
-			}
-			time.Sleep(time.Second)
-		}
-	}()
-
-	for {
-		select {
-		case <-startUpdate:
-			stop = false
-
-			// prevents freak situation where rapidly switching songs
-			// causes track stream to be accessed before its loaded
-			if currentTrack.stream == nil {
-				continue
-			}
-			if currentTrack.stream.Position() >= currentTrack.stream.Len()/2 {
-				scrobble(toInt(currentTrack.ID), "true")
-			}
-			if currentTrack.stream.Position() == currentTrack.stream.Len() {
-				requestNextTrack()
-			}
-			updateCurrentTrackText()
-
-		case <-pauseUpdate:
-			stop = true
-			updateCurrentTrackText()
-		}
-	}
 }
 
 func nextTrackIndex(incr int) int {
