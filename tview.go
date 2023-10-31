@@ -142,6 +142,13 @@ func trackInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	case 'm':
 		requestMute()
 		return nil
+
+	case '[':
+		requestSeek(-5)
+		return nil
+	case ']':
+		requestSeek(5)
+		return nil
 	}
 	return event
 }

@@ -181,6 +181,25 @@ func toggleMute() {
 	playerCtrl.Silent = !playerCtrl.Silent
 }
 
+func seek(step int) {
+	if currentTrack.stream == nil {
+		return
+	}
+
+	seekTo := currentTrack.stream.Position() + step*sr.N(time.Second)
+	if seekTo < 0 {
+		seekTo = 0
+	} else if seekTo > currentTrack.stream.Len() {
+		nextTrack()
+		return
+	}
+
+	speaker.Lock()
+	currentTrack.stream.Seek(seekTo)
+	speaker.Unlock()
+	asyncRequestStatusUpdate()
+}
+
 func getStream(path string) beep.StreamSeekCloser {
 	f, err := os.Open(path)
 	if err != nil {

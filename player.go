@@ -11,6 +11,7 @@ const (
 	Previous
 	ChangeVolume
 	Mute
+	Seek
 	PlayIfNext
 	SetNext
 	GetNext
@@ -65,6 +66,10 @@ func requestMute() {
 	trackRequestChan <- TrackRequest{Mute, nil}
 }
 
+func requestSeek(step int) {
+	trackRequestChan <- TrackRequest{Seek, step}
+}
+
 // play the track if (play || (playNext == trackIndex))
 func requestPlayIfNext(trackID string, trackIndex int, play bool) {
 	if play {
@@ -111,6 +116,9 @@ func playerWorker() {
 			changeVolume(step)
 		case Mute:
 			toggleMute()
+		case Seek:
+			step := message.args.(int)
+			seek(step)
 		case PlayIfNext:
 			playIfNext(message.args.(PlayRequest))
 		case SetNext:
