@@ -189,8 +189,9 @@ func seek(step int) {
 	seekTo := currentTrack.stream.Position() + step*sr.N(time.Second)
 	if seekTo < 0 {
 		seekTo = 0
-	} else if seekTo >= currentTrack.stream.Len() {
-		requestNextTrack()
+	} else if seekTo > currentTrack.stream.Len() {
+		nextTrack()
+		return
 	}
 
 	speaker.Lock()
