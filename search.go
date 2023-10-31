@@ -41,6 +41,7 @@ func searchIncremental(text string) {
 
 	searchIndexes = searchList.FindItems(text, "", true, true)
 	if len(searchIndexes) == 0 {
+		searchList.SetCurrentItem(searchStartContext)
 		return
 	}
 
