@@ -171,11 +171,14 @@ func previousTrack() {
 }
 
 func changeVolume(step float64) {
+	playerCtrl.Silent = false
+
 	newVolume := playerCtrl.Volume + step
 	newVolumePercent := baseVolume + int(newVolume*10)
 
 	if newVolumePercent < MIN_VOLUME {
 		newVolume = float64(MIN_VOLUME-baseVolume) / 10
+		playerCtrl.Silent = true
 	} else if newVolumePercent > MAX_VOLUME {
 		newVolume = float64(MAX_VOLUME-baseVolume) / 10
 	}
@@ -192,7 +195,7 @@ func toggleMute() {
 func updateVolumeText() {
 	volumePercent := baseVolume + int(playerCtrl.Volume*10)
 	downloadProgressText.Clear()
-	if playerCtrl.Silent {
+	if playerCtrl.Silent || volumePercent == 0 {
 		fmt.Fprint(downloadProgressText, " muted ")
 	} else {
 		fmt.Fprintf(downloadProgressText, "  %d%% ", volumePercent)
@@ -267,7 +270,7 @@ func trackDownloadProgress(done chan bool, filePath string, fileSize int, trackI
 		select {
 		case <-done:
 			downloadProgressText.Clear()
-			fmt.Fprintf(downloadProgressText, "%d%%", volumePercent)
+			updateVolumeText()
 
 			// remove placeholder
 			originalTrackName = strings.Replace(originalTrackName, trackNotDownloadedMarker, "", 1)
