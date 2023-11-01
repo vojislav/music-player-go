@@ -25,7 +25,7 @@ current features:
 * `>/<` - next/previous track
 * `/` - search
 * `n/N` - next/previous search result
-* ``-/=`` - decrease/increase volume
+* `-/=` - decrease/increase volume
 * `m` - mute
 * `i` - show track info
 * `.` - show lyrics

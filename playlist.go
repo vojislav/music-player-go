@@ -54,14 +54,32 @@ func showPlaylist(_ int, playlistName, playlistIDString string, _ rune) {
 func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	focused := app.GetFocus()
 
+	switch event.Rune() {
+	case 'h': // override 'h' to KeyLeft
+		event = tcell.NewEventKey(tcell.KeyLeft, 0, tcell.ModNone)
+
+	case 'l': // override 'l' to KeyRight
+		event = tcell.NewEventKey(tcell.KeyRight, 0, tcell.ModNone)
+
+	case ' ':
+		if focused == playlistList {
+			listEnqueueSublist(playlistList, playlistTracks, false)
+		} else if focused == playlistTracks {
+			listEnqueueTrack(playlistTracks, false)
+		}
+		return nil
+
+	case 'o':
+		findInLibrary(playlistTracks)
+		return nil
+	}
+
 	switch event.Key() {
 	case tcell.KeyEnter:
-		if focused == playlistTracks {
-			currentTrackIndex := playlistTracks.GetCurrentItem()
-			_, currentTrackID := playlistTracks.GetItemText(currentTrackIndex)
-			go downloadCallback(currentTrackID, addToQueueAndPlay)
-			playlistTracks.SetCurrentItem(currentTrackIndex + 1)
-			markList(playlistTracks, currentTrackIndex)
+		if focused == playlistList {
+			listEnqueueSublist(playlistList, playlistTracks, true)
+		} else if focused == playlistTracks {
+			listEnqueueTrack(playlistTracks, true)
 		}
 		return nil
 
@@ -75,49 +93,8 @@ func playlistInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		if focused == playlistList {
 			setAndSaveFocus(playlistTracks)
 		} else if focused == playlistTracks {
-			currentTrackIndex := playlistTracks.GetCurrentItem()
-			_, currentTrackID := playlistTracks.GetItemText(currentTrackIndex)
-			go downloadCallback(currentTrackID, addToQueueAndPlay)
-			playlistTracks.SetCurrentItem(currentTrackIndex + 1)
-			markList(playlistTracks, currentTrackIndex)
+			listEnqueueTrack(playlistTracks, true)
 		}
-		return nil
-	}
-
-	switch event.Rune() {
-	case 'h':
-		if focused == playlistTracks {
-			setAndSaveFocus(playlistList)
-		}
-		return nil
-	case 'j':
-		return tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone)
-	case 'k':
-		return tcell.NewEventKey(tcell.KeyUp, 0, tcell.ModNone)
-	case 'l':
-		if focused == playlistList {
-			setAndSaveFocus(playlistTracks)
-		} else if focused == playlistTracks {
-			currentTrackIndex := playlistTracks.GetCurrentItem()
-			_, currentTrackID := playlistTracks.GetItemText(currentTrackIndex)
-			go downloadCallback(currentTrackID, addToQueueAndPlay)
-			playlistTracks.SetCurrentItem(currentTrackIndex + 1)
-			markList(playlistTracks, currentTrackIndex)
-		}
-		return nil
-
-	case ' ':
-		if focused == playlistTracks {
-			currentTrackIndex := playlistTracks.GetCurrentItem()
-			_, currentTrackID := playlistTracks.GetItemText(currentTrackIndex)
-			go downloadCallback(currentTrackID, addToQueue)
-			playlistTracks.SetCurrentItem(currentTrackIndex + 1)
-			markList(playlistTracks, currentTrackIndex)
-		}
-		return nil
-
-	case 'o':
-		findInLibrary(playlistTracks)
 		return nil
 	}
 

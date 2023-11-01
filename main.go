@@ -9,7 +9,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var cacheDirectory, lyricsDirectory, coversDirectory, configDirectory, playlistDirectory, databaseFile, configFile, initScriptFile string
+var cacheDirectory, lyricsDirectory, coversDirectory, configDirectory, playlistDirectory, databaseFile, configFile, initScriptFile, readmeFile string
 var reloadDatabaseFlag *bool
 
 func init() {
@@ -20,6 +20,7 @@ func init() {
 	databaseFile = configDirectory + "database.db"
 	configFile = configDirectory + "config"
 	initScriptFile = configDirectory + "init.sql"
+	readmeFile = "README.md"
 
 	cacheDirectory = homeDirectory + "/.cache/music-player-go/tracks/"
 	lyricsDirectory = homeDirectory + "/.cache/music-player-go/lyrics/"
@@ -49,6 +50,9 @@ func init() {
 	if _, err := os.Stat(playlistDirectory); err != nil {
 		os.Mkdir(playlistDirectory, 0755)
 	}
+
+	go downloadWorker()
+	go playerWorker()
 }
 
 // the only way you should kill the app. ensures required work is done before it's stopped
@@ -68,6 +72,7 @@ func main() {
 	playerCtrl = &CtrlVolume{Streamer: nil, Paused: false, Silent: false, Base: 2.0, Volume: 0.0}
 
 	initView()
+	go trackTime()
 
 	if !validConfig() {
 		pages.SwitchToPage("login")

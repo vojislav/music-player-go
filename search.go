@@ -1,9 +1,6 @@
 package main
 
 import (
-	"fmt"
-	"time"
-
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
@@ -44,7 +41,7 @@ func searchIncremental(text string) {
 
 	searchIndexes = searchList.FindItems(text, "", true, true)
 	if len(searchIndexes) == 0 {
-		go searchStatus("No results found!", "")
+		searchList.SetCurrentItem(searchStartContext)
 		return
 	}
 
@@ -61,7 +58,7 @@ func searchIncremental(text string) {
 func cancelSearch() {
 	searchIndexes = nil
 	searchList.SetCurrentItem(searchStartContext)
-	go searchStatus("Search cleared", "")
+	syncRequestCustomStatus("Search cleared.", 1500)
 
 	closeSearch()
 }
@@ -82,19 +79,14 @@ func searchInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 
 	case tcell.KeyEnter:
+		if len(searchIndexes) == 0 {
+			syncRequestCustomStatus("No results found!", 1500)
+		}
 		closeSearch()
 		return nil
 	}
 
 	return event
-}
-
-func searchStatus(message, searchString string) {
-	currentTrackText.Clear()
-	fmt.Fprint(currentTrackText, message, searchString)
-	time.Sleep(2 * time.Second)
-	updateCurrentTrackText()
-	app.Draw()
 }
 
 func upper_bound(array []int, target int) int {
