@@ -195,7 +195,7 @@ func toggleMute() {
 func updateVolumeText() {
 	volumePercent := baseVolume + int(playerCtrl.Volume*10)
 	downloadProgressText.Clear()
-	if playerCtrl.Silent || volumePercent == 0 {
+	if playerCtrl.Silent && volumePercent != 0 {
 		fmt.Fprint(downloadProgressText, " muted ")
 	} else {
 		fmt.Fprintf(downloadProgressText, "  %d%% ", volumePercent)
