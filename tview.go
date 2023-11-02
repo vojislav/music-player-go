@@ -267,11 +267,11 @@ func initView() {
 	downloadProgressText.
 		SetBorder(true).
 		SetBorderColor(tcell.ColorDarkGrey)
-	fmt.Fprintf(downloadProgressText, "%d%%", volumePercent)
+	updateVolumeText()
 
 	bottomPanel.
 		AddItem(currentTrackPanel, 0, 1, false).
-		AddItem(downloadProgressText, 10, 1, false)
+		AddItem(downloadProgressText, 9, 1, false)
 
 	bottomPage.AddPage("current track info", bottomPanel, true, true)
 
