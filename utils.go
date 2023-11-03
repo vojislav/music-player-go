@@ -2,9 +2,10 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/inhies/go-bytesize"
 )
 
 // returns true if file exists at location loc
@@ -41,7 +42,8 @@ func bisect(array []int, comp func(v int) bool) int {
 }
 
 func getSizeString(size int) string {
-	return fmt.Sprintf("%.1fM", float64(size)/(1024*1024))
+	return bytesize.New(float64(size)).
+		Format("%.1f ", "", false)
 }
 
 func getDirSize(path string) int {
