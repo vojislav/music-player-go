@@ -20,6 +20,9 @@ var trackInQueueMarker = "[::b]"
 // the way in which the tracks that are not downloaded are marked
 var trackNotDownloadedMarker = "[::d]"
 
+// duration of all tracks in queue
+var queueDuration = 0
+
 // removes indicator that track is in queue. This fixes the situation where
 // trackList/playlistTracks are not refreshed after removing track from queue
 func removeInQueueMarks(list *tview.List, trackID string) {
@@ -58,6 +61,30 @@ func removeAllTrackInfoFromQueue(index int) {
 	queueLengthList.RemoveItem(index)
 }
 
+// updates queue duration message in queue
+// is called whenever new track is added or removed from queue
+func updateQueueDuration(step int) {
+	queueDuration += step
+	if queueDuration == 0 {
+		queueLength.SetText("")
+	}
+
+	var timeString = ""
+	var hrs = queueDuration / 3600
+	var mins = (queueDuration % 3600) / 60
+	var secs = queueDuration % 60
+	if hrs > 0 {
+		timeString += fmt.Sprintf("%dhr ", hrs)
+	}
+	if mins > 0 {
+		timeString += fmt.Sprintf("%dmin ", mins)
+	}
+	timeString += fmt.Sprintf("%dsec", secs)
+
+	_, _, width, _ := mainPanel.GetInnerRect()
+	queueLength.SetText(strings.Repeat("=", width-2) + fmt.Sprintf("\nQueue length: [::b]%s", timeString))
+}
+
 func removeFromQueue() {
 	if queueList.GetItemCount() == 0 {
 		return
@@ -81,6 +108,8 @@ func removeFromQueue() {
 	_, trackID := queueList.GetItemText(highlightedTrackIndex)
 	removeInQueueMarks(trackList, trackID)
 	removeInQueueMarks(playlistTracks, trackID)
+
+	updateQueueDuration(-queryDuration(trackID))
 
 	refreshSearchIndexes(highlightedTrackIndex)
 
@@ -161,6 +190,9 @@ func downloadAndEnqueueTrack(trackID string, play bool) {
 	// add placeholder and get its index
 	idx := queueList.GetItemCount()
 	addAllTrackInfoToQueue("_", trackID, idx, getTimeString(duration)) // this item must be added before playNext is set because of race condition
+
+	// increase queue duration
+	updateQueueDuration(+duration)
 
 	if trackExists(trackID) { // no need to add it to download map if it exists
 		queueList.SetItemText(idx, trackText, trackID)

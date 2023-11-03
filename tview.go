@@ -464,8 +464,6 @@ func refreshProgressBar(currentTime int, totalTime int) {
 	// width is reduced by 4 to account for " |" at the beginning and "| " at the end of progress bar
 	width -= 4
 
-	queueLength.SetText(strings.Repeat("=", width+2) + "\nQueue length: [::b]57min 3sec")
-
 	// amount of '=' characters in progress bar
 	progressCount := int(float64(currentTime) / float64(totalTime) * float64(width))
 	// amount of padding spaces in progress bar
