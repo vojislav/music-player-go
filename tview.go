@@ -22,6 +22,7 @@ var currentTrackText, currentTrackTime, downloadProgressText, loadingTextBox, lo
 var nowPlayingCover *tview.Image
 var loginGrid *tview.Grid
 var libraryFlex, queueFlex, playlistFlex, nowPlayingFlex, bottomPanel *tview.Flex
+var saveQueuePrompt *tview.InputField
 
 // remembers which page was last before going to help page
 var lastPage string
@@ -280,6 +281,12 @@ func initView() {
 
 	bottomPage.AddPage("search", searchInput, true, false)
 
+	saveQueuePrompt = tview.NewInputField().
+		SetLabel("Give a name for the playlist: ").
+		SetDoneFunc(saveQueueHandler)
+
+	bottomPage.AddPage("savequeue", saveQueuePrompt, true, false)
+
 	// library page
 	artistList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
 	artistList.SetBorder(true).SetTitle(" Artist ")
@@ -511,7 +518,7 @@ func getTimeString(time int) string {
 func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	focused := app.GetFocus()
 	frontPage, _ := pages.GetFrontPage()
-	if frontPage == "login" || focused == searchInput {
+	if frontPage == "login" || focused == searchInput || focused == saveQueuePrompt {
 		return event
 	}
 

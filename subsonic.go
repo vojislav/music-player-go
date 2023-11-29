@@ -560,6 +560,59 @@ func getPlaylists() []Playlist {
 	return playlists
 }
 
+func savePlaylist(playlistName string, trackIDs []string) string {
+	req, err := http.NewRequest("GET", config.ServerURL+"createPlaylist", nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	params := req.URL.Query()
+	params.Add("u", config.Username)
+	params.Add("t", config.Token)
+	params.Add("s", config.Salt)
+	params.Add("v", config.Version)
+	params.Add("c", client_name)
+	params.Add("f", "json")
+	params.Add("name", playlistName)
+	for _, trackID := range trackIDs {
+		params.Add("songId", trackID)
+	}
+
+	req.URL.RawQuery = params.Encode()
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var resJSON map[string]interface{}
+	json.Unmarshal(body, &resJSON)
+
+	if resJSON["subsonic-response"].(map[string]interface{})["status"] == "ok" {
+		query, err := gojq.Parse(`."subsonic-response".playlist.id`)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		var resJSON map[string]interface{}
+		json.Unmarshal(body, &resJSON)
+
+		iter := query.Run(resJSON)
+
+		playlistID, _ := iter.Next()
+
+		return fmt.Sprint("Created playlist " + playlistName + " with ID " + playlistID.(string))
+	} else {
+		return "Failed to create playlist"
+	}
+}
+
 func getPlaylistTracks(playlistID int) []byte {
 	req, err := http.NewRequest("GET", config.ServerURL+"getPlaylist", nil)
 	if err != nil {

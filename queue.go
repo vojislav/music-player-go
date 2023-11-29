@@ -189,6 +189,34 @@ func listEnqueueSublist(list *tview.List, sublist *tview.List, play bool) {
 	list.SetCurrentItem(currentListIndex + 1)
 }
 
+func saveQueueHandler(key tcell.Key) {
+	switch key {
+	case tcell.KeyEnter:
+		playlistName := saveQueuePrompt.GetText()
+		if len(playlistName) == 0 {
+			bottomPage.SwitchToPage("current track info")
+			restoreFocus()
+			saveQueuePrompt.SetText("")
+			return
+		}
+		queueItemCount := queueList.GetItemCount()
+		var trackIDs []string
+		for i := 0; i < queueItemCount; i++ {
+			_, trackID := queueList.GetItemText(i)
+			trackIDs = append(trackIDs, trackID)
+		}
+		response := savePlaylist(playlistName, trackIDs)
+		syncRequestCustomStatus(response, 1500)
+		bottomPage.SwitchToPage("current track info")
+		restoreFocus()
+		saveQueuePrompt.SetText("")
+	case tcell.KeyEscape:
+		bottomPage.SwitchToPage("current track info")
+		restoreFocus()
+		saveQueuePrompt.SetText("")
+	}
+}
+
 func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 	switch event.Key() {
 	case tcell.KeyRight, tcell.KeyEnter:
@@ -215,6 +243,16 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 	case 'o':
 		findInLibrary(queueList)
+		return nil
+
+	case 'S':
+		if queueList.GetItemCount() == 0 {
+			return nil
+		}
+		currentList := app.GetFocus().(*tview.List)
+		setAndSaveFocus(currentList)
+		app.SetFocus(bottomPage)
+		bottomPage.SwitchToPage("savequeue")
 		return nil
 	}
 
