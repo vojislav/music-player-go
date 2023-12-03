@@ -66,7 +66,8 @@ func removeAllTrackInfoFromQueue(index int) {
 func updateQueueDuration(step int) {
 	queueDuration += step
 	if queueDuration == 0 {
-		queueLength.SetText("")
+		queueLength.Clear()
+		return
 	}
 
 	var timeString = ""
@@ -82,7 +83,7 @@ func updateQueueDuration(step int) {
 	timeString += fmt.Sprintf("%dsec", secs)
 
 	_, _, width, _ := mainPanel.GetInnerRect()
-	queueLength.SetText(strings.Repeat("=", width-2) + fmt.Sprintf("\nQueue length: [::b]%s", timeString))
+	queueLength.SetText(strings.Repeat("-", width-2) + fmt.Sprintf("\nQueue length: [::b]%s", timeString))
 }
 
 func removeFromQueue() {
