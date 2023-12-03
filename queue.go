@@ -194,11 +194,9 @@ func saveQueueHandler(key tcell.Key) {
 	case tcell.KeyEnter:
 		playlistName := saveQueuePrompt.GetText()
 		if len(playlistName) == 0 {
-			bottomPage.SwitchToPage("current track info")
-			restoreFocus()
-			saveQueuePrompt.SetText("")
-			return
+			break
 		}
+
 		queueItemCount := queueList.GetItemCount()
 		var trackIDs []string
 		for i := 0; i < queueItemCount; i++ {
@@ -207,14 +205,16 @@ func saveQueueHandler(key tcell.Key) {
 		}
 		response := savePlaylist(playlistName, trackIDs)
 		syncRequestCustomStatus(response, 1500)
-		bottomPage.SwitchToPage("current track info")
-		restoreFocus()
-		saveQueuePrompt.SetText("")
-	case tcell.KeyEscape:
-		bottomPage.SwitchToPage("current track info")
-		restoreFocus()
-		saveQueuePrompt.SetText("")
+
+	case tcell.KeyEscape: // escape should just conclude input
+		// pass
+	default: // ignore forwards and backwards tab
+		return
 	}
+
+	bottomPage.SwitchToPage("current track info")
+	restoreFocus()
+	saveQueuePrompt.SetText("")
 }
 
 func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {

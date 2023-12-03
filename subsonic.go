@@ -594,23 +594,22 @@ func savePlaylist(playlistName string, trackIDs []string) string {
 	var resJSON map[string]interface{}
 	json.Unmarshal(body, &resJSON)
 
-	if resJSON["subsonic-response"].(map[string]interface{})["status"] == "ok" {
-		query, err := gojq.Parse(`."subsonic-response".playlist.id`)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		var resJSON map[string]interface{}
-		json.Unmarshal(body, &resJSON)
-
-		iter := query.Run(resJSON)
-
-		playlistID, _ := iter.Next()
-
-		return fmt.Sprint("Created playlist " + playlistName + " with ID " + playlistID.(string))
-	} else {
+	if resJSON["subsonic-response"].(map[string]interface{})["status"] != "ok" {
 		return "Failed to create playlist"
 	}
+
+	query, err := gojq.Parse(`."subsonic-response".playlist.id`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	json.Unmarshal(body, &resJSON)
+
+	iter := query.Run(resJSON)
+
+	playlistID, _ := iter.Next()
+
+	return fmt.Sprint("Created playlist " + playlistName + " with ID " + playlistID.(string))
 }
 
 func getPlaylistTracks(playlistID int) []byte {
