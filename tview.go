@@ -31,14 +31,14 @@ var lastPage string
 // if focus is on bottomPage (i.e. during search) using these functions would lead to undefined behaviour
 var pageFocus map[string]*tview.List = make(map[string]*tview.List)
 
-// every time focus is set save that information
+// every time focus is set on main panel page save that information
 func setAndSaveFocus(list *tview.List) {
 	mainFrontPage, _ := mainPanel.GetFrontPage()
 	pageFocus[mainFrontPage] = list
 	app.SetFocus(list)
 }
 
-// on certain multi-listed pages [library, playlists] context should be restored
+// on certain multi-listed pages [library, playlists] context (i.e. which list was focused last) should be restored
 func restoreFocus() {
 	mainFrontPage, _ := mainPanel.GetFrontPage()
 	list, ok := pageFocus[mainFrontPage]
@@ -46,9 +46,6 @@ func restoreFocus() {
 		app.SetFocus(list)
 	}
 }
-
-// saves context of caller of track info or lyrics
-var focusedList *tview.List
 
 var popup = func(p tview.Primitive, width, height int) tview.Primitive {
 	return tview.NewGrid().
@@ -349,13 +346,11 @@ func toggleTrackInfo() {
 		list = queueList
 	case trackInfoTextBox:
 		pages.HidePage("track info")
-		setAndSaveFocus(focusedList)
-		focusedList = nil
+		restoreFocus()
 		return
 	default:
 		return
 	}
-	focusedList = list
 
 	pages.ShowPage("track info")
 	pages.SendToFront("track info")
@@ -381,13 +376,11 @@ func toggleLyrics() {
 		list = queueList
 	case lyricsTextBox:
 		pages.HidePage("lyrics")
-		setAndSaveFocus(focusedList)
-		focusedList = nil
+		restoreFocus()
 		return
 	default:
 		return
 	}
-	focusedList = list
 
 	go showLyrics(list)
 }
