@@ -249,8 +249,7 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		if queueList.GetItemCount() == 0 {
 			return nil
 		}
-		currentList := app.GetFocus().(*tview.List)
-		setAndSaveFocus(currentList)
+		setAndSaveFocus(queueList)
 		app.SetFocus(bottomPage)
 		bottomPage.SwitchToPage("savequeue")
 		return nil
