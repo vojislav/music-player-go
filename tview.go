@@ -18,7 +18,7 @@ var mainPanel = tview.NewPages()
 var bottomPage = tview.NewPages()
 var loadingPopup tview.Primitive
 var currentTrackText, currentTrackTime, downloadProgressText, loadingTextBox, loginStatus, trackInfoTextBox,
-	lyricsTextBox, helpWindowTextBox, nowPlayingTrackTextBox, nowPlayingTimeTextBox, progressBar *tview.TextView
+	lyricsTextBox, helpWindowTextBox, nowPlayingTrackTextBox, nowPlayingTimeTextBox, progressBar, queueLength *tview.TextView
 var nowPlayingCover *tview.Image
 var loginGrid *tview.Grid
 var libraryFlex, queueFlex, playlistFlex, nowPlayingFlex, bottomPanel *tview.Flex
@@ -300,15 +300,42 @@ func initView() {
 
 	mainPanel.AddPage("library", libraryFlex, true, true)
 
-	// queue page
+	// tracks in queue
 	queueList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
-	queueList.SetBorder(true).SetTitle(" Queue ")
-	queueList.SetSelectedFunc(requestPlayTrack)
 	setColor(queueList)
-	queueFlex = tview.NewFlex().SetDirection(tview.FlexRow).
-		AddItem(queueList, 0, 1, true)
+	queueList.SetSelectedFunc(requestPlayTrack)
+	queueList.SetChangedFunc(queueOnChange)
 
-	mainPanel.AddPage("queue", queueFlex, true, false)
+	// numbering of queue
+	queueNumberList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
+	setColor(queueNumberList)
+	queueNumberList.SetSelectedFocusOnly(false)
+
+	// lengths of tracks
+	queueLengthList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
+	setColor(queueLengthList)
+	queueLengthList.SetSelectedFocusOnly(false)
+
+	queueFlex = tview.NewFlex().SetDirection(tview.FlexColumn).
+		AddItem(queueNumberList, 4, 0, false).
+		AddItem(queueList, 0, 1, true).
+		AddItem(queueLengthList, 8, 0, false)
+
+	queueLength = tview.NewTextView().
+		SetTextAlign(tview.AlignRight).
+		SetTextColor(tcell.ColorBlue).
+		SetDynamicColors(true)
+
+	queueBigFlex := tview.NewFlex().SetDirection(tview.FlexRow).
+		AddItem(queueFlex, 0, 1, true).
+		AddItem(queueLength, 2, 1, false)
+	queueBigFlex.
+		SetTitle(" Queue ").
+		SetTitleColor(tcell.ColorYellow).
+		SetBorder(true).
+		SetBorderColor(tcell.ColorYellow)
+
+	mainPanel.AddPage("queue", queueBigFlex, true, false)
 
 	// playlist
 	playlistList = tview.NewList().ShowSecondaryText(false).SetHighlightFullLine(true).SetWrapAround(false)
@@ -521,6 +548,7 @@ func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		stopApp()
 		return nil
 	case '1':
+
 		pages.SwitchToPage("main")
 		mainPanel.SwitchToPage("queue")
 		return nil

@@ -20,6 +20,9 @@ var trackInQueueMarker = "[::b]"
 // the way in which the tracks that are not downloaded are marked
 var trackNotDownloadedMarker = "[::d]"
 
+// duration of all tracks in queue
+var queueDuration = 0
+
 // removes indicator that track is in queue. This fixes the situation where
 // trackList/playlistTracks are not refreshed after removing track from queue
 func removeInQueueMarks(list *tview.List, trackID string) {
@@ -50,6 +53,39 @@ func refreshSearchIndexes(trackIndex int) {
 	searchIndexes = searchIndexesNew
 }
 
+// removes numbering, track text and duration from queue lists
+func removeAllTrackInfoFromQueue(index int) {
+	cnt := queueNumberList.GetItemCount()
+	queueList.RemoveItem(index)
+	queueNumberList.RemoveItem(cnt - 1)
+	queueLengthList.RemoveItem(index)
+}
+
+// updates queue duration message in queue
+// is called whenever new track is added or removed from queue
+func updateQueueDuration(step int) {
+	queueDuration += step
+	if queueDuration == 0 {
+		queueLength.Clear()
+		return
+	}
+
+	var timeString = ""
+	var hrs = queueDuration / 3600
+	var mins = (queueDuration % 3600) / 60
+	var secs = queueDuration % 60
+	if hrs > 0 {
+		timeString += fmt.Sprintf("%dhr ", hrs)
+	}
+	if mins > 0 {
+		timeString += fmt.Sprintf("%dmin ", mins)
+	}
+	timeString += fmt.Sprintf("%dsec", secs)
+
+	_, _, width, _ := mainPanel.GetInnerRect()
+	queueLength.SetText(strings.Repeat("-", width-2) + fmt.Sprintf("\nQueue length: [::b]%s", timeString))
+}
+
 func removeFromQueue() {
 	if queueList.GetItemCount() == 0 {
 		return
@@ -74,9 +110,11 @@ func removeFromQueue() {
 	removeInQueueMarks(trackList, trackID)
 	removeInQueueMarks(playlistTracks, trackID)
 
+	updateQueueDuration(-queryDuration(trackID))
+
 	refreshSearchIndexes(highlightedTrackIndex)
 
-	queueList.RemoveItem(highlightedTrackIndex)
+	removeAllTrackInfoFromQueue(highlightedTrackIndex)
 }
 
 // should only be called when current song is changed
@@ -135,16 +173,27 @@ func markList(list *tview.List, idx int) {
 	list.SetItemText(idx, trackInQueueMarker+prim, sec)
 }
 
+// adds song to queue (including numbering and track duration)
+func addAllTrackInfoToQueue(trackText string, trackID string, position int, trackDurationString string) {
+	queueList.AddItem(trackText, trackID, 0, nil)
+	queueNumberList.AddItem(fmt.Sprintf("%d.", position+1), "", 0, nil)
+	queueLengthList.AddItem(fmt.Sprintf("[%s[]", trackDurationString), "", 0, nil)
+}
+
 // adds dummy placeholder to queue, and downloads track and puts it on that place
 // play argument indicates whether track should be played immediately upon download
 func downloadAndEnqueueTrack(trackID string, play bool) {
 	var artist, title string
-	queryArtistAndTitle(toInt(trackID)).Scan(&artist, &title)
+	var duration int
+	queryArtistAndTitleAndDuration(toInt(trackID)).Scan(&artist, &title, &duration)
 	trackText := fmt.Sprintf("%s - %s", artist, title)
 
 	// add placeholder and get its index
-	queueList.AddItem("_", trackID, 0, nil) // this item must be added before playNext is set because of race condition
-	idx := queueList.GetItemCount() - 1
+	idx := queueList.GetItemCount()
+	addAllTrackInfoToQueue("_", trackID, idx, getTimeString(duration)) // this item must be added before playNext is set because of race condition
+
+	// increase queue duration
+	updateQueueDuration(+duration)
 
 	if trackExists(trackID) { // no need to add it to download map if it exists
 		queueList.SetItemText(idx, trackText, trackID)
@@ -189,7 +238,24 @@ func listEnqueueSublist(list *tview.List, sublist *tview.List, play bool) {
 	list.SetCurrentItem(currentListIndex + 1)
 }
 
+// every time different track is highlighted also highlight its duration and number
+func queueOnChange(index int, _ string, _ string, _ rune) {
+	queueNumberList.SetCurrentItem(index)
+	queueLengthList.SetCurrentItem(index)
+}
+
 func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
+	switch event.Rune() {
+	case 'l':
+		event = tcell.NewEventKey(tcell.KeyEnter, 0, tcell.ModNone)
+
+	case 'x':
+		event = tcell.NewEventKey(tcell.KeyDelete, 0, tcell.ModNone)
+	case 'o':
+		findInLibrary(queueList)
+		return nil
+	}
+
 	switch event.Key() {
 	case tcell.KeyRight, tcell.KeyEnter:
 		queuePlayHighlighted()
@@ -198,23 +264,6 @@ func queueInputHandler(event *tcell.EventKey) *tcell.EventKey {
 		return nil
 	case tcell.KeyDelete:
 		removeFromQueue()
-		return nil
-	}
-
-	switch event.Rune() {
-	case 'j':
-		return tcell.NewEventKey(tcell.KeyDown, 0, tcell.ModNone)
-	case 'k':
-		return tcell.NewEventKey(tcell.KeyUp, 0, tcell.ModNone)
-	case 'l':
-		queuePlayHighlighted()
-		return nil
-
-	case 'x':
-		removeFromQueue()
-		return nil
-	case 'o':
-		findInLibrary(queueList)
 		return nil
 	}
 
