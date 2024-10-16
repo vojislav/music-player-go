@@ -1,15 +1,13 @@
 # music-player-go
+a music player for [Subsonic](subsonic.org) music servers, specifically my own at [music.lazic.xyz](https://music.lazic.xyz), written in `Go` and `tview`
+
+modeled after [ncmpcpp](https://github.com/ncmpcpp/ncmpcpp)
 
 ## requirements
 * tested on go version `go1.21.2 linux/amd64`
 * requires `alsa` lib: `sudo apt install libasound2-dev`
 
 ## features
-a music player for [Subsonic](subsonic.org) music servers, specifically my own at [music.lazic.xyz](https://music.lazic.xyz), written in Go and tview
-
-modeled after [ncmpcpp](https://github.com/ncmpcpp/ncmpcpp)
-
-current features:
 - library view
 - queue
 - playlists
