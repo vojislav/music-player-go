@@ -4,7 +4,7 @@ a music player for [Subsonic](subsonic.org) music servers, specifically my own a
 modeled after [ncmpcpp](https://github.com/ncmpcpp/ncmpcpp)
 
 ## requirements
-* tested on go version `go1.21.2 linux/amd64`
+* tested on go version `go1.23.4 linux/amd64`
 * requires `alsa` lib: `sudo apt install libasound2-dev`
 
 ## features

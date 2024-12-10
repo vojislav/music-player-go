@@ -27,7 +27,7 @@ func init() {
 	coversDirectory = homeDirectory + "/.cache/music-player-go/covers/"
 
 	if _, err := os.Stat(cacheDirectory); err != nil {
-		os.Mkdir(cacheDirectory, 0755)
+		os.MkdirAll(cacheDirectory, 0755)
 	}
 
 	if _, err := os.Stat(lyricsDirectory); err != nil {

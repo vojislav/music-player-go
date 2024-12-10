@@ -49,6 +49,10 @@ func getSizeString(size int) string {
 func getDirSize(path string) int {
 	var dirSize int64 = 0
 
+  if _, err := os.Stat(path); err != nil {
+    return -1
+  }
+
 	walkDirFunc := func(path string, d os.DirEntry, err error) error {
 		if !d.IsDir() {
 			fileInfo, _ := d.Info()
