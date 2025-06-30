@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"log"
 	"os"
 	"time"
 
@@ -13,6 +14,12 @@ var cacheDirectory, lyricsDirectory, coversDirectory, configDirectory, playlistD
 var reloadDatabaseFlag *bool
 
 func init() {
+	logFile, err := os.OpenFile("app.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		panic(err)
+	}
+	log.SetOutput(logFile)
+
 	homeDirectory, _ := os.UserHomeDir()
 	configDirectory = homeDirectory + "/.config/music-player-go/"
 	playlistDirectory = configDirectory + "playlists/"
