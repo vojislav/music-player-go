@@ -5,6 +5,12 @@ modeled after [ncmpcpp](https://github.com/ncmpcpp/ncmpcpp)
 
 feel free to give it a go using my server (which is the default) with the `guest` user and password
 
+## screenshots
+<img src="https://github.com/vojislav/music-player-go/raw/main/screenshots/library.png" alt="library" width="80%" />
+<img src="https://github.com/vojislav/music-player-go/raw/main/screenshots/queue.png" alt="queue" width="80%" />
+<img src="https://github.com/vojislav/music-player-go/raw/main/screenshots/playlist.png" alt="playlist" width="80%" />
+<img src="https://github.com/vojislav/music-player-go/raw/main/screenshots/nowplaying.png" alt="now playing" width="80%" />
+
 ## requirements
 * tested on go version `go1.23.4 linux/amd64`
 * requires `alsa` lib: `sudo apt install libasound2-dev`
