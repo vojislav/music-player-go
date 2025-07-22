@@ -1,0 +1,3 @@
+client_name = "music-player-go"
+version = "1.16.1"
+server_url = "https://music.lazic.xyz/rest/"

@@ -2,38 +2,49 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/pelletier/go-toml"
 )
 
-var client_name = "music-player-go"
-var version = "1.16.1"
-var server_url = "https://music.lazic.xyz/rest/"
-
 type Config struct {
-	Username  string `toml:"username"`
-	Salt      string `toml:"salt"`
-	Token     string `toml:"token"`
-	Version   string `toml:"version"`
-	ServerURL string `toml:"server_url"`
+	Username   string `toml:"username"`
+	Salt       string `toml:"salt"`
+	Token      string `toml:"token"`
+	Version    string `toml:"version"`
+	ServerURL  string `toml:"server_url"`
+	ClientName string `toml:"client_name"`
 }
 
 var config Config
 
-func readConfig() {
+// load config file into struct
+func loadConfig(config *Config) {
 	configData, err := os.ReadFile(configFile)
 	if err != nil {
 		fmt.Println(err)
 	}
-	toml.Unmarshal(configData, &config)
+	toml.Unmarshal(configData, config)
 }
 
-func writeConfig() {
-	config.ServerURL = server_url
-	config.Version = version
-	configToml, _ := toml.Marshal(config)
-	_ = os.WriteFile(configFile, configToml, 0644)
+// write default and user-specfic config to file
+func saveConfig() {
+	defaultConfig, err := os.ReadFile("config")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	// load default config fields to Config struct
+	// username, token and salt are already added from loginForm
+	toml.Unmarshal(defaultConfig, &config)
+
+	fullConfig, err := toml.Marshal(config)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	_ = os.WriteFile(configFile, fullConfig, 0644)
 }
 
 func validConfig() bool {
@@ -41,11 +52,12 @@ func validConfig() bool {
 		return false
 	}
 
-	readConfig()
+	var tempConfig Config
+	loadConfig(&tempConfig)
 
-	if config.Username == "" || config.Salt == "" ||
-		config.Token == "" || config.ServerURL == "" ||
-		config.Version == "" {
+	if tempConfig.Username == "" || tempConfig.Salt == "" ||
+		tempConfig.Token == "" || tempConfig.ServerURL == "" ||
+		tempConfig.Version == "" || tempConfig.ClientName == "" {
 		return false
 	}
 

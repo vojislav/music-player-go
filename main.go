@@ -81,6 +81,8 @@ func main() {
 	initView()
 	go trackTime()
 
+	loadConfig(&config)
+
 	if !validConfig() {
 		pages.SwitchToPage("login")
 	} else if !ping() {

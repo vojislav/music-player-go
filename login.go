@@ -13,7 +13,7 @@ import (
 var loginForm *tview.Form
 
 func loginUser() {
-	writeConfig()
+	saveConfig()
 
 	if ping() {
 		if _, err := os.Stat(databaseFile); err == nil && !*reloadDatabaseFlag {

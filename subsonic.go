@@ -22,7 +22,7 @@ import (
 // var config.Salt = "eYEy8Yue"
 // var config.Token = "ee5d78b9d676fd5ab119a68860db3c59"
 // var config.Version = "1.16.1"
-// var client_name = "music-player-go"
+// var config.ClientName = "music-player-go"
 
 type Artist struct {
 	id     int
@@ -80,7 +80,7 @@ func ping() bool {
 	params.Add("t", config.Token)
 	params.Add("s", config.Salt)
 	params.Add("v", config.Version)
-	params.Add("c", client_name)
+	params.Add("c", config.ClientName)
 	params.Add("f", "json")
 	req.URL.RawQuery = params.Encode()
 
@@ -116,7 +116,7 @@ func getArtists() bool {
 	params.Add("t", config.Token)
 	params.Add("s", config.Salt)
 	params.Add("v", config.Version)
-	params.Add("c", client_name)
+	params.Add("c", config.ClientName)
 	params.Add("f", "json")
 	req.URL.RawQuery = params.Encode()
 
@@ -162,7 +162,7 @@ func getAlbums(artistID int) bool {
 	params.Add("t", config.Token)
 	params.Add("s", config.Salt)
 	params.Add("v", config.Version)
-	params.Add("c", client_name)
+	params.Add("c", config.ClientName)
 	params.Add("f", "json")
 	params.Add("id", strconv.FormatInt(int64(artistID), 10))
 	req.URL.RawQuery = params.Encode()
@@ -218,7 +218,7 @@ func getTracks(albumID int) bool {
 	params.Add("t", config.Token)
 	params.Add("s", config.Salt)
 	params.Add("v", config.Version)
-	params.Add("c", client_name)
+	params.Add("c", config.ClientName)
 	params.Add("f", "json")
 	params.Add("id", fmt.Sprint(albumID))
 	req.URL.RawQuery = params.Encode()
@@ -387,7 +387,7 @@ func download(trackIDString string, trackIndex int) string {
 		params.Add("t", config.Token)
 		params.Add("s", config.Salt)
 		params.Add("v", config.Version)
-		params.Add("c", client_name)
+		params.Add("c", config.ClientName)
 		params.Add("f", "json")
 		params.Add("id", fmt.Sprint(trackID))
 		req.URL.RawQuery = params.Encode()
@@ -442,7 +442,7 @@ func getCoverArt(trackID string) []byte {
 	params.Add("t", config.Token)
 	params.Add("s", config.Salt)
 	params.Add("v", config.Version)
-	params.Add("c", client_name)
+	params.Add("c", config.ClientName)
 	params.Add("f", "json")
 	params.Add("id", trackID)
 	req.URL.RawQuery = params.Encode()
@@ -473,7 +473,7 @@ func scrobble(trackID int, submission string) bool {
 	params.Add("t", config.Token)
 	params.Add("s", config.Salt)
 	params.Add("v", config.Version)
-	params.Add("c", client_name)
+	params.Add("c", config.ClientName)
 	params.Add("f", "json")
 	params.Add("id", fmt.Sprint(trackID))
 	params.Add("submission", submission)
@@ -520,7 +520,7 @@ func getPlaylists() []Playlist {
 	params.Add("t", config.Token)
 	params.Add("s", config.Salt)
 	params.Add("v", config.Version)
-	params.Add("c", client_name)
+	params.Add("c", config.ClientName)
 	params.Add("f", "json")
 	req.URL.RawQuery = params.Encode()
 
@@ -571,7 +571,7 @@ func getPlaylistTracks(playlistID int) []byte {
 	params.Add("t", config.Token)
 	params.Add("s", config.Salt)
 	params.Add("v", config.Version)
-	params.Add("c", client_name)
+	params.Add("c", config.ClientName)
 	params.Add("f", "json")
 	params.Add("id", fmt.Sprint(playlistID))
 	req.URL.RawQuery = params.Encode()
