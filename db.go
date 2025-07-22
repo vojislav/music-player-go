@@ -13,13 +13,7 @@ func createDatabase() {
 	db, _ := sql.Open("sqlite3", databaseFile)
 	defer db.Close()
 
-	initScript := configDirectory + "init.sql"
-	script, err := os.ReadFile(initScript)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	_, err = db.Exec(string(script))
+	_, err := db.Exec(string(dbInitScript))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -225,8 +219,20 @@ func loadDatabase() {
 
 }
 
-func makeInitScript() {
-	initScript := `DROP TABLE IF EXISTS artists;
+func getArtistName(artistID int) string {
+	db, err := sql.Open("sqlite3", databaseFile)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer db.Close()
+
+	var artistName string
+	db.QueryRow("SELECT name FROM artists WHERE id=?", artistID).Scan(&artistName)
+
+	return artistName
+}
+
+var dbInitScript = `DROP TABLE IF EXISTS artists;
 DROP TABLE IF EXISTS albums;
 DROP TABLE IF EXISTS tracks;
 DROP TABLE IF EXISTS playlists;
@@ -275,29 +281,3 @@ CREATE TABLE playlists (
 	changed TEXT,
 	coverArt TEXT
 );`
-
-	f, err := os.Create(initScriptFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer f.Close()
-
-	_, err = f.WriteString(initScript)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func getArtistName(artistID int) string {
-	db, err := sql.Open("sqlite3", databaseFile)
-	if err != nil {
-		fmt.Println(err)
-	}
-	defer db.Close()
-
-	var artistName string
-	db.QueryRow("SELECT name FROM artists WHERE id=?", artistID).Scan(&artistName)
-
-	return artistName
-}
