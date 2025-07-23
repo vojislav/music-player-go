@@ -231,6 +231,17 @@ func getArtistName(artistID int) string {
 	return artistName
 }
 
+func queryPlaylists() *sql.Rows {
+	db, err := sql.Open("sqlite3", databaseFile)
+	if err != nil {
+		printError(err)
+	}
+	defer db.Close()
+
+	rows, _ := db.Query("SELECT id, name FROM playlists ORDER BY id;")
+	return rows
+}
+
 var dbInitScript = `DROP TABLE IF EXISTS artists;
 DROP TABLE IF EXISTS albums;
 DROP TABLE IF EXISTS tracks;

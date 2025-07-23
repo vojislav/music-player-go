@@ -541,9 +541,10 @@ func getPlaylists() []Playlist {
 	var playlists []Playlist
 
 	for playlistMap, ok := iter.Next(); ok; playlistMap, ok = iter.Next() {
-		// id := playlist.(map[string]any)["id"].(string)
-		// name := playlist.(map[string]any)["name"].(string)
-		// playlists = append(playlists, Playlist{ID: id, Name: name})
+		if err, ok := playlistMap.(error); ok {
+			printError(err)
+			break
+		}
 		newPlaylist := Playlist{}
 		playlistJSON, _ := json.Marshal(playlistMap)
 		json.Unmarshal(playlistJSON, &newPlaylist)

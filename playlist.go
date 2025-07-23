@@ -14,13 +14,20 @@ var playlistList, playlistTracks *tview.List
 
 func initPlaylistPage() {
 	fillPlaylists()
-	main, secondary := playlistList.GetItemText(0)
-	showPlaylist(0, main, secondary, 0)
+	if playlistList.GetItemCount() > 0 {
+		main, secondary := playlistList.GetItemText(0)
+		showPlaylist(0, main, secondary, 0)
+	}
 }
 
 func fillPlaylists() {
-	for _, playlist := range getPlaylists() {
-		playlistList.AddItem(playlist.Name, fmt.Sprint(playlist.ID), 0, nil)
+	rows := queryPlaylists()
+	for rows.Next() {
+		var playlistID int
+		var name string
+
+		rows.Scan(&playlistID, &name)
+		playlistList.AddItem(name, fmt.Sprint(playlistID), 0, nil)
 	}
 }
 
