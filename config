@@ -1,3 +1,5 @@
 client_name = "music-player-go"
-version = "1.16.1"
 server_url = "https://music.lazic.xyz/rest/"
+# 1.16.1 is the highest version supported for Subsonic servers
+# for Airsonic servers its 1.15.0, so set appropriately
+version = "1.16.1"
