@@ -14,6 +14,7 @@ feel free to give it a go using my server (which is the default) with the `guest
 ## requirements
 * tested on go version `go1.23.4 linux/amd64`
 * requires `alsa` lib: `sudo apt install libasound2-dev`
+* tested on `Subsonic 6.1.6` and `Airsonic 11.1.4`
 
 ## features
 - library view
