@@ -17,13 +17,6 @@ import (
 	"github.com/itchyny/gojq"
 )
 
-// var config.ServerURL = "https://music.lazic.xyz/rest/"
-// var config.Username = "voja"
-// var config.Salt = "eYEy8Yue"
-// var config.Token = "ee5d78b9d676fd5ab119a68860db3c59"
-// var config.Version = "1.16.1"
-// var config.ClientName = "music-player-go"
-
 type Artist struct {
 	id     int
 	name   string

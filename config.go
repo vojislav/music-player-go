@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 
@@ -23,7 +22,7 @@ var config Config
 func loadConfig(config *Config) {
 	configData, err := os.ReadFile(configFile)
 	if err != nil {
-		fmt.Println(err)
+		return
 	}
 	toml.Unmarshal(configData, config)
 }
