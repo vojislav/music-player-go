@@ -7,7 +7,6 @@ import (
 	"image"
 	"image/jpeg"
 	"image/png"
-	"log"
 	"os"
 
 	"github.com/nfnt/resize"
@@ -60,12 +59,12 @@ func displayCoverArt() {
 		var format string
 		coverArt, format, err := image.Decode(bytes.NewReader(coverArtBytes))
 		if err != nil {
-			log.Fatal(err)
+			printError(err)
 		}
 
 		coverFile, err := os.Create(coverPath)
 		if err != nil {
-			log.Fatal(err)
+			printError(err)
 		}
 
 		resizedCoverArt := resize.Resize(300, 0, coverArt, resize.Lanczos3)
@@ -78,13 +77,13 @@ func displayCoverArt() {
 		}
 
 		if err != nil {
-			log.Fatal(err)
+			printError(err)
 		}
 	}
 
 	coverArtBytes, err := os.ReadFile(coverPath)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	encodedCoverArt := base64.StdEncoding.EncodeToString(coverArtBytes)

@@ -3,7 +3,6 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -15,7 +14,7 @@ func createDatabase() {
 
 	_, err := db.Exec(string(dbInitScript))
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 }
 
@@ -25,7 +24,7 @@ func queryArtists() *sql.Rows {
 
 	rows, err := db.Query("SELECT * FROM artists ORDER BY name")
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 	return rows
 }
@@ -33,7 +32,7 @@ func queryArtists() *sql.Rows {
 func queryAlbums(artistID int) *sql.Rows {
 	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
-		fmt.Println(err)
+		printError(err)
 	}
 	defer db.Close()
 
@@ -44,7 +43,7 @@ func queryAlbums(artistID int) *sql.Rows {
 func queryAlbumTracks(albumID int) *sql.Rows {
 	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
-		fmt.Println(err)
+		printError(err)
 	}
 	defer db.Close()
 
@@ -55,7 +54,7 @@ func queryAlbumTracks(albumID int) *sql.Rows {
 func queryTrackInfo(trackID int) *sql.Row {
 	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
-		fmt.Println(err)
+		printError(err)
 	}
 	defer db.Close()
 
@@ -66,7 +65,7 @@ func queryTrackInfo(trackID int) *sql.Row {
 func queryArtistAndAlbum(trackID int) *sql.Row {
 	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
-		fmt.Println(err)
+		printError(err)
 	}
 	defer db.Close()
 
@@ -77,7 +76,7 @@ func queryArtistAndAlbum(trackID int) *sql.Row {
 func queryPlaylistTracks(playlistID int) *sql.Rows {
 	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
-		fmt.Println(err)
+		printError(err)
 	}
 	defer db.Close()
 
@@ -88,7 +87,7 @@ func queryPlaylistTracks(playlistID int) *sql.Rows {
 func queryDuration(trackID string) int {
 	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
-		fmt.Println(err)
+		printError(err)
 	}
 	defer db.Close()
 
@@ -103,7 +102,7 @@ func queryDuration(trackID string) int {
 func queryArtistAndTitleAndDuration(trackID int) *sql.Row {
 	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
-		fmt.Println(err)
+		printError(err)
 	}
 	defer db.Close()
 
@@ -114,7 +113,7 @@ func queryArtistAndTitleAndDuration(trackID int) *sql.Row {
 func queryArtistAndTitle(trackID int) *sql.Row {
 	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
-		fmt.Println(err)
+		printError(err)
 	}
 	defer db.Close()
 
@@ -125,7 +124,7 @@ func queryArtistAndTitle(trackID int) *sql.Row {
 func getAlbumID(trackID string) int {
 	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
-		fmt.Println(err)
+		printError(err)
 	}
 	defer db.Close()
 
@@ -138,37 +137,37 @@ func getAlbumID(trackID string) int {
 func loadDatabase() {
 	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
-		fmt.Println(err)
+		printError(err)
 		return
 	}
 
 	artistQuery, err := db.Prepare("INSERT OR IGNORE INTO artists(id, name) VALUES(?,?)")
 	if err != nil {
-		fmt.Println(err)
+		printError(err)
 		return
 	}
 
 	albumQuery, err := db.Prepare("INSERT OR IGNORE INTO albums(id, artistID, name, year) VALUES(?,?,?,?)")
 	if err != nil {
-		fmt.Println(err)
+		printError(err)
 		return
 	}
 
 	trackQuery, err := db.Prepare("INSERT OR IGNORE INTO tracks(id, title, album, artist, track, year, genre, size, suffix, duration, bitrate, disc, albumID, artistID) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
 	if err != nil {
-		fmt.Println(err)
+		printError(err)
 		return
 	}
 
 	playlistQuery, err := db.Prepare("INSERT OR IGNORE INTO playlists(id, name, comment, owner, public, songCount, duration, created, changed, coverArt) VALUES(?,?,?,?,?,?,?,?,?,?)")
 	if err != nil {
-		fmt.Println(err)
+		printError(err)
 		return
 	}
 
 	trackCount, err := db.Prepare("SELECT COUNT(*) FROM tracks")
 	if err != nil {
-		fmt.Println(err)
+		printError(err)
 		return
 	}
 
@@ -177,7 +176,7 @@ func loadDatabase() {
 		_, err := playlistQuery.Exec(playlist.ID, playlist.Name, playlist.Comment, playlist.Owner,
 			playlist.Public, playlist.SongCount, playlist.Duration, playlist.Created, playlist.Changed, playlist.CoverArt)
 		if err != nil {
-			fmt.Println(err)
+			printError(err)
 			return
 		}
 		playlistTracks := getPlaylistTracks(toInt(playlist.ID))
@@ -191,7 +190,7 @@ func loadDatabase() {
 		artistID := k
 		_, err := artistQuery.Exec(k, v.name)
 		if err != nil {
-			fmt.Println(err)
+			printError(err)
 			return
 		}
 		getAlbums(artistID)
@@ -199,14 +198,14 @@ func loadDatabase() {
 			albumID := k
 			_, err := albumQuery.Exec(k, v.artistID, v.name, v.year)
 			if err != nil {
-				fmt.Println(err)
+				printError(err)
 				return
 			}
 			getTracks(albumID)
 			for k, v := range artists[artistID].albums[albumID].tracks {
 				_, err := trackQuery.Exec(k, v.Title, v.Album, v.Artist, v.Track, v.Year, v.Genre, v.Size, v.Suffix, v.Duration, v.BitRate, v.Disc, v.AlbumID, v.ArtistID)
 				if err != nil {
-					fmt.Println(err)
+					printError(err)
 					return
 				}
 			}
@@ -222,7 +221,7 @@ func loadDatabase() {
 func getArtistName(artistID int) string {
 	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
-		fmt.Println(err)
+		printError(err)
 	}
 	defer db.Close()
 

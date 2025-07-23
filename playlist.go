@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/gdamore/tcell/v2"
@@ -30,12 +29,12 @@ func showPlaylist(_ int, playlistName, playlistIDString string, _ rune) {
 
 	playlistTracksJSON, err := os.ReadFile(playlistDirectory + playlistName + ".json")
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	query, err := gojq.Parse(`."subsonic-response".playlist.entry[]`)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	var resJSON map[string]interface{}

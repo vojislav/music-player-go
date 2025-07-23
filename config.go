@@ -41,7 +41,7 @@ func saveConfig() {
 
 	fullConfig, err := toml.Marshal(config)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	_ = os.WriteFile(configFile, fullConfig, 0644)

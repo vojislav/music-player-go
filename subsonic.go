@@ -72,7 +72,7 @@ var downloadSemaphore = make(chan bool, 1500)
 func ping() bool {
 	req, err := http.NewRequest("GET", config.ServerURL+"ping", nil)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	params := req.URL.Query()
@@ -86,13 +86,13 @@ func ping() bool {
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	var resJSON map[string]interface{}
@@ -108,7 +108,7 @@ func ping() bool {
 func getArtists() bool {
 	req, err := http.NewRequest("GET", config.ServerURL+"getArtists", nil)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	params := req.URL.Query()
@@ -122,18 +122,18 @@ func getArtists() bool {
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	query, err := gojq.Parse(`."subsonic-response".artists.index[].artist[] | .id + "\t" + .name`)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	var resJSON map[string]interface{}
@@ -154,7 +154,7 @@ func getArtists() bool {
 func getAlbums(artistID int) bool {
 	req, err := http.NewRequest("GET", config.ServerURL+"getArtist", nil)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	params := req.URL.Query()
@@ -169,18 +169,18 @@ func getAlbums(artistID int) bool {
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	query, err := gojq.Parse(`."subsonic-response".artist.album[] | .id + "\t" + .artist + "\t" + .name + "\t" + (.year|tostring)`)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	var resJSON map[string]interface{}
@@ -210,7 +210,7 @@ func getAlbums(artistID int) bool {
 func getTracks(albumID int) bool {
 	req, err := http.NewRequest("GET", config.ServerURL+"getAlbum", nil)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	params := req.URL.Query()
@@ -225,13 +225,13 @@ func getTracks(albumID int) bool {
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	// ."subsonic-response".album.song[]
@@ -241,7 +241,7 @@ func getTracks(albumID int) bool {
 
 	query, err := gojq.Parse(`."subsonic-response".album.artistId`)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	var artistID string
@@ -253,7 +253,7 @@ func getTracks(albumID int) bool {
 
 	query, err = gojq.Parse(`."subsonic-response".album.song[]`)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	iter = query.Run(resJSON)
@@ -379,7 +379,7 @@ func download(trackIDString string, trackIndex int) string {
 
 		req, err := http.NewRequest("GET", config.ServerURL+"stream", nil)
 		if err != nil {
-			log.Fatal(err)
+			printError(err)
 		}
 
 		params := req.URL.Query()
@@ -394,17 +394,17 @@ func download(trackIDString string, trackIndex int) string {
 
 		headResp, err := http.Head(req.URL.String())
 		if err != nil {
-			log.Fatal(err)
+			printError(err)
 		}
 
 		fileSize, err := strconv.Atoi(headResp.Header.Get("Content-Length"))
 		if err != nil {
-			log.Fatal(err)
+			printError(err)
 		}
 
 		res, err := http.DefaultClient.Do(req)
 		if err != nil {
-			log.Fatal(err)
+			printError(err)
 		}
 		defer res.Body.Close()
 
@@ -413,12 +413,12 @@ func download(trackIDString string, trackIndex int) string {
 
 		file, err := os.Create(fakeFilePath)
 		if err != nil {
-			log.Fatal(err)
+			printError(err)
 		}
 
 		_, err = io.Copy(file, res.Body)
 		if err != nil {
-			log.Fatal(err)
+			printError(err)
 		}
 
 		lastDownloaded = trackIndex
@@ -434,7 +434,7 @@ func download(trackIDString string, trackIndex int) string {
 func getCoverArt(trackID string) []byte {
 	req, err := http.NewRequest("GET", config.ServerURL+"getCoverArt", nil)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	params := req.URL.Query()
@@ -449,7 +449,7 @@ func getCoverArt(trackID string) []byte {
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 	defer res.Body.Close()
 
@@ -462,7 +462,7 @@ func getCoverArt(trackID string) []byte {
 func scrobble(trackID int, submission string) bool {
 	req, err := http.NewRequest("GET", config.ServerURL+"scrobble", nil)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	elapsedTime := currentTrack.stream.Position() / sr.N(time.Second)
@@ -482,13 +482,13 @@ func scrobble(trackID int, submission string) bool {
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	var resJSON map[string]interface{}
@@ -512,7 +512,7 @@ func toInt(s string) int {
 func getPlaylists() []Playlist {
 	req, err := http.NewRequest("GET", config.ServerURL+"getPlaylists", nil)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	params := req.URL.Query()
@@ -526,18 +526,18 @@ func getPlaylists() []Playlist {
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	query, err := gojq.Parse(`."subsonic-response".playlists.playlist[]`)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	var resJSON map[string]interface{}
@@ -563,7 +563,7 @@ func getPlaylists() []Playlist {
 func getPlaylistTracks(playlistID int) []byte {
 	req, err := http.NewRequest("GET", config.ServerURL+"getPlaylist", nil)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	params := req.URL.Query()
@@ -578,18 +578,18 @@ func getPlaylistTracks(playlistID int) []byte {
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 	defer res.Body.Close()
 
 	tracksJSON, err := io.ReadAll(res.Body)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	// query, err := gojq.Parse(`."subsonic-response".playlist.entry`)
 	// if err != nil {
-	// 	log.Fatal(err)
+	// 	printError(err)
 	// }
 
 	// var resJSON map[string]interface{}

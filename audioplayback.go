@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"regexp"
 	"strings"
@@ -224,7 +223,7 @@ func seek(step int) {
 func getStream(path string) beep.StreamSeekCloser {
 	f, err := os.Open(path)
 	if err != nil {
-		fmt.Println(err)
+		printError(err)
 		return nil
 	}
 
@@ -238,7 +237,7 @@ func getStream(path string) beep.StreamSeekCloser {
 
 	streamer, _, err := mp3.Decode(f)
 	if err != nil {
-		fmt.Println(err)
+		printError(err)
 		return nil
 	}
 
@@ -248,13 +247,13 @@ func getStream(path string) beep.StreamSeekCloser {
 func getTags(path string) tag.Metadata {
 	f, err := os.Open(path)
 	if err != nil {
-		fmt.Println(err)
+		printError(err)
 		return nil
 	}
 
 	tags, err := tag.ReadFrom(f)
 	if err != nil {
-		fmt.Println(err)
+		printError(err)
 		return nil
 	}
 
@@ -291,7 +290,7 @@ func trackDownloadProgress(done chan bool, filePath string, fileSize int, trackI
 
 			fi, err := file.Stat()
 			if err != nil {
-				log.Fatal(err)
+				printError(err)
 			}
 
 			size := fi.Size()

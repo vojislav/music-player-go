@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"log"
 	"os"
 	"path/filepath"
 
@@ -49,9 +50,9 @@ func getSizeString(size int) string {
 func getDirSize(path string) int {
 	var dirSize int64 = 0
 
-  if _, err := os.Stat(path); err != nil {
-    return -1
-  }
+	if _, err := os.Stat(path); err != nil {
+		return -1
+	}
 
 	walkDirFunc := func(path string, d os.DirEntry, err error) error {
 		if !d.IsDir() {
@@ -65,4 +66,8 @@ func getDirSize(path string) int {
 	filepath.WalkDir(path, walkDirFunc)
 
 	return int(dirSize)
+}
+
+func printError(err error) {
+	log.Println(err)
 }

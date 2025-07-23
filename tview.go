@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"regexp"
 	"strings"
@@ -427,7 +426,7 @@ func toggleHelpPage() {
 func initHelpWindow() {
 	readme, err := os.ReadFile(readmeFile)
 	if err != nil {
-		log.Fatal(err)
+		printError(err)
 	}
 
 	r, _ := regexp.Compile("(?s)keyboard shortcuts.*")
