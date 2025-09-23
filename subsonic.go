@@ -18,14 +18,14 @@ import (
 )
 
 type Artist struct {
-	id     int
+	id     string
 	name   string
-	albums map[int]*Album
+	albums map[string]*Album
 }
 
 type Album struct {
-	id         int
-	artistID   int
+	id         string
+	artistID   string
 	artistName string
 	name       string
 	year       int
@@ -45,7 +45,7 @@ type Playlist struct {
 	CoverArt  string    `json:"coverArt"`
 }
 
-var artists = make(map[int]*Artist)
+var artists = make(map[string]*Artist)
 var downloadPercent float64
 
 // idx of last downloaded song. used for optimization only.
@@ -135,16 +135,16 @@ func getArtists() bool {
 	iter := query.Run(resJSON)
 	for v, ok := iter.Next(); ok; v, ok = iter.Next() {
 		split := strings.Split(v.(string), "\t")
-		id := toInt(split[0])
+		id := split[0]
 		name := split[1]
-		albums := make(map[int]*Album)
-		artists[int(id)] = &Artist{id: int(id), name: name, albums: albums}
+		albums := make(map[string]*Album)
+		artists[id] = &Artist{id: id, name: name, albums: albums}
 	}
 
 	return true
 }
 
-func getAlbums(artistID int) bool {
+func getAlbums(artistID string) bool {
 	req, err := http.NewRequest("GET", config.ServerURL+"getArtist", nil)
 	if err != nil {
 		printError(err)
@@ -157,7 +157,7 @@ func getAlbums(artistID int) bool {
 	params.Add("v", config.Version)
 	params.Add("c", config.ClientName)
 	params.Add("f", "json")
-	params.Add("id", strconv.FormatInt(int64(artistID), 10))
+	params.Add("id", artistID)
 	req.URL.RawQuery = params.Encode()
 
 	res, err := http.DefaultClient.Do(req)
@@ -182,14 +182,14 @@ func getAlbums(artistID int) bool {
 	iter := query.Run(resJSON)
 	for v, ok := iter.Next(); ok; v, ok = iter.Next() {
 		split := strings.Split(v.(string), "\t")
-		id := toInt(split[0])
+		id := split[0]
 		artistName := split[1]
 		name := split[2]
 		year := toInt(split[3])
 		tracks := make(map[int]*Track)
-		artists[artistID].albums[int(id)] =
+		artists[artistID].albums[id] =
 			&Album{
-				id:         int(id),
+				id:         id,
 				artistID:   artistID,
 				artistName: artistName,
 				name:       name,
@@ -200,7 +200,7 @@ func getAlbums(artistID int) bool {
 	return true
 }
 
-func getTracks(albumID int) bool {
+func getTracks(albumID string) bool {
 	req, err := http.NewRequest("GET", config.ServerURL+"getAlbum", nil)
 	if err != nil {
 		printError(err)
@@ -273,7 +273,7 @@ func getTracks(albumID int) bool {
 		newTrack := Track{}
 		trackJSON, _ := json.Marshal(trackMap)
 		json.Unmarshal(trackJSON, &newTrack)
-		artists[toInt(artistID)].albums[albumID].tracks[toInt(newTrack.ID)] = &newTrack
+		artists[artistID].albums[albumID].tracks[toInt(newTrack.ID)] = &newTrack
 	}
 
 	return true

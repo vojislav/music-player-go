@@ -248,13 +248,13 @@ DROP TABLE IF EXISTS tracks;
 DROP TABLE IF EXISTS playlists;
 
 CREATE TABLE artists (
-	id INTEGER PRIMARY KEY,
+	id TEXT PRIMARY KEY,
 	name TEXT
 );
 
 CREATE TABLE albums (
 	id INTEGER PRIMARY KEY,
-	artistID INTEGER,
+	artistID TEXT,
 	name TEXT,
 	year INT,
 	FOREIGN KEY (artistID) REFERENCES artists(id)
@@ -274,7 +274,7 @@ CREATE TABLE tracks (
 	bitrate INTEGER,
 	disc INTEGER,
 	albumID INTEGER,
-	artistID INTEGER,
+	artistID TEXT,
 	FOREIGN KEY (artistID) REFERENCES artists(id),
 	FOREIGN KEY (albumID) REFERENCES albums(id)
 );
