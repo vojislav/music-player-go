@@ -29,7 +29,7 @@ type Album struct {
 	artistName string
 	name       string
 	year       int
-	tracks     map[int]*Track
+	tracks     map[string]*Track
 }
 
 type Playlist struct {
@@ -186,7 +186,7 @@ func getAlbums(artistID string) bool {
 		artistName := split[1]
 		name := split[2]
 		year := toInt(split[3])
-		tracks := make(map[int]*Track)
+		tracks := make(map[string]*Track)
 		artists[artistID].albums[id] =
 			&Album{
 				id:         id,
@@ -273,7 +273,7 @@ func getTracks(albumID string) bool {
 		newTrack := Track{}
 		trackJSON, _ := json.Marshal(trackMap)
 		json.Unmarshal(trackJSON, &newTrack)
-		artists[artistID].albums[albumID].tracks[toInt(newTrack.ID)] = &newTrack
+		artists[artistID].albums[albumID].tracks[newTrack.ID] = &newTrack
 	}
 
 	return true

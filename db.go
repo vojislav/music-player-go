@@ -253,7 +253,7 @@ CREATE TABLE artists (
 );
 
 CREATE TABLE albums (
-	id INTEGER PRIMARY KEY,
+	id TEXT PRIMARY KEY,
 	artistID TEXT,
 	name TEXT,
 	year INT,
@@ -261,7 +261,7 @@ CREATE TABLE albums (
 );
 
 CREATE TABLE tracks (
-	id INTEGER PRIMARY KEY,
+	id TEXT PRIMARY KEY,
 	title TEXT,
 	album TEXT,
 	artist TEXT,
@@ -273,7 +273,7 @@ CREATE TABLE tracks (
 	duration INTEGER,
 	bitrate INTEGER,
 	disc INTEGER,
-	albumID INTEGER,
+	albumID TEXT,
 	artistID TEXT,
 	FOREIGN KEY (artistID) REFERENCES artists(id),
 	FOREIGN KEY (albumID) REFERENCES albums(id)

@@ -471,7 +471,8 @@ func refreshProgressBar(currentTime int, totalTime int) {
 	fmt.Fprintf(progressBar, "%s%s", progress, negativeProgress)
 }
 
-func updateCurrentTrackText() { // TODO: better name as this function is getting bloated and affects other stuff
+// TODO: better name as this function is getting bloated and affects other stuff
+func updateCurrentTrackText() {
 	currentTrackText.Clear()
 	currentTrackTime.Clear()
 

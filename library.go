@@ -29,11 +29,11 @@ func initLibraryPage() {
 func fillArtistList() {
 	rows := queryArtists()
 	for rows.Next() {
-		var artistID int
+		var artistID string
 		var name string
 
 		rows.Scan(&artistID, &name)
-		artistList.AddItem(name, fmt.Sprint(artistID), 0, nil)
+		artistList.AddItem(name, artistID, 0, nil)
 	}
 }
 
@@ -43,11 +43,11 @@ func fillAlbumsList(_ int, artistName, artistIDString string, _ rune) {
 	artistID := toInt(artistIDString)
 	rows := queryAlbums(int(artistID))
 	for rows.Next() {
-		var albumID, artistID, year int
-		var name string
+		var year int
+		var albumID, artistID, name string
 		rows.Scan(&albumID, &artistID, &name, &year)
 
-		albumList.AddItem(fmt.Sprintf("(%d) %s", year, name), fmt.Sprint(albumID), 0, nil)
+		albumList.AddItem(fmt.Sprintf("(%d) %s", year, name), albumID, 0, nil)
 	}
 }
 
