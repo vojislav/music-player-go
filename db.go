@@ -29,7 +29,7 @@ func queryArtists() *sql.Rows {
 	return rows
 }
 
-func queryAlbums(artistID int) *sql.Rows {
+func queryAlbums(artistID string) *sql.Rows {
 	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
 		printError(err)
@@ -40,7 +40,7 @@ func queryAlbums(artistID int) *sql.Rows {
 	return rows
 }
 
-func queryAlbumTracks(albumID int) *sql.Rows {
+func queryAlbumTracks(albumID string) *sql.Rows {
 	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
 		printError(err)
@@ -51,7 +51,7 @@ func queryAlbumTracks(albumID int) *sql.Rows {
 	return rows
 }
 
-func queryTrackInfo(trackID int) *sql.Row {
+func queryTrackInfo(trackID string) *sql.Row {
 	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
 		printError(err)
@@ -121,14 +121,14 @@ func queryArtistAndTitle(trackID int) *sql.Row {
 	return row
 }
 
-func getAlbumID(trackID string) int {
+func getAlbumID(trackID string) string {
 	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
 		printError(err)
 	}
 	defer db.Close()
 
-	var albumID int
+	var albumID string
 	db.QueryRow("SELECT albumID FROM tracks WHERE id=?", trackID).Scan(&albumID)
 
 	return albumID

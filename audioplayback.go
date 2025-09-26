@@ -228,7 +228,11 @@ func getStream(path string) beep.StreamSeekCloser {
 	}
 
 	// get sample rate of current stream and update the speaker with it
-	decodedStream, _ := gomp3.NewDecoder(f)
+	decodedStream, err := gomp3.NewDecoder(f)
+	if err != nil {
+		printError(err)
+		return nil
+	}
 	if decodedStream.SampleRate() != int(sr) {
 		sr = beep.SampleRate(decodedStream.SampleRate())
 		speaker.Close()

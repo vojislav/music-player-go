@@ -384,7 +384,7 @@ func toggleTrackInfo() {
 	_, trackID := list.GetItemText(list.GetCurrentItem())
 	var id, title, album, artist, genre, suffix, albumID, artistID string
 	var track, disc, year, size, duration, bitrate int
-	queryTrackInfo(toInt(trackID)).Scan(&id, &title, &album, &artist, &track, &year, &genre, &size, &suffix, &duration, &bitrate, &disc, &albumID, &artistID)
+	queryTrackInfo(trackID).Scan(&id, &title, &album, &artist, &track, &year, &genre, &size, &suffix, &duration, &bitrate, &disc, &albumID, &artistID)
 	if genre == "" {
 		genre = "-"
 	}

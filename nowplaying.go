@@ -13,7 +13,7 @@ import (
 )
 
 // used to test if cover art needs changing as it is costly
-var currentAlbumID = -1
+var currentAlbumID = "-1"
 
 func displayNowPlaying() {
 	if currentTrack.stream == nil {
@@ -29,13 +29,13 @@ func displayNowPlaying() {
 }
 
 // returns file path (string) of album cover with id albumID
-func getCoverPath(albumID int) string {
+func getCoverPath(albumID string) string {
 	return fmt.Sprint(coversDirectory, albumID, ".jpg")
 }
 
 // removes cover art from nowplaying page
 func removeCoverArt() {
-	currentAlbumID = -1
+	currentAlbumID = "-1"
 	nowPlayingCover.SetImage(nil)
 }
 

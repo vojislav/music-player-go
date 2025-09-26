@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
@@ -40,8 +39,8 @@ func fillArtistList() {
 func fillAlbumsList(_ int, artistName, artistIDString string, _ rune) {
 	albumList.Clear()
 
-	artistID := toInt(artistIDString)
-	rows := queryAlbums(int(artistID))
+	artistID := artistIDString
+	rows := queryAlbums(artistID)
 	for rows.Next() {
 		var year int
 		var albumID, artistID, name string
@@ -54,17 +53,17 @@ func fillAlbumsList(_ int, artistName, artistIDString string, _ rune) {
 func fillTracksList(_ int, albumName, albumIDString string, _ rune) {
 	trackList.Clear()
 
-	albumID := toInt(albumIDString)
+	albumID := albumIDString
 
 	rows := queryAlbumTracks(albumID)
 	for rows.Next() {
-		var title, album, artist, genre, suffix, albumID, artistID string
-		var trackID, track, disc, year, size, duration, bitrate int
+		var trackID, title, album, artist, genre, suffix, albumID, artistID string
+		var track, disc, year, size, duration, bitrate int
 		rows.Scan(&trackID, &title, &album, &artist, &track, &year, &genre, &size, &suffix, &duration, &bitrate, &disc, &albumID, &artistID)
 
 		var trackText string
 
-		alreadyInQueue := markTrack(strconv.FormatInt(int64(trackID), 10))
+		alreadyInQueue := markTrack(trackID)
 
 		trackText = alreadyInQueue
 

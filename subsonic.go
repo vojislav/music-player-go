@@ -273,6 +273,7 @@ func getTracks(albumID string) bool {
 		newTrack := Track{}
 		trackJSON, _ := json.Marshal(trackMap)
 		json.Unmarshal(trackJSON, &newTrack)
+		log.Println(newTrack)
 		artists[artistID].albums[albumID].tracks[newTrack.ID] = &newTrack
 	}
 
@@ -368,8 +369,6 @@ func download(trackIDString string, trackIndex int) string {
 
 	// if the track isn't already downloaded - download it
 	if _, err := os.Stat(trueFilePath); err != nil {
-		trackID := toInt(trackIDString)
-
 		req, err := http.NewRequest("GET", config.ServerURL+"stream", nil)
 		if err != nil {
 			printError(err)
@@ -382,7 +381,7 @@ func download(trackIDString string, trackIndex int) string {
 		params.Add("v", config.Version)
 		params.Add("c", config.ClientName)
 		params.Add("f", "json")
-		params.Add("id", fmt.Sprint(trackID))
+		params.Add("id", trackIDString)
 		req.URL.RawQuery = params.Encode()
 
 		headResp, err := http.Head(req.URL.String())
