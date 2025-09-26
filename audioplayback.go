@@ -100,7 +100,7 @@ func playTrack(trackIndex int, _ string, trackID string, _ rune) {
 
 	setQueuePosition(trackIndex)
 
-	scrobble(toInt(currentTrack.ID), "false")
+	scrobble(currentTrack.ID, "false")
 
 	asyncRequestStatusUpdate()
 }

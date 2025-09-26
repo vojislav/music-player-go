@@ -89,7 +89,7 @@ func findInLibrary(list *tview.List) {
 	idx := list.GetCurrentItem()
 	_, trackID := list.GetItemText(idx)
 	var artist, album string
-	queryArtistAndAlbum(toInt(trackID)).Scan(&artist, &album)
+	queryArtistAndAlbum(trackID).Scan(&artist, &album)
 
 	artists := artistList.FindItems(artist, "", true, true)
 	if len(artists) == 0 {

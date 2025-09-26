@@ -21,7 +21,7 @@ func showLyrics(list *tview.List) {
 
 func getLyrics(trackID string) string {
 	var artist, title string
-	queryArtistAndTitle(toInt(trackID)).Scan(&artist, &title)
+	queryArtistAndTitle(trackID).Scan(&artist, &title)
 
 	lyricsPath := fmt.Sprint(lyricsDirectory, trackID, ".txt")
 	if _, err := os.Stat(lyricsPath); err == nil {

@@ -185,7 +185,7 @@ func addAllTrackInfoToQueue(trackText string, trackID string, position int, trac
 func downloadAndEnqueueTrack(trackID string, play bool) {
 	var artist, title string
 	var duration int
-	queryArtistAndTitleAndDuration(toInt(trackID)).Scan(&artist, &title, &duration)
+	queryArtistAndTitleAndDuration(trackID).Scan(&artist, &title, &duration)
 	trackText := fmt.Sprintf("%s - %s", artist, title)
 
 	// add placeholder and get its index

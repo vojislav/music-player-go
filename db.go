@@ -62,7 +62,7 @@ func queryTrackInfo(trackID string) *sql.Row {
 	return row
 }
 
-func queryArtistAndAlbum(trackID int) *sql.Row {
+func queryArtistAndAlbum(trackID string) *sql.Row {
 	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
 		printError(err)
@@ -99,7 +99,7 @@ func queryDuration(trackID string) int {
 	return duration
 }
 
-func queryArtistAndTitleAndDuration(trackID int) *sql.Row {
+func queryArtistAndTitleAndDuration(trackID string) *sql.Row {
 	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
 		printError(err)
@@ -110,7 +110,7 @@ func queryArtistAndTitleAndDuration(trackID int) *sql.Row {
 	return row
 }
 
-func queryArtistAndTitle(trackID int) *sql.Row {
+func queryArtistAndTitle(trackID string) *sql.Row {
 	db, err := sql.Open("sqlite3", databaseFile)
 	if err != nil {
 		printError(err)
