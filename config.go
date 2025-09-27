@@ -29,7 +29,7 @@ func loadConfig(config *Config) {
 
 // write default and user-specfic config to file
 func saveConfig() {
-	defaultConfig, err := os.ReadFile("config")
+	defaultConfig, err := os.ReadFile(defaultConfigFile)
 	if err != nil {
 		log.Fatalln(err)
 	}
