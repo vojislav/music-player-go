@@ -18,7 +18,6 @@ var sr = beep.SampleRate(44100)
 var playerCtrl *CtrlVolume
 
 var currentTrack Track
-var currentScrobbledTrackID string = "-1"
 
 // how often will download progress in queue be updated
 const downloadProgressSleepTime = time.Second
@@ -101,8 +100,7 @@ func playTrack(trackIndex int, _ string, trackID string, _ rune) {
 
 	setQueuePosition(trackIndex)
 
-	scrobble(currentTrack.ID, "false")
-	currentScrobbledTrackID = "-1"
+	scrobble(toInt(currentTrack.ID), "false")
 
 	asyncRequestStatusUpdate()
 }
