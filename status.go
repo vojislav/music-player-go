@@ -37,8 +37,9 @@ func tickTrack() bool {
 		return false
 	}
 
-	if currentTrack.stream.Position() >= currentTrack.stream.Len()/2 {
-		scrobble(toInt(currentTrack.ID), "true")
+	if currentTrack.stream.Position() >= currentTrack.stream.Len()/2 && currentScrobbledTrackID != currentTrack.ID {
+		scrobble(currentTrack.ID, "true")
+		currentScrobbledTrackID = currentTrack.ID
 	}
 	if currentTrack.stream.Position() == currentTrack.stream.Len() {
 		requestNextTrack()
