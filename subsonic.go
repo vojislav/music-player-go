@@ -452,7 +452,7 @@ func getCoverArt(trackID string) []byte {
 	return content
 }
 
-func scrobble(trackID int, submission string) bool {
+func scrobble(trackID string, submission string) bool {
 	req, err := http.NewRequest("GET", config.ServerURL+"scrobble", nil)
 	if err != nil {
 		printError(err)
