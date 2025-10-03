@@ -36,10 +36,9 @@ func fillArtistList() {
 	}
 }
 
-func fillAlbumsList(_ int, artistName, artistIDString string, _ rune) {
+func fillAlbumsList(_ int, artistName, artistID string, _ rune) {
 	albumList.Clear()
 
-	artistID := artistIDString
 	rows := queryAlbums(artistID)
 	for rows.Next() {
 		var year int
