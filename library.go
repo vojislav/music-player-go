@@ -50,10 +50,8 @@ func fillAlbumsList(_ int, artistName, artistIDString string, _ rune) {
 	}
 }
 
-func fillTracksList(_ int, albumName, albumIDString string, _ rune) {
+func fillTracksList(_ int, albumName, albumID string, _ rune) {
 	trackList.Clear()
-
-	albumID := albumIDString
 
 	rows := queryAlbumTracks(albumID)
 	for rows.Next() {
