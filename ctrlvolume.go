@@ -3,7 +3,7 @@ package main
 import (
 	"math"
 
-	"github.com/faiface/beep"
+	"github.com/gopxl/beep/v2"
 )
 
 type CtrlVolume struct {

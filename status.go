@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -37,11 +38,13 @@ func tickTrack() bool {
 		return false
 	}
 
+	log.Printf("current time: %d, total time %d, delta: %d\n", currentTrack.stream.Position(), currentTrack.stream.Len(), currentTrack.stream.Len()-currentTrack.stream.Position())
+
 	if currentTrack.stream.Position() >= currentTrack.stream.Len()/2 && currentScrobbledTrackID != currentTrack.ID {
 		scrobble(currentTrack.ID, "true")
 		currentScrobbledTrackID = currentTrack.ID
 	}
-	if currentTrack.stream.Position() == currentTrack.stream.Len() {
+	if currentTrack.stream.Position() >= currentTrack.stream.Len()-1152 {
 		requestNextTrack()
 	}
 	return true

@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/dhowden/tag"
-	"github.com/faiface/beep"
-	"github.com/faiface/beep/mp3"
-	"github.com/faiface/beep/speaker"
+	"github.com/gopxl/beep/v2"
+	"github.com/gopxl/beep/v2/mp3"
+	"github.com/gopxl/beep/v2/speaker"
 	gomp3 "github.com/hajimehoshi/go-mp3"
 )
 
