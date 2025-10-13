@@ -14,6 +14,7 @@ type Config struct {
 	Version    string `toml:"version"`
 	ServerURL  string `toml:"server_url"`
 	ClientName string `toml:"client_name"`
+	Scrobbling bool   `toml:"scrobbling"`
 }
 
 var config Config

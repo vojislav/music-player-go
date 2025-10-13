@@ -73,6 +73,7 @@ func fillTracksList(_ int, albumName, albumIDString string, _ rune) {
 		}
 
 		trackText += title
+		trackText += fmt.Sprintf(" (%s)", getTimeString(duration))
 
 		trackList.AddItem(trackText, fmt.Sprint(trackID), 0, nil)
 	}

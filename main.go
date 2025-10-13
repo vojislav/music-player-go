@@ -68,7 +68,7 @@ func main() {
 
 	flag.Parse()
 
-	speaker.Init(sr, sr.N(time.Second/10))
+	speaker.Init(sr, sr.N(time.Second/100))
 	currentTrack = Track{stream: nil}
 
 	playerCtrl = &CtrlVolume{Streamer: nil, Paused: false, Silent: false, Base: 2.0, Volume: 0.0}
