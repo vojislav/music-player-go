@@ -383,6 +383,8 @@ func download(trackIDString string, trackIndex int) string {
 		params.Add("c", config.ClientName)
 		params.Add("f", "json")
 		params.Add("id", fmt.Sprint(trackID))
+		params.Add("format", "mp3")
+		params.Add("estimateContentLength", "true")
 		req.URL.RawQuery = params.Encode()
 
 		headResp, err := http.Head(req.URL.String())
