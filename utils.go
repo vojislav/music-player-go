@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -70,4 +71,15 @@ func getDirSize(path string) int {
 
 func printError(err error) {
 	log.Println(err)
+}
+
+func getTimeString(time int) string {
+	minutes := fmt.Sprint(time / 60)
+	seconds := fmt.Sprint(time % 60)
+
+	if len(seconds) == 1 {
+		seconds = "0" + seconds
+	}
+
+	return fmt.Sprint(minutes, ":", seconds)
 }

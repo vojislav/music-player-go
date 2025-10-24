@@ -471,7 +471,8 @@ func refreshProgressBar(currentTime int, totalTime int) {
 	fmt.Fprintf(progressBar, "%s%s", progress, negativeProgress)
 }
 
-func updateCurrentTrackText() { // TODO: better name as this function is getting bloated and affects other stuff
+// TODO: better name as this function is getting bloated and affects other stuff
+func updateCurrentTrackText() {
 	currentTrackText.Clear()
 	currentTrackTime.Clear()
 
@@ -514,17 +515,6 @@ func updateCurrentTrackText() { // TODO: better name as this function is getting
 	displayCoverArt()
 
 	app.Draw()
-}
-
-func getTimeString(time int) string {
-	minutes := fmt.Sprint(time / 60)
-	seconds := fmt.Sprint(time % 60)
-
-	if len(seconds) == 1 {
-		seconds = "0" + seconds
-	}
-
-	return fmt.Sprint(minutes, ":", seconds)
 }
 
 func appInputHandler(event *tcell.EventKey) *tcell.EventKey {
