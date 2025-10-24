@@ -382,6 +382,8 @@ func download(trackIDString string, trackIndex int) string {
 		params.Add("c", config.ClientName)
 		params.Add("f", "json")
 		params.Add("id", trackIDString)
+		params.Add("format", "mp3")
+		params.Add("estimateContentLength", "true")
 		req.URL.RawQuery = params.Encode()
 
 		headResp, err := http.Head(req.URL.String())
@@ -452,6 +454,10 @@ func getCoverArt(trackID string) []byte {
 }
 
 func scrobble(trackID string, submission string) bool {
+	if !config.Scrobbling {
+		return false
+	}
+
 	req, err := http.NewRequest("GET", config.ServerURL+"scrobble", nil)
 	if err != nil {
 		printError(err)
