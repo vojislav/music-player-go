@@ -24,16 +24,17 @@ feel free to give it a go using my server (which is the default) with the `guest
 - last.fm scrobbling
 
 ## keyboard shortcuts
-
-* `h/j/k/l` - left/down/up/right movement
-* `space` - add song to queue
-* `enter` - add song to queue and play
-* `p` - toggle play/pause
-* `>/<` - next/previous track
-* `/` - search
-* `n/N` - next/previous search result
-* `-/=` - decrease/increase volume
-* `m` - mute
-* `i` - show track info
-* `.` - show lyrics
-* `x` - remove current track from queue
+keys | movement
+--- | ---
+`h/j/k/l` | left/down/up/right movement
+`space` | add song to queue
+`enter` | add song to queue and play
+`p` | toggle play/pause
+`>/<` | next/previous track
+`/` | search
+`n/N` | next/previous search result
+`-/=` | decrease/increase volume
+`m` | mute
+`i` | show track info
+`.` | show lyrics
+`x` | remove current track from queue
