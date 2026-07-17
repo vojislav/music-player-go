@@ -1,13 +1,13 @@
 module github.com/vojislav/music-player-go
 
-go 1.20
+go 1.21
 
 require (
 	github.com/dhowden/tag v0.0.0-20220618230019-adf36e896086
 	github.com/faiface/beep v1.1.0
 	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/itchyny/gojq v0.12.12
-	github.com/mattn/go-sqlite3 v1.14.16
+	github.com/mattn/go-sqlite3 v1.14.48
 	github.com/pelletier/go-toml v1.9.5
 	github.com/rivo/tview v0.0.0-20231007183732-6c844bdc5f7a
 )

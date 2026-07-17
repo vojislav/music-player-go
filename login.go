@@ -30,6 +30,6 @@ func loginUser() {
 
 func setToken(password string) {
 	config.Salt = fmt.Sprint(rand.Int())
-	token := md5.Sum([]byte(fmt.Sprint(password, config.Salt)))
+	token := md5.Sum(fmt.Append([]byte(password), config.Salt))
 	config.Token = hex.EncodeToString(token[:])
 }

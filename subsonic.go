@@ -79,13 +79,13 @@ func ping() bool {
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
-		printError(err)
+		return false
 	}
 	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		printError(err)
+		return false
 	}
 
 	var resJSON map[string]interface{}
